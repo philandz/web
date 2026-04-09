@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "title": "Philandz Identity Web",
+    "description": "Identity-first web client for Philandz"
+  },
+  "app": {
+    "name": "Philand"
+  },
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "vietnamese": "Vietnamese"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Toggle theme"
+  },
+  "actions": {
+    "retry": "Retry",
+    "signOut": "Sign out"
+  },
+  "states": {
+    "loading": "Loading...",
+    "redirecting": "Redirecting...",
+    "somethingWrong": "Something went wrong. Please try again."
+  }
+}

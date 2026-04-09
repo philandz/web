@@ -1,19 +1,42 @@
-# web
+# Philandz Web
 
-Frontend workspace placeholder for the microservices migration.
+Identity-first Next.js frontend for Philand UI v2.
 
-## Status
+## Quick start
 
-- This repository currently does not contain active web source files.
-- Legacy/primary frontend sources are in the `philand` repository in this workspace.
+```bash
+npm install
+npm run dev
+```
 
-## Intended Role
+Open `http://localhost:3000`.
 
-- Host the dedicated microservices-era web client.
-- Consume APIs through `gateway` (`/api/...`) only.
+### Environment
 
-When source code is added, include:
+Create `.env.local`:
 
-- local run instructions
-- env contract
-- test/lint/build commands
+```bash
+NEXT_PUBLIC_API_URL=http://127.0.0.1:9000
+```
+
+## Developer commands
+
+- `npm run dev` - run local dev server
+- `npm run lint` - run lint checks
+- `npm run test` - run unit/component tests
+- `npm run build` - validate production build
+
+## Architecture docs
+
+- Structure and boundaries: `docs/architecture.md`
+- Testing strategy and examples: `docs/testing.md`
+- i18n conventions: `i18n/README.md`
+
+## Core conventions
+
+- Locale-first routes: all product routes are under `/[locale]/...`
+- Service and data logic stay out of UI components
+- Shared UI primitives go in `components/ui` or `components/form`
+- Domain behavior belongs to `modules/<domain>`
+- API calls are centralized through `lib/http/client.ts`
+- Error capture and sanitization are centralized in `lib/observability/*`

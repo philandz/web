@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "title": "Philandz Identity Web",
+    "description": "Ứng dụng web ưu tiên luồng định danh của Philandz"
+  },
+  "app": {
+    "name": "Philand"
+  },
+  "language": {
+    "label": "Ngôn ngữ",
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt"
+  },
+  "theme": {
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống",
+    "toggle": "Chuyển giao diện"
+  },
+  "actions": {
+    "retry": "Thử lại",
+    "signOut": "Đăng xuất"
+  },
+  "states": {
+    "loading": "Đang tải...",
+    "redirecting": "Đang chuyển hướng...",
+    "somethingWrong": "Đã có lỗi xảy ra. Vui lòng thử lại."
+  }
+}

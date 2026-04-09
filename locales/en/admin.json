@@ -1,0 +1,36 @@
+{
+  "toolbar": {
+    "title": "Overview",
+    "subtitle": "Your financial performance at a glance.",
+    "search": "Search"
+  },
+  "console": {
+    "badge": "Super Admin Console",
+    "title": "Identity system operations",
+    "loggedInAs": "Logged in as {name} ({email})",
+    "role": "super_admin"
+  },
+  "cards": {
+    "totalUsers": "Total users",
+    "normalUsers": "Normal users",
+    "superAdmins": "Super admins"
+  },
+  "userManagement": {
+    "title": "User management",
+    "subtitle": "Global user management actions are UI placeholders in this sprint because dedicated backend endpoints are not available yet.",
+    "searchPlaceholder": "Search by name, email, type",
+    "results": "{count, plural, =0 {No users} one {# user} other {# users}}",
+    "orgOnboardingTitle": "Organization onboarding",
+    "orgOnboardingSubtitle": "Super admins can bootstrap and govern tenant organizations.",
+    "orgCount": "{count, plural, =0 {No organizations} one {# organization} other {# organizations}}",
+    "createOrganization": "Create organization",
+    "manageOrganizations": "Manage organizations",
+    "edit": "Edit",
+    "changeType": "Change type",
+    "lock": "Lock"
+  },
+  "states": {
+    "loading": "Loading admin console...",
+    "error": "Something went wrong in admin area."
+  }
+}

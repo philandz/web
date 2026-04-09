@@ -1,0 +1,36 @@
+{
+  "toolbar": {
+    "title": "Tổng quan",
+    "subtitle": "Hiệu suất tài chính trong tầm nhìn nhanh.",
+    "search": "Tìm kiếm"
+  },
+  "console": {
+    "badge": "Bảng điều khiển Super Admin",
+    "title": "Vận hành hệ thống định danh",
+    "loggedInAs": "Đăng nhập với {name} ({email})",
+    "role": "super_admin"
+  },
+  "cards": {
+    "totalUsers": "Tổng người dùng",
+    "normalUsers": "Người dùng thường",
+    "superAdmins": "Super admin"
+  },
+  "userManagement": {
+    "title": "Quản lý người dùng",
+    "subtitle": "Các thao tác quản lý người dùng toàn cục hiện là giao diện mô phỏng do backend chuyên dụng chưa sẵn sàng.",
+    "searchPlaceholder": "Tìm theo tên, email, loại",
+    "results": "{count, plural, =0 {Không có người dùng} one {# người dùng} other {# người dùng}}",
+    "orgOnboardingTitle": "Khởi tạo tổ chức",
+    "orgOnboardingSubtitle": "Super admin có thể tạo và quản trị các tổ chức tenant.",
+    "orgCount": "{count, plural, =0 {Không có tổ chức} one {# tổ chức} other {# tổ chức}}",
+    "createOrganization": "Tạo tổ chức",
+    "manageOrganizations": "Quản lý tổ chức",
+    "edit": "Sửa",
+    "changeType": "Đổi loại",
+    "lock": "Khóa"
+  },
+  "states": {
+    "loading": "Đang tải bảng quản trị...",
+    "error": "Đã xảy ra lỗi ở khu vực quản trị."
+  }
+}
