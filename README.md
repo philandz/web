@@ -32,6 +32,16 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:9000
 - Testing strategy and examples: `docs/testing.md`
 - i18n conventions: `i18n/README.md`
 
+## CI/CD
+
+- PR checks run via `.github/workflows/ci-pr.yml` on `develop`, `sandbox`, and `main` PRs.
+- Release CD runs via `.github/workflows/release-main.yml` on push to `main`.
+- Release workflow expects these repository secrets:
+  - `GH_REPO_PAT`
+  - `HARBOR_HOST`
+  - `HARBOR_USER`
+  - `HARBOR_PASS`
+
 ## Core conventions
 
 - Locale-first routes: all product routes are under `/[locale]/...`
