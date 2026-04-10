@@ -1,0 +1,181 @@
+name: web-release-main
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Validate semantic commit messages
+        run: |
+          set -euo pipefail
+          range="${{ github.event.before }}..${{ github.sha }}"
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            range="${{ github.sha }}"
+          fi
+
+          invalid=0
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+
+            sha="${line%% *}"
+            subject="${line#* }"
+
+            if [ "$(git rev-list --parents -n 1 "$sha" | wc -w | tr -d ' ')" -eq 1 ]; then
+              continue
+            fi
+
+            if [[ "$subject" =~ ^Merge\  ]]; then
+              continue
+            fi
+            if ! [[ "$subject" =~ ^(feat|fix|docs|style|refactor|test|chore|ci)(\([^\)]+\))?!?:\ .+ ]]; then
+              echo "Invalid commit message: $subject"
+              invalid=1
+            fi
+          done < <(git log --format='%H %s' "$range")
+
+          if [ "$invalid" -ne 0 ]; then
+            echo "Commit message validation failed"
+            exit 1
+          fi
+
+      - name: Compute next semantic version
+        id: version
+        run: |
+          set -euo pipefail
+          last_tag="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          if [ -z "$last_tag" ]; then
+            echo "version=v1.0.0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          range="$last_tag..HEAD"
+          major=0
+          minor=0
+
+          if git log --format=%B "$range" | grep -q "BREAKING CHANGE"; then
+            major=1
+          fi
+
+          while IFS= read -r subject; do
+            [ -z "$subject" ] && continue
+            if [[ "$subject" =~ ^Merge\  ]]; then
+              continue
+            fi
+
+            if [[ "$subject" =~ !: ]]; then
+              major=1
+              continue
+            fi
+            if [[ "$subject" =~ ^feat(\(|:) ]]; then
+              minor=1
+            fi
+          done < <(git log --format=%s "$range")
+
+          base="${last_tag#v}"
+          IFS='.' read -r x y z <<< "$base"
+          if [ "$major" -eq 1 ]; then
+            x=$((x + 1)); y=0; z=0
+          elif [ "$minor" -eq 1 ]; then
+            y=$((y + 1)); z=0
+          else
+            z=$((z + 1))
+          fi
+
+          echo "version=v${x}.${y}.${z}" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push git tag
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          if git rev-parse "$version" >/dev/null 2>&1; then
+            echo "Tag already exists: $version"
+          else
+            git tag "$version"
+            git push origin "$version"
+          fi
+
+      - name: Login Harbor
+        run: |
+          printf '%s' '${{ secrets.HARBOR_PASS }}' | \
+          docker login ${{ secrets.HARBOR_HOST }} -u '${{ secrets.HARBOR_USER }}' --password-stdin
+
+      - name: Build and push image
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          image="${{ secrets.HARBOR_HOST }}/philand/web:${version}"
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=https://v2.philand.io.vn \
+            -t "$image" .
+          docker push "$image"
+
+      - name: Update infra deploy manifest
+        env:
+          GH_REPO_PAT: ${{ secrets.GH_REPO_PAT }}
+        run: |
+          set -euo pipefail
+          tmp_dir="$(mktemp -d)"
+          git clone "https://${GH_REPO_PAT}@github.com/philandz/infra.git" "$tmp_dir/infra"
+          cd "$tmp_dir/infra"
+          git checkout main
+
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          path = Path("deploy/web/deployment.yaml")
+          text = path.read_text(encoding="utf-8")
+          version = "${{ steps.version.outputs.version }}"
+          pattern = r"(^\s*image:\s*harbor\.philand\.io\.vn/philand/web:)([^\s]+)"
+          matched = re.search(pattern, text, flags=re.MULTILINE)
+          if not matched:
+              raise SystemExit("web image line not found in deploy manifest")
+
+          new = re.sub(
+              pattern,
+              r"\g<1>" + version,
+              text,
+              flags=re.MULTILINE,
+          )
+          path.write_text(new, encoding="utf-8")
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deploy/web/deployment.yaml
+          if git diff --cached --quiet; then
+            echo "No infra manifest changes to commit"
+            exit 0
+          fi
+          git commit -m "chore(deploy): update web image to ${{ steps.version.outputs.version }}"
+          git push origin main
