@@ -21,34 +21,40 @@ export function AuthShell({
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 gap-4 p-3 md:p-5 lg:grid-cols-[0.92fr_1.08fr] lg:gap-6">
-        <section className="flex items-start justify-center pt-4 md:items-center md:pt-0">
-          <div className="surface-panel w-full max-w-md rounded-2xl p-5 shadow-float md:p-7">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Image src="/philand.png" alt={tCommon("app.name")} width={28} height={28} priority />
-                <span className="text-sm font-semibold tracking-tight">{tCommon("app.name")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <LanguageSwitcher />
-                <AuthThemeToggle />
-              </div>
+      <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 lg:grid-cols-[0.92fr_1.08fr] lg:gap-6 lg:p-5">
+
+        {/* Form side */}
+        <section className="flex min-h-screen flex-col px-6 py-8 md:items-center md:justify-center md:px-8 lg:min-h-0 lg:py-8">
+
+          {/* Card — desktop wraps content; mobile is full-bleed */}
+          <div className="flex w-full flex-1 flex-col md:max-w-md md:flex-none md:rounded-2xl md:border md:border-border md:bg-card md:p-7 md:shadow-float">
+
+            {/* Logo — large on mobile, compact inside card on desktop */}
+            <div className="mb-8 flex items-center gap-3 md:mb-6">
+              <Image src="/philand.png" alt={tCommon("app.name")} width={40} height={40} priority className="md:hidden" />
+              <Image src="/philand.png" alt={tCommon("app.name")} width={28} height={28} priority className="hidden md:block" />
+              <span className="text-xl font-semibold tracking-tight md:text-sm">{tCommon("app.name")}</span>
             </div>
 
-            <div className="surface-muted mb-5 rounded-xl px-3 py-2.5 md:hidden">
-              <p className="text-subtle text-[11px] uppercase tracking-[0.12em]">{tShell("secureAccess")}</p>
-              <p className="mt-0.5 text-sm text-foreground">{tShell("secureAccessDescription")}</p>
-            </div>
-
-            <div className="mb-6 space-y-1">
-              <h2 className="text-[28px] font-semibold tracking-tight">{title}</h2>
+            {/* Page title */}
+            <div className="mb-7 space-y-1">
+              <h1 className="text-[28px] font-semibold tracking-tight">{title}</h1>
               <p className="text-sm text-muted-foreground">{subtitle}</p>
             </div>
 
-            {children}
+            {/* Form content */}
+            <div className="flex-1">{children}</div>
+
+            {/* Language + theme — bottom on mobile, bottom of card on desktop */}
+            <div className="mt-8 flex items-center justify-center gap-3 border-t border-border/50 pt-5">
+              <LanguageSwitcher />
+              <div className="h-4 w-px bg-border/60" />
+              <AuthThemeToggle />
+            </div>
           </div>
         </section>
 
+        {/* Hero side — desktop only */}
         <section className="surface-muted relative hidden overflow-hidden rounded-2xl p-8 lg:block">
           <div className="relative z-10 flex h-full flex-col justify-between">
             <div className="flex items-center gap-3">
@@ -60,9 +66,9 @@ export function AuthShell({
             </div>
 
             <div className="space-y-4 pb-2">
-              <h1 className="max-w-md text-4xl font-semibold leading-[1.1] tracking-tight text-foreground">
+              <h2 className="max-w-md text-4xl font-semibold leading-[1.1] tracking-tight text-foreground">
                 {tShell("heroTitle")}
-              </h1>
+              </h2>
               <p className="max-w-sm text-sm text-muted-foreground">
                 {tShell("heroDescription")}
               </p>

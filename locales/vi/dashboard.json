@@ -47,7 +47,9 @@
     "seeAll": "Xem hết",
     "revenue": "Doanh thu",
     "expenses": "Chi phí",
-    "savings": "Tiết kiệm"
+    "savings": "Tiết kiệm",
+    "balance": "Số dư tổng",
+    "byCategory": "Theo danh mục"
   },
   "selectOrganization": {
     "context": "Ngữ cảnh người dùng thường",
@@ -65,10 +67,17 @@
   "profile": {
     "title": "Hồ sơ",
     "subtitle": "Cập nhật thông tin tài khoản của bạn.",
+    "sectionIdentity": "Danh tính",
+    "sectionAbout": "Giới thiệu",
+    "sectionPreferences": "Tùy chọn",
     "email": "Email",
+    "emailReadOnly": "Chỉ đọc",
     "displayName": "Tên hiển thị",
-    "avatar": "URL ảnh đại diện",
-    "avatarPlaceholder": "https://example.com/avatar.jpg",
+    "avatar": "Ảnh đại diện",
+    "avatarTitle": "Tải ảnh lên",
+    "avatarHint": "PNG, JPG, GIF hoặc WebP · Tối đa 10 MB",
+    "avatarChange": "Đổi ảnh",
+    "avatarUploadLabel": "Tải ảnh đại diện",
     "bio": "Giới thiệu",
     "timezone": "Múi giờ",
     "timezonePlaceholder": "Asia/Ho_Chi_Minh",
@@ -81,7 +90,7 @@
     "validation": {
       "displayNameShort": "Tên hiển thị quá ngắn",
       "displayNameLong": "Tên hiển thị quá dài",
-      "avatarInvalid": "URL ảnh đại diện không hợp lệ",
+      "avatarInvalid": "Ảnh đại diện phải là PNG, JPG, GIF hoặc WebP",
       "bioLong": "Phần giới thiệu quá dài",
       "timezoneLong": "Múi giờ quá dài",
       "localeLong": "Mã ngôn ngữ quá dài"

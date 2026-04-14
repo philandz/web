@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Philandz Identity Web",
-    "description": "Identity-first web client for Philandz"
+    "title": "Philandz",
+    "description": "Your personal finance companion."
   },
   "app": {
     "name": "Philand"
@@ -19,6 +19,7 @@
   },
   "actions": {
     "retry": "Retry",
+    "cancel": "Cancel",
     "signOut": "Sign out"
   },
   "states": {

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Philandz Identity Web",
-    "description": "Ứng dụng web ưu tiên luồng định danh của Philandz"
+    "title": "Philandz",
+    "description": "Người bạn đồng hành tài chính cá nhân của bạn."
   },
   "app": {
     "name": "Philand"
@@ -19,6 +19,7 @@
   },
   "actions": {
     "retry": "Thử lại",
+    "cancel": "Hủy",
     "signOut": "Đăng xuất"
   },
   "states": {
