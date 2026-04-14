@@ -94,6 +94,10 @@ export const identityService = {
       id: raw.user.base?.id ?? "",
       email: raw.user.email,
       displayName: raw.user.display_name,
+      avatar: raw.user.avatar ?? "",
+      bio: raw.user.bio ?? "",
+      timezone: raw.user.timezone ?? "",
+      locale: raw.user.locale ?? "",
       userType: normalizeUserType(raw.user.user_type)
     };
   },

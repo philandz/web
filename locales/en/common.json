@@ -19,6 +19,7 @@
   },
   "actions": {
     "retry": "Retry",
+    "cancel": "Cancel",
     "signOut": "Sign out"
   },
   "states": {

@@ -62,5 +62,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  return <AppShell userType={userType} profileName={profile?.displayName ?? tAdmin("role")}>{children}</AppShell>;
+  return (
+    <AppShell
+      userType={userType}
+      profileName={profile?.displayName ?? tAdmin("role")}
+      profileAvatar={profile?.avatar ?? ""}
+    >
+      {children}
+    </AppShell>
+  );
 }
