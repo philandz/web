@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { LoginResult } from "@/types/identity";
 import { ApiError, isForbiddenError, isUnauthorizedError } from "@/lib/http/errors";
 import { identityService } from "@/services/identity-service";
+import { mediaService } from "@/services/media-service";
 import { useAuthStore } from "@/lib/auth-store";
 import type { ProfileFormValues } from "@/modules/auth/forms";
 
@@ -23,10 +24,15 @@ function handleAuthError(error: unknown, handlers: AuthErrorHandler) {
   }
 }
 
-function toUpdateProfileInput(values: ProfileFormValues) {
+type UpdateProfilePayload = {
+  values: ProfileFormValues;
+  avatarFile?: File | null;
+};
+
+function toUpdateProfileInput(values: ProfileFormValues, avatarUrl?: string) {
   return {
     displayName: values.displayName,
-    avatar: values.avatar || undefined,
+    avatar: avatarUrl || undefined,
     bio: values.bio || undefined,
     timezone: values.timezone || undefined,
     locale: values.locale || undefined
@@ -129,7 +135,7 @@ export function useUpdateProfileMutation(onUnauthorized: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (values: ProfileFormValues) => {
+    mutationFn: async ({ values, avatarFile }: UpdateProfilePayload) => {
       if (!token) {
         throw new ApiError({
           message: "Authentication required",
@@ -137,7 +143,8 @@ export function useUpdateProfileMutation(onUnauthorized: () => void) {
           status: 401
         });
       }
-      return identityService.updateProfile(toUpdateProfileInput(values));
+      const avatarUrl = avatarFile ? (await mediaService.uploadImage(avatarFile)).url : undefined;
+      return identityService.updateProfile(toUpdateProfileInput(values, avatarUrl));
     },
     onSuccess: (updated) => {
       setProfile(updated);

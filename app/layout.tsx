@@ -17,7 +17,7 @@ const headingFont = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Philandz Identity Web",
+  title: "Philandz",
   description: "Identity-first web client for Philandz"
 };
 

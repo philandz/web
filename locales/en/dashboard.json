@@ -47,7 +47,9 @@
     "seeAll": "See all",
     "revenue": "Revenue",
     "expenses": "Expenses",
-    "savings": "Savings"
+    "savings": "Savings",
+    "balance": "Total Balance",
+    "byCategory": "By Category"
   },
   "selectOrganization": {
     "context": "Normal User Context",
@@ -65,10 +67,17 @@
   "profile": {
     "title": "Profile",
     "subtitle": "Update your account information.",
+    "sectionIdentity": "Identity",
+    "sectionAbout": "About",
+    "sectionPreferences": "Preferences",
     "email": "Email",
+    "emailReadOnly": "Read-only",
     "displayName": "Display name",
-    "avatar": "Avatar URL",
-    "avatarPlaceholder": "https://example.com/avatar.jpg",
+    "avatar": "Avatar",
+    "avatarTitle": "Upload a photo",
+    "avatarHint": "PNG, JPG, GIF, or WebP · Max 10 MB",
+    "avatarChange": "Change photo",
+    "avatarUploadLabel": "Upload avatar photo",
     "bio": "Bio",
     "timezone": "Timezone",
     "timezonePlaceholder": "Asia/Ho_Chi_Minh",
@@ -81,7 +90,7 @@
     "validation": {
       "displayNameShort": "Display name is too short",
       "displayNameLong": "Display name is too long",
-      "avatarInvalid": "Avatar must be a valid URL",
+      "avatarInvalid": "Avatar must be a PNG, JPG, GIF, or WebP image",
       "bioLong": "Bio is too long",
       "timezoneLong": "Timezone is too long",
       "localeLong": "Locale is too long"
