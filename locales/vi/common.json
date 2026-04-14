@@ -19,6 +19,7 @@
   },
   "actions": {
     "retry": "Thử lại",
+    "cancel": "Hủy",
     "signOut": "Đăng xuất"
   },
   "states": {

@@ -79,5 +79,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  return <AppShell userType={userType} profileName={profile?.displayName ?? tShell("me")}>{children}</AppShell>;
+  return (
+    <AppShell
+      userType={userType}
+      profileName={profile?.displayName ?? tShell("me")}
+      profileAvatar={profile?.avatar ?? ""}
+    >
+      {children}
+    </AppShell>
+  );
 }

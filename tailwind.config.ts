@@ -80,6 +80,11 @@ const config: Config = {
         "pulse-soft": {
           "0%, 100%": { opacity: "0.75" },
           "50%": { opacity: "1" }
+        },
+        "loading-bar": {
+          "0%": { transform: "translateX(-100%)" },
+          "50%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(100%)" }
         }
       },
       borderRadius: {
@@ -92,7 +97,8 @@ const config: Config = {
       animation: {
         "fade-in-up": "fade-in-up 420ms ease-out",
         "line-reveal": "line-reveal 900ms ease-out forwards",
-        "pulse-soft": "pulse-soft 1.8s ease-in-out infinite"
+        "pulse-soft": "pulse-soft 1.8s ease-in-out infinite",
+        "loading-bar": "loading-bar 1.4s ease-in-out infinite"
       }
     }
   },

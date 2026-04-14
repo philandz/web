@@ -7,14 +7,17 @@ import { BarChart3, BellRing, ChevronUp, ChevronsLeft, CreditCard, KeyRound, Lay
 
 import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 export function PreviewSidebar({
   profileName,
+  profileAvatar,
   onSignOut,
   collapsed,
   onToggleCollapse
 }: {
   profileName: string;
+  profileAvatar?: string;
   onSignOut: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
@@ -142,14 +145,13 @@ export function PreviewSidebar({
           title={collapsed ? tShell("profileActions") : undefined}
         >
           <span className="flex items-center gap-2 overflow-hidden">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-lime-300/25 text-[11px] font-semibold text-lime-500">
-              {(profileName || "U")
-                .split(" ")
-                .filter(Boolean)
-                .slice(0, 2)
-                .map((part) => part[0]?.toUpperCase())
-                .join("")}
-            </span>
+            <UserAvatar
+              name={profileName}
+              src={profileAvatar}
+              size={28}
+              className="bg-lime-300/25 text-lime-500"
+              fallbackClassName="text-[11px]"
+            />
             {!collapsed ? <span className="truncate text-sm font-medium text-foreground">{profileName}</span> : null}
           </span>
           {!collapsed ? <ChevronUp className={`h-4 w-4 text-muted-foreground transition ${open ? "rotate-180" : ""}`} /> : null}
