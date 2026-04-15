@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { BarChart3, Building2, LayoutDashboard, UserCircle2 } from "lucide-react";
+import { BarChart3, Building2, LayoutDashboard, Menu, UserCircle2 } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 
 import { SidebarNav } from "@/components/layout/sidebar-nav";
@@ -19,9 +19,10 @@ interface AppShellProps {
   profileName: string;
   profileAvatar?: string;
   children: React.ReactNode;
+  wide?: boolean;
 }
 
-export function AppShell({ userType, profileName, profileAvatar, children }: AppShellProps) {
+export function AppShell({ userType, profileName, profileAvatar, children, wide }: AppShellProps) {
   const tShell = useTranslations("dashboard.shell");
   const pathname = usePathname();
   const router = useRouter();
@@ -31,6 +32,7 @@ export function AppShell({ userType, profileName, profileAvatar, children }: App
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -43,11 +45,11 @@ export function AppShell({ userType, profileName, profileAvatar, children }: App
   }, [mobileMenuOpen]);
 
   const dashboardPath = userType === "super_admin" ? routes.admin : routes.root;
-  const secondaryPath = userType === "super_admin" ? "/admin?view=users" : routes.selectOrganization;
+  const secondaryPath = userType === "super_admin" ? "/admin?view=users" : routes.organization;
   const settingsPath = userType === "super_admin" ? routes.admin : routes.settings;
 
   const isRoot = pathname === "/" || pathname === "";
-  const isOrgs = pathname.includes("select-organization");
+  const isOrgs = pathname === "/organization" || pathname.startsWith("/organization/") || pathname.includes("select-organization");
 
   const mobileNavItems = [
     {
@@ -97,13 +99,22 @@ export function AppShell({ userType, profileName, profileAvatar, children }: App
 
       {/* Main content */}
       <main className="flex-1 overflow-x-hidden">
-        <div className="container max-w-4xl py-6 pb-24 pt-20 md:pb-8 md:pt-6">
+        <div className={cn("container py-6 pb-24 pt-20 md:pb-8 md:pt-6", wide ? "max-w-6xl" : "max-w-4xl")}>
           {children}
         </div>
       </main>
 
       {/* Mobile: top bar */}
       <header className="surface-panel fixed inset-x-0 top-0 z-30 flex items-center gap-3 border-b border-border/60 px-4 py-3 md:hidden">
+        {userType === "super_admin" ? (
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Open navigation"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        ) : null}
         <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
           <UserAvatar name={profileName} src={profileAvatar} size={30} fallbackClassName="text-[10px]" />
           <div className="min-w-0">
@@ -114,6 +125,37 @@ export function AppShell({ userType, profileName, profileAvatar, children }: App
           </div>
         </div>
       </header>
+
+      {/* Mobile: sidebar drawer (super_admin only) */}
+      {userType === "super_admin" && mobileSidebarOpen ? (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 z-50 w-72 p-3 md:hidden">
+            <SidebarNav
+              userType={userType}
+              profileName={profileName}
+              profileAvatar={profileAvatar}
+              organizations={tenant.organizations}
+              selectedOrgId={tenant.selectedOrgId}
+              orgRole={tenant.orgRole}
+              onSelectOrganization={(orgId) => {
+                selectOrganization(orgId);
+                setMobileSidebarOpen(false);
+                router.push(routes.root);
+              }}
+              onNavigateDashboard={() => { setMobileSidebarOpen(false); router.push(dashboardPath); }}
+              onNavigateOrganizations={() => { setMobileSidebarOpen(false); router.push(secondaryPath); }}
+              onNavigateAdminUsers={() => { setMobileSidebarOpen(false); router.push(routes.adminUsers); }}
+              onNavigateAdminOrgs={() => { setMobileSidebarOpen(false); router.push(routes.adminOrgs); }}
+              onNavigateSettings={() => { setMobileSidebarOpen(false); router.push(settingsPath); }}
+              onSignOut={() => { setMobileSidebarOpen(false); clearAuth(); router.push(routes.login); }}
+            />
+          </div>
+        </>
+      ) : null}
 
       {/* Mobile: profile sheet */}
       {mobileMenuOpen ? (

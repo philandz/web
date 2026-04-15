@@ -5,7 +5,11 @@ export const routes = {
   forgotPassword: "/forgot-password",
   resetPassword: "/reset-password",
   admin: "/admin",
+  adminUsers: "/admin/users",
+  adminOrgs: "/admin/organizations",
   selectOrganization: "/select-organization",
+  organization: "/organization",
+  acceptInvitation: "/accept-invitation",
   profile: "/profile",
   settings: "/settings"
 } as const;

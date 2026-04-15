@@ -67,6 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       userType={userType}
       profileName={profile?.displayName ?? tAdmin("role")}
       profileAvatar={profile?.avatar ?? ""}
+      wide
     >
       {children}
     </AppShell>

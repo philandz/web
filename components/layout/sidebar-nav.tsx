@@ -5,15 +5,18 @@ import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import {
   BarChart3,
+  Building2,
   ChevronDown,
   LayoutDashboard,
   Settings2,
   UserCircle2,
+  Users,
 } from "lucide-react";
 
 import { UserMenuContent } from "@/components/layout/user-menu-content";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { routes } from "@/constants/routes";
 import type { AppOrgRole, AppUserType } from "@/lib/identity-normalize";
 import type { IdentityOrganization } from "@/types/identity";
 import { cn } from "@/lib/utils";
@@ -28,6 +31,8 @@ interface SidebarNavProps {
   onSelectOrganization: (orgId: string) => void;
   onNavigateDashboard: () => void;
   onNavigateOrganizations: () => void;
+  onNavigateAdminUsers?: () => void;
+  onNavigateAdminOrgs?: () => void;
   onNavigateSettings: () => void;
   onSignOut: () => void;
 }
@@ -84,6 +89,8 @@ export function SidebarNav({
   onSelectOrganization,
   onNavigateDashboard,
   onNavigateOrganizations,
+  onNavigateAdminUsers,
+  onNavigateAdminOrgs,
   onNavigateSettings,
   onSignOut,
 }: SidebarNavProps) {
@@ -106,9 +113,11 @@ export function SidebarNav({
   }, []);
 
   const isRoot = pathname === "/" || pathname === "";
-  const isOrgs = pathname.includes("select-organization");
+  const isOrgs = pathname === "/organization" || pathname.startsWith("/organization/") || pathname.includes("select-organization");
   const isProfile = pathname.includes("profile");
   const isSettings = pathname.includes("settings");
+  const isAdminUsers = pathname.includes("admin/users");
+  const isAdminOrgs = pathname.includes("admin/organizations");
 
   const selectedOrg = organizations.find((o) => o.id === selectedOrgId) ?? organizations[0] ?? null;
 
@@ -129,29 +138,48 @@ export function SidebarNav({
           active={isRoot}
           onClick={onNavigateDashboard}
         />
-        <NavItem
-          icon={BarChart3}
-          label={userType === "super_admin" ? tShell("financialInsights") : tShell("organizationCenter")}
-          active={isOrgs}
-          onClick={onNavigateOrganizations}
-        />
+        {userType === "super_admin" ? (
+          <>
+            <NavItem
+              icon={Users}
+              label={tShell("adminUsers")}
+              active={isAdminUsers}
+              onClick={() => onNavigateAdminUsers ? onNavigateAdminUsers() : router.push(routes.adminUsers)}
+            />
+            <NavItem
+              icon={Building2}
+              label={tShell("adminOrgs")}
+              active={isAdminOrgs}
+              onClick={() => onNavigateAdminOrgs ? onNavigateAdminOrgs() : router.push(routes.adminOrgs)}
+            />
+          </>
+        ) : (
+          <NavItem
+            icon={BarChart3}
+            label={tShell("organizationCenter")}
+            active={isOrgs}
+            onClick={onNavigateOrganizations}
+          />
+        )}
       </nav>
 
-      {/* Secondary nav */}
-      <div className="mt-4 border-t border-border/50 px-1 pt-4 space-y-0.5">
-        <NavItem
-          icon={UserCircle2}
-          label={tShell("profile")}
-          active={isProfile}
-          onClick={() => router.push("/profile")}
-        />
-        <NavItem
-          icon={Settings2}
-          label={tShell("settings")}
-          active={isSettings}
-          onClick={onNavigateSettings}
-        />
-      </div>
+      {/* Secondary nav — only for normal users */}
+      {userType !== "super_admin" ? (
+        <div className="mt-4 border-t border-border/50 px-1 pt-4 space-y-0.5">
+          <NavItem
+            icon={UserCircle2}
+            label={tShell("profile")}
+            active={isProfile}
+            onClick={() => router.push("/profile")}
+          />
+          <NavItem
+            icon={Settings2}
+            label={tShell("settings")}
+            active={isSettings}
+            onClick={onNavigateSettings}
+          />
+        </div>
+      ) : null}
 
       {/* User menu — bottom */}
       <div ref={profileRef} className="relative mt-auto px-1 pt-4">
