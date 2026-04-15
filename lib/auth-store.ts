@@ -22,6 +22,7 @@ interface AuthState {
   setProfile: (profile: IdentityProfile) => void;
   setOrganizations: (organizations: IdentityOrganization[]) => void;
   selectOrganization: (orgId: string) => void;
+  leaveOrganization: (orgId: string) => void;
   clearAuth: () => void;
   expireSession: () => void;
   clearSessionNotice: () => void;
@@ -54,6 +55,11 @@ export const useAuthStore = create<AuthState>()(
       setProfile: (profile) => set({ profile }),
       setOrganizations: (organizations) => set({ organizations }),
       selectOrganization: (orgId) => set({ selectedOrgId: orgId }),
+      leaveOrganization: (orgId) =>
+        set((state) => ({
+          organizations: state.organizations.filter((org) => org.id !== orgId),
+          selectedOrgId: state.selectedOrgId === orgId ? null : state.selectedOrgId
+        })),
       clearAuth: () =>
         set({
           sessionNotice: null,

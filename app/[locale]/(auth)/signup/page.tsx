@@ -1,7 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -14,12 +15,17 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { applyServerValidationErrors, getFormErrorMessage } from "@/lib/form-errors";
 import { createSignupFormSchema, type SignupFormValues } from "@/modules/auth/forms";
 import { useSignupMutation } from "@/modules/auth/hooks";
+import { identityService } from "@/services/identity-service";
 
 export default function SignupPage() {
   const t = useTranslations("auth.signup");
   const tValidation = useTranslations("auth");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const invitationToken = searchParams.get("invitation");
+
   const [formError, setFormError] = useState<string | null>(null);
+  const [acceptingInvite, setAcceptingInvite] = useState(false);
 
   const {
     register,
@@ -38,11 +44,20 @@ export default function SignupPage() {
 
   const mutation = useSignupMutation();
 
-  useEffect(() => {
-    if (mutation.isSuccess) {
-      router.push(routes.login);
+  async function onSignupSuccess() {
+    if (invitationToken) {
+      setAcceptingInvite(true);
+      try {
+        await identityService.acceptInvitation(invitationToken);
+      } catch {
+        // Non-fatal: token may have expired between page load and signup.
+        // User can ask for a new invite after logging in.
+      }
     }
-  }, [mutation.isSuccess, router]);
+    router.push(routes.login);
+  }
+
+  const isPending = mutation.isPending || acceptingInvite;
 
   return (
     <AuthShell title={t("title")} subtitle={t("subtitle")}>
@@ -57,6 +72,7 @@ export default function SignupPage() {
               password: values.password
             },
             {
+              onSuccess: () => { void onSignupSuccess(); },
               onError: (error) => {
                 const applied = applyServerValidationErrors(setError, error, {
                   display_name: "displayName",
@@ -73,6 +89,10 @@ export default function SignupPage() {
           );
         })}
       >
+        {invitationToken ? (
+          <InlineAlert tone="info">{t("inviteHint")}</InlineAlert>
+        ) : null}
+
         <AuthInput id="displayName" label={t("displayNameLabel")} placeholder={t("displayNamePlaceholder")} error={errors.displayName?.message} {...register("displayName")} />
         <AuthInput id="email" type="email" label={t("emailLabel")} placeholder={t("emailPlaceholder")} error={errors.email?.message} {...register("email")} />
         <AuthInput id="password" type="password" label={t("passwordLabel")} placeholder={t("passwordPlaceholder")} error={errors.password?.message} {...register("password")} />
@@ -87,7 +107,7 @@ export default function SignupPage() {
 
         {formError ? <InlineAlert tone="error">{formError}</InlineAlert> : null}
 
-        <AuthButton type="submit" loading={mutation.isPending} loadingLabel={t("submitting")}>
+        <AuthButton type="submit" loading={isPending} loadingLabel={acceptingInvite ? t("acceptingInvite") : t("submitting")}>
           {t("submit")}
         </AuthButton>
 

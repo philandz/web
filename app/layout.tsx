@@ -18,7 +18,12 @@ const headingFont = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Philandz",
-  description: "Identity-first web client for Philandz"
+  description: "Personal finance web app for Philandz",
+  icons: {
+    icon: "/philand.png",
+    shortcut: "/philand.png",
+    apple: "/philand.png"
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
