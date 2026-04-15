@@ -37,3 +37,34 @@ export interface RegisterResult {
   displayName: string;
   userType: AppUserType;
 }
+
+export interface OrgMember {
+  userId: string;
+  email: string;
+  displayName: string;
+  role: AppOrgRole;
+  status: "active" | "invited";
+  joinedAt: number;
+}
+
+export interface InvitationResult {
+  invitationId: string;
+  inviteeEmail: string;
+  orgRole: AppOrgRole;
+  status: string;
+  expiresAt: number;
+  inviteToken: string;
+}
+
+export interface AcceptInvitationResult {
+  orgId: string;
+  role: AppOrgRole;
+}
+
+export interface OrgInvitation {
+  id: string;
+  inviteeEmail: string;
+  orgRole: AppOrgRole;
+  expiresAt: number;
+  createdAt: number;
+}

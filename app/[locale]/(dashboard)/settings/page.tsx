@@ -62,7 +62,7 @@ export default function SettingsPage() {
               size="sm"
               variant="outline"
               disabled={!tenant.permissions.canManageOrganization}
-              onClick={() => router.push("/select-organization")}
+              onClick={() => router.push("/organization")}
             >
               {tShell("manageOrganization")}
             </Button>
