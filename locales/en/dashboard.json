@@ -29,7 +29,8 @@
     "quickAppearance": "Quick appearance",
     "profileActions": "Profile actions",
     "openSidebar": "Open sidebar",
-    "closeSidebar": "Close sidebar"
+    "closeSidebar": "Close sidebar",
+    "budgets": "Budgets"
   },
   "dashboard": {
     "title": "Dashboard",

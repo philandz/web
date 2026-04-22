@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronUp, ChevronsUpDown, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronUp, ChevronRight, ChevronsUpDown, ChevronLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { SortDir } from "@/hooks/use-table-state";
@@ -16,6 +16,8 @@ const STATUS_STYLES: Record<string, string> = {
   invited:     "bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25",
   deleted:     "bg-red-500/12 text-red-500 border-red-500/25",
   blocked:     "bg-red-500/12 text-red-500 border-red-500/25",
+  income:      "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
+  expense:     "bg-red-500/12 text-red-500 border-red-500/25",
 };
 
 const TYPE_STYLES: Record<string, string> = {
@@ -136,6 +138,96 @@ export function Pagination({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Enum filter — segmented pill control
+// ---------------------------------------------------------------------------
+
+export function EnumFilter<T extends string>({
+  value,
+  options,
+  onChange,
+  className,
+}: {
+  value: T | undefined;
+  options: { value: T; label: string }[];
+  onChange: (v: T | undefined) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("inline-flex h-10 items-center gap-0.5 rounded-xl border border-input bg-background p-1", className)}>
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(value === opt.value ? undefined : opt.value)}
+          className={cn(
+            "h-8 rounded-lg px-3 text-xs font-medium transition-colors",
+            value === opt.value
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Date range filter — compact inline date picker pair
+// ---------------------------------------------------------------------------
+
+export function DateRangeFilter({
+  from,
+  to,
+  onFrom,
+  onTo,
+  onClear,
+  className,
+}: {
+  from?: string;
+  to?: string;
+  onFrom: (v: string | undefined) => void;
+  onTo: (v: string | undefined) => void;
+  onClear: () => void;
+  className?: string;
+}) {
+  const hasDate = Boolean(from || to);
+  return (
+    <div className={cn(
+      "flex h-10 items-center gap-2 rounded-xl border border-input bg-background px-3 text-sm transition-colors",
+      hasDate && "border-primary/50 bg-primary/5",
+      className,
+    )}>
+      <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <input
+        type="date"
+        value={from ?? ""}
+        onChange={(e) => onFrom(e.target.value || undefined)}
+        className="min-w-0 flex-1 bg-transparent text-xs text-foreground focus:outline-none"
+      />
+      <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+      <input
+        type="date"
+        value={to ?? ""}
+        onChange={(e) => onTo(e.target.value || undefined)}
+        className="min-w-0 flex-1 bg-transparent text-xs text-foreground focus:outline-none"
+      />
+      {hasDate && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="ml-0.5 shrink-0 text-muted-foreground hover:text-foreground"
+          aria-label="Clear dates"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
     </div>
   );
 }

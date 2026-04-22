@@ -78,6 +78,11 @@ async function uploadToPresignedUrl(file: File, init: InitUploadResponse) {
 }
 
 export const mediaService = {
+  async getFileUrl(fileId: string): Promise<string> {
+    const r = await getDownloadUrl(fileId);
+    return r.download_url;
+  },
+
   /**
    * Full upload flow: init → PUT to S3 → complete → get presigned download URL.
    * Returns a presigned GET URL valid for the configured download TTL.
