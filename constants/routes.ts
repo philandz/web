@@ -11,5 +11,8 @@ export const routes = {
   organization: "/organization",
   acceptInvitation: "/accept-invitation",
   profile: "/profile",
-  settings: "/settings"
+  settings: "/settings",
+  budgets: "/budgets",
+  budgetDetail: (id: string) => `/budgets/${id}`,
+  transactions: "/transactions",
 } as const;

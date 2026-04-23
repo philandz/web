@@ -1,7 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { BarChart3, Building2, LayoutDashboard, Menu, UserCircle2 } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 
 import { SidebarNav } from "@/components/layout/sidebar-nav";
@@ -12,7 +11,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import type { AppUserType } from "@/lib/identity-normalize";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { cn } from "@/lib/utils";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 
 interface AppShellProps {
   userType: AppUserType;
@@ -23,8 +22,6 @@ interface AppShellProps {
 }
 
 export function AppShell({ userType, profileName, profileAvatar, children, wide }: AppShellProps) {
-  const tShell = useTranslations("dashboard.shell");
-  const pathname = usePathname();
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const selectOrganization = useAuthStore((state) => state.selectOrganization);
@@ -47,31 +44,6 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
   const dashboardPath = userType === "super_admin" ? routes.admin : routes.root;
   const secondaryPath = userType === "super_admin" ? "/admin?view=users" : routes.organization;
   const settingsPath = userType === "super_admin" ? routes.admin : routes.settings;
-
-  const isRoot = pathname === "/" || pathname === "";
-  const isOrgs = pathname === "/organization" || pathname.startsWith("/organization/") || pathname.includes("select-organization");
-
-  const mobileNavItems = [
-    {
-      label: tShell("home"),
-      icon: LayoutDashboard,
-      active: isRoot,
-      onClick: () => { setMobileMenuOpen(false); router.push(dashboardPath); },
-    },
-    {
-      label: userType === "super_admin" ? tShell("insights") : tShell("orgs"),
-      icon: userType === "super_admin" ? BarChart3 : Building2,
-      active: isOrgs,
-      onClick: () => { setMobileMenuOpen(false); router.push(secondaryPath); },
-    },
-    {
-      label: tShell("me"),
-      icon: UserCircle2,
-      active: mobileMenuOpen || pathname.includes("profile"),
-      onClick: () => setMobileMenuOpen((p) => !p),
-      isProfile: true,
-    },
-  ];
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -99,22 +71,20 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
 
       {/* Main content */}
       <main className="flex-1 overflow-x-hidden">
-        <div className={cn("container py-6 pb-24 pt-20 md:pb-8 md:pt-6", wide ? "max-w-6xl" : "max-w-4xl")}>
+        <div className={cn("container py-6 pb-8 pt-20 md:pt-6", wide ? "max-w-6xl" : "max-w-4xl")}>
           {children}
         </div>
       </main>
 
       {/* Mobile: top bar */}
       <header className="surface-panel fixed inset-x-0 top-0 z-30 flex items-center gap-3 border-b border-border/60 px-4 py-3 md:hidden">
-        {userType === "super_admin" ? (
-          <button
-            onClick={() => setMobileSidebarOpen(true)}
-            className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Open navigation"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        ) : null}
+        <button
+          onClick={() => setMobileSidebarOpen(true)}
+          className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          aria-label="Open navigation"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
           <UserAvatar name={profileName} src={profileAvatar} size={30} fallbackClassName="text-[10px]" />
           <div className="min-w-0">
@@ -126,8 +96,8 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
         </div>
       </header>
 
-      {/* Mobile: sidebar drawer (super_admin only) */}
-      {userType === "super_admin" && mobileSidebarOpen ? (
+      {/* Mobile: sidebar drawer (all user types) */}
+      {mobileSidebarOpen ? (
         <>
           <div
             className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden"
@@ -150,6 +120,8 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
               onNavigateOrganizations={() => { setMobileSidebarOpen(false); router.push(secondaryPath); }}
               onNavigateAdminUsers={() => { setMobileSidebarOpen(false); router.push(routes.adminUsers); }}
               onNavigateAdminOrgs={() => { setMobileSidebarOpen(false); router.push(routes.adminOrgs); }}
+              onNavigateBudgets={() => { setMobileSidebarOpen(false); router.push(routes.budgets); }}
+              onNavigateTransactions={() => { setMobileSidebarOpen(false); router.push(routes.transactions); }}
               onNavigateSettings={() => { setMobileSidebarOpen(false); router.push(settingsPath); }}
               onSignOut={() => { setMobileSidebarOpen(false); clearAuth(); router.push(routes.login); }}
             />
@@ -166,7 +138,7 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
           />
           <div
             ref={mobileMenuRef}
-            className="fixed inset-x-4 bottom-20 z-50 rounded-2xl border border-border/80 bg-card p-2 shadow-float md:hidden"
+            className="fixed inset-x-4 bottom-4 z-50 rounded-2xl border border-border/80 bg-card p-2 shadow-float md:hidden"
           >
             <UserMenuContent
               userType={userType}
@@ -178,43 +150,6 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
           </div>
         </>
       ) : null}
-
-      {/* Mobile: bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-card/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-3">
-          {mobileNavItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-3 text-[11px] font-medium transition-colors",
-                  item.active
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {item.isProfile ? (
-                  <UserAvatar
-                    name={profileName}
-                    src={profileAvatar}
-                    size={22}
-                    className={cn(
-                      "transition-all",
-                      item.active ? "ring-2 ring-primary ring-offset-1 ring-offset-card" : ""
-                    )}
-                    fallbackClassName="text-[9px]"
-                  />
-                ) : (
-                  <Icon className="h-5 w-5" />
-                )}
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }

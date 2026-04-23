@@ -3,18 +3,20 @@ import { getRequestConfig } from "next-intl/server";
 import { isAppLocale, routing } from "@/i18n/routing";
 
 async function loadMessages(locale: string) {
-  const [common, auth, dashboard, admin] = await Promise.all([
+  const [common, auth, dashboard, admin, budget] = await Promise.all([
     import(`@/locales/${locale}/common.json`).then((mod) => mod.default),
     import(`@/locales/${locale}/auth.json`).then((mod) => mod.default),
     import(`@/locales/${locale}/dashboard.json`).then((mod) => mod.default),
-    import(`@/locales/${locale}/admin.json`).then((mod) => mod.default)
+    import(`@/locales/${locale}/admin.json`).then((mod) => mod.default),
+    import(`@/locales/${locale}/budget.json`).then((mod) => mod.default),
   ]);
 
   return {
     common,
     auth,
     dashboard,
-    admin
+    admin,
+    budget,
   };
 }
 
