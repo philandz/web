@@ -522,7 +522,10 @@ function AddAssetDialog({
               </div>
               <div className="space-y-1.5">
                 <Label>{t("interestType")}</Label>
-                <SelectNative value={interestType} onValueChange={setInterestType}>
+                <SelectNative
+                  value={interestType}
+                  onValueChange={(v) => setInterestType(v as "simple" | "compound")}
+                >
                   <option value="simple">{t("simple")}</option>
                   <option value="compound">{t("compound")}</option>
                 </SelectNative>

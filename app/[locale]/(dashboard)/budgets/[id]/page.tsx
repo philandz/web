@@ -193,9 +193,7 @@ export default function BudgetDetailPage() {
       </Tabs>
 
       {/* Quick entry floating button (mobile) + N shortcut (desktop) */}
-      {budget.type !== "invest" && (
-        <QuickEntryButton budgetId={budgetId} currency={budget.currency} />
-      )}
+      <QuickEntryButton budgetId={budgetId} currency={budget.currency} />
     </div>
   );
 }
