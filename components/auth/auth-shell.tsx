@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 import { AuthThemeToggle } from "@/components/auth/auth-theme-toggle";
+import { LoginHeroPanel } from "@/components/auth/login-hero-panel";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 
 export function AuthShell({
@@ -17,7 +18,6 @@ export function AuthShell({
   children: ReactNode;
 }) {
   const tCommon = useTranslations("common");
-  const tShell = useTranslations("auth.shell");
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -55,40 +55,7 @@ export function AuthShell({
         </section>
 
         {/* Hero side — desktop only */}
-        <section className="surface-muted relative hidden overflow-hidden rounded-2xl p-8 lg:block">
-          <div className="relative z-10 flex h-full flex-col justify-between">
-            <div className="flex items-center gap-3">
-              <Image src="/philand.png" alt={tCommon("app.name")} width={36} height={36} priority className="opacity-90" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">{tShell("workspaceTitle")}</p>
-                <p className="text-xs text-muted-foreground">{tShell("workspaceSubtitle")}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 pb-2">
-              <h2 className="max-w-md text-4xl font-semibold leading-[1.1] tracking-tight text-foreground">
-                {tShell("heroTitle")}
-              </h2>
-              <p className="max-w-sm text-sm text-muted-foreground">
-                {tShell("heroDescription")}
-              </p>
-            </div>
-
-            <div className="surface-panel rounded-2xl p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{tShell("monthlyBalance")}</span>
-                <span className="rounded-full bg-highlight/20 px-2 py-0.5 text-[11px] font-semibold text-foreground">+12.4%</span>
-              </div>
-              <p className="text-2xl font-semibold tracking-tight text-foreground">$84,921.00</p>
-              <div className="mt-3 h-1.5 rounded-full bg-muted">
-                <div className="h-1.5 w-3/5 rounded-full bg-highlight" />
-              </div>
-            </div>
-          </div>
-
-          <div className="pointer-events-none absolute -bottom-12 -right-8 h-52 w-52 rounded-full bg-card/40 blur-2xl" />
-          <div className="pointer-events-none absolute -top-14 right-10 h-40 w-40 rounded-full bg-highlight/30 blur-2xl" />
-        </section>
+        <LoginHeroPanel />
       </div>
     </main>
   );

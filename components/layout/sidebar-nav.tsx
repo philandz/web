@@ -11,6 +11,8 @@ import {
   Settings2,
   UserCircle2,
   Users,
+  Wallet,
+  ArrowLeftRight,
 } from "lucide-react";
 
 import { UserMenuContent } from "@/components/layout/user-menu-content";
@@ -33,6 +35,8 @@ interface SidebarNavProps {
   onNavigateOrganizations: () => void;
   onNavigateAdminUsers?: () => void;
   onNavigateAdminOrgs?: () => void;
+  onNavigateBudgets?: () => void;
+  onNavigateTransactions?: () => void;
   onNavigateSettings: () => void;
   onSignOut: () => void;
 }
@@ -91,6 +95,8 @@ export function SidebarNav({
   onNavigateOrganizations,
   onNavigateAdminUsers,
   onNavigateAdminOrgs,
+  onNavigateBudgets,
+  onNavigateTransactions,
   onNavigateSettings,
   onSignOut,
 }: SidebarNavProps) {
@@ -118,6 +124,8 @@ export function SidebarNav({
   const isSettings = pathname.includes("settings");
   const isAdminUsers = pathname.includes("admin/users");
   const isAdminOrgs = pathname.includes("admin/organizations");
+  const isBudgets = pathname === "/budgets" || pathname.startsWith("/budgets/");
+  const isTransactions = pathname === "/transactions";
 
   const selectedOrg = organizations.find((o) => o.id === selectedOrgId) ?? organizations[0] ?? null;
 
@@ -161,6 +169,22 @@ export function SidebarNav({
             onClick={onNavigateOrganizations}
           />
         )}
+        {userType !== "super_admin" ? (
+          <>
+            <NavItem
+              icon={Wallet}
+              label={tShell("budgets")}
+              active={isBudgets}
+              onClick={() => onNavigateBudgets ? onNavigateBudgets() : router.push(routes.budgets)}
+            />
+            <NavItem
+              icon={ArrowLeftRight}
+              label={tShell("transactions")}
+              active={isTransactions}
+              onClick={() => onNavigateTransactions ? onNavigateTransactions() : router.push(routes.transactions)}
+            />
+          </>
+        ) : null}
       </nav>
 
       {/* Secondary nav — only for normal users */}
