@@ -111,7 +111,7 @@ export function CategoryFormDialog({ open, onClose, budgetId, category, defaultT
               {COLOR_OPTIONS.map((c) => (
                 <button key={c} type="button" onClick={() => setColor(c)}
                   className={`h-7 w-7 rounded-full transition-transform ${color === c ? "scale-125 ring-2 ring-offset-2 ring-offset-card" : "hover:scale-110"}`}
-                  style={{ background: c, ringColor: c }} />
+                  style={{ background: c }} />
               ))}
             </div>
           </div>
