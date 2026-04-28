@@ -53,6 +53,20 @@ export function useLoginMutation() {
   });
 }
 
+export function useLoginWithGoogleMutation() {
+  const setSession = useAuthStore((state) => state.setSession);
+  const setProfile = useAuthStore((state) => state.setProfile);
+
+  return useMutation({
+    mutationFn: (idToken: string) => identityService.loginWithGoogle(idToken),
+    onSuccess: async (result: LoginResult) => {
+      setSession(result);
+      const profile = await identityService.profile();
+      setProfile(profile);
+    },
+  });
+}
+
 export function useSignupMutation() {
   return useMutation({
     mutationFn: identityService.register
