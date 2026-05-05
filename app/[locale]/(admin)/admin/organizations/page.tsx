@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { MoreHorizontal, Plus, Search, Trash2, UserCog2 } from "lucide-react";
+import { Building2, MoreHorizontal, Plus, Search, Trash2, UserCog2 } from "lucide-react";
 
+import { PageHeader } from "@/components/layout/page-header";
 import { SectionLoadingState } from "@/components/state/section-loading-state";
 import { useToast } from "@/components/state/toast-provider";
 import { FilterBadge, Pagination, SortButton, StatusChip } from "@/components/philand/data-table";
@@ -175,15 +176,16 @@ export default function AdminOrgsPage() {
 
   return (
     <div className="space-y-5 animate-fade-in-up">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("pageTitle")}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{t("pageSubtitle")}</p>
-        </div>
-        <Button size="sm" onClick={() => setShowCreate(true)} className="shrink-0 self-start sm:self-auto">
-          <Plus className="mr-1.5 h-4 w-4" />{t("create")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("pageTitle")}
+        description={t("pageSubtitle")}
+        icon={<Building2 className="h-5 w-5" />}
+        actions={(
+          <Button size="sm" onClick={() => setShowCreate(true)} className="shrink-0 self-start sm:self-auto">
+            <Plus className="mr-1.5 h-4 w-4" />{t("create")}
+          </Button>
+        )}
+      />
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">

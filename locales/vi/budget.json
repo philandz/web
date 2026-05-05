@@ -27,6 +27,7 @@
     "income": "Thu nhập",
     "expense": "Chi tiêu",
     "spent": "Đã chi",
+    "noLimit": "Không giới hạn",
     "members": "thành viên"
   },
   "create": {
@@ -60,7 +61,13 @@
     "tabCategories": "Danh mục",
     "tabMembers": "Thành viên",
     "tabSettings": "Cài đặt",
-    "add": "Thêm"
+    "memberSingular": "thành viên",
+    "memberPlural": "thành viên",
+    "percentUsed": "Đã dùng {percent}%",
+    "add": "Thêm",
+    "spentThisMonth": "Đã chi tháng này",
+    "remaining": "còn lại",
+    "overBudget": "vượt ngân sách"
   },
   "overview": {
     "income": "Tổng thu nhập",
@@ -205,7 +212,8 @@
     "archiveSuccess": "Đã lưu trữ danh mục",
     "archiveError": "Không thể lưu trữ",
     "loadError": "Không thể tải danh mục",
-    "loadErrorHint": "Vui lòng thử tải lại trang."
+    "loadErrorHint": "Vui lòng thử tải lại trang.",
+    "readOnlyHint": "Bạn có thể xem danh mục, nhưng chỉ người đóng góp, quản lý và chủ sở hữu mới có thể tạo hoặc chỉnh sửa."
   },
   "catForm": {
     "createTitle": "Thêm danh mục",
