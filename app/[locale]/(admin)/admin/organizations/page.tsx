@@ -99,6 +99,7 @@ function EditOrgDialog({ org, onClose }: { org: AdminOrg; onClose: () => void })
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!org.id) { toast.error("Organization ID is missing"); return; }
     mutation.mutate(
       { orgId: org.id, input: { name: form.name, status: form.status } },
       {
@@ -253,9 +254,15 @@ export default function AdminOrgsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setEditOrg(org)}><UserCog2 className="mr-2 h-4 w-4" />{t("edit")}</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOrgId(org.id)}><Trash2 className="mr-2 h-4 w-4" />{t("delete")}</DropdownMenuItem>
+                            {org.id ? (
+                              <>
+                                <DropdownMenuItem onClick={() => setEditOrg(org)}><UserCog2 className="mr-2 h-4 w-4" />{t("edit")}</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOrgId(org.id)}><Trash2 className="mr-2 h-4 w-4" />{t("delete")}</DropdownMenuItem>
+                              </>
+                            ) : (
+                              <DropdownMenuItem className="text-muted-foreground cursor-not-allowed" disabled>{t("edit")}</DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
