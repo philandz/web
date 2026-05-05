@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   ArrowDownRight,
@@ -150,15 +151,36 @@ function SpendingChart() {
   const linePath = buildLinePath(CHART_POINTS);
   const areaPath = buildAreaPath(CHART_POINTS);
 
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  const min = Math.min(...CHART_POINTS);
+  const max = Math.max(...CHART_POINTS);
+  const range = Math.max(1, max - min);
+
+  function pointForIndex(i: number) {
+    const w = 520;
+    const h = 120;
+    const x = (i / Math.max(1, CHART_POINTS.length - 1)) * w;
+    const y = h - ((CHART_POINTS[i] - min) / range) * h;
+    return { x, y };
+  }
+
   return (
-    <div className="overflow-hidden">
-      <svg
-        viewBox="0 0 520 130"
-        className="w-full"
-        role="img"
-        aria-label="Spending trend"
-        preserveAspectRatio="none"
-      >
+    <div
+      ref={wrapRef}
+      className="relative overflow-hidden"
+      onMouseLeave={() => setHoverIndex(null)}
+      onMouseMove={(e) => {
+        if (!wrapRef.current) return;
+        const rect = wrapRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const ratio = Math.min(1, Math.max(0, x / Math.max(1, rect.width)));
+        const idx = Math.round(ratio * (CHART_POINTS.length - 1));
+        setHoverIndex(idx);
+      }}
+    >
+      <svg viewBox="0 0 520 130" className="w-full" role="img" aria-label="Spending trend" preserveAspectRatio="none">
         <defs>
           <linearGradient id="dash-line" x1="0" x2="1" y1="0" y2="0">
             <stop offset="0%" stopColor="hsl(var(--primary))" />
@@ -178,6 +200,16 @@ function SpendingChart() {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+
+        {hoverIndex != null ? (() => {
+          const { x, y } = pointForIndex(hoverIndex);
+          return (
+            <g>
+              <line x1={x} x2={x} y1={0} y2={130} stroke="hsl(var(--border))" strokeDasharray="3 4" />
+              <circle cx={x} cy={y} r="4" fill="hsl(var(--card))" stroke="hsl(var(--primary))" strokeWidth="2" />
+            </g>
+          );
+        })() : null}
         {CHART_POINTS.map((v, i) => {
           const min = Math.min(...CHART_POINTS);
           const max = Math.max(...CHART_POINTS);
@@ -196,6 +228,19 @@ function SpendingChart() {
           );
         })}
       </svg>
+
+      {hoverIndex != null ? (
+        <div
+          className="pointer-events-none absolute top-2 rounded-xl border border-border bg-card/95 px-2.5 py-1.5 text-xs shadow-soft"
+          style={{
+            left: `${(hoverIndex / Math.max(1, CHART_POINTS.length - 1)) * 100}%`,
+            transform: "translateX(-50%)",
+          }}
+        >
+          <div className="font-semibold text-foreground">{MONTHS[hoverIndex]}</div>
+          <div className="text-muted-foreground tabular-nums">{CHART_POINTS[hoverIndex]}</div>
+        </div>
+      ) : null}
       <div className="mt-1 flex justify-between px-0.5">
         {MONTHS.map((m) => (
           <span key={m} className="text-[10px] text-muted-foreground">{m}</span>

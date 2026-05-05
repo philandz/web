@@ -79,11 +79,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  const pageTitle = (() => {
+    if (pathname === routes.root) return tShell("dashboard");
+    if (pathname.startsWith(routes.budgets)) return tShell("budgets");
+    if (pathname.startsWith(routes.transactions)) return tShell("transactions");
+    if (pathname.startsWith(routes.organization)) return tShell("organizationCenter");
+    if (pathname.startsWith(routes.profile)) return tShell("profile");
+    if (pathname.startsWith(routes.settings)) return tShell("settings");
+    return undefined;
+  })();
+
+  const wide = pathname.startsWith(routes.budgets);
+
   return (
     <AppShell
       userType={userType}
       profileName={profile?.displayName ?? tShell("me")}
       profileAvatar={profile?.avatar ?? ""}
+      pageTitle={pageTitle}
+      wide={wide}
     >
       {children}
     </AppShell>

@@ -17,11 +17,12 @@ interface AppShellProps {
   userType: AppUserType;
   profileName: string;
   profileAvatar?: string;
+  pageTitle?: string;
   children: React.ReactNode;
   wide?: boolean;
 }
 
-export function AppShell({ userType, profileName, profileAvatar, children, wide }: AppShellProps) {
+export function AppShell({ userType, profileName, profileAvatar, pageTitle, children, wide }: AppShellProps) {
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const selectOrganization = useAuthStore((state) => state.selectOrganization);
@@ -43,7 +44,6 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
 
   const dashboardPath = userType === "super_admin" ? routes.admin : routes.root;
   const secondaryPath = userType === "super_admin" ? "/admin?view=users" : routes.organization;
-  const settingsPath = userType === "super_admin" ? routes.admin : routes.settings;
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -63,7 +63,6 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
             }}
             onNavigateDashboard={() => router.push(dashboardPath)}
             onNavigateOrganizations={() => router.push(secondaryPath)}
-            onNavigateSettings={() => router.push(settingsPath)}
             onSignOut={() => { clearAuth(); router.push(routes.login); }}
           />
         </div>
@@ -85,15 +84,26 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
         >
           <Menu className="h-5 w-5" />
         </button>
-        <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex flex-1 items-center gap-2.5 overflow-hidden rounded-xl px-1.5 py-1 text-left hover:bg-muted/60 transition-colors"
+          aria-label="Open profile menu"
+        >
           <UserAvatar name={profileName} src={profileAvatar} size={30} fallbackClassName="text-[10px]" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">{profileName}</p>
+            {pageTitle ? (
+              <p className="truncate text-sm font-semibold text-foreground">{pageTitle}</p>
+            ) : (
+              <p className="truncate text-sm font-semibold text-foreground">{profileName}</p>
+            )}
             {tenant.selectedOrganization ? (
               <p className="truncate text-[11px] text-muted-foreground">{tenant.selectedOrganization.name}</p>
-            ) : null}
+            ) : (
+              <p className="truncate text-[11px] text-muted-foreground">{profileName}</p>
+            )}
           </div>
-        </div>
+        </button>
       </header>
 
       {/* Mobile: sidebar drawer (all user types) */}
@@ -122,7 +132,6 @@ export function AppShell({ userType, profileName, profileAvatar, children, wide 
               onNavigateAdminOrgs={() => { setMobileSidebarOpen(false); router.push(routes.adminOrgs); }}
               onNavigateBudgets={() => { setMobileSidebarOpen(false); router.push(routes.budgets); }}
               onNavigateTransactions={() => { setMobileSidebarOpen(false); router.push(routes.transactions); }}
-              onNavigateSettings={() => { setMobileSidebarOpen(false); router.push(settingsPath); }}
               onSignOut={() => { setMobileSidebarOpen(false); clearAuth(); router.push(routes.login); }}
             />
           </div>
