@@ -133,8 +133,7 @@ export function BudgetCard({ budget, onClick }: BudgetCardProps) {
                 </span>
               </>
             ) : (
-              /* invisible placeholder preserves height */
-              <span className="h-4" aria-hidden />
+              <span className="text-[11px] text-muted-foreground">{t("noLimit")}</span>
             )}
           </div>
 

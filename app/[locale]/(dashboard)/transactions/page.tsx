@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { ArrowLeftRight } from "lucide-react";
+
+import { PageHeader } from "@/components/layout/page-header";
 import { TransactionsTab } from "@/components/philand/transactions-tab";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
@@ -17,24 +20,23 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-5 animate-fade-in-up">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("title")}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{t("subtitle")}</p>
-        </div>
-        {budgets.length > 0 && (
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        icon={<ArrowLeftRight className="h-5 w-5" />}
+        actions={budgets.length > 0 ? (
           <SelectNative
             value={budgetId}
             onValueChange={setBudgetId}
-            className="w-48 shrink-0"
+            className="w-full sm:w-56"
           >
             <option value="">{t("allBudgets")}</option>
             {budgets.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </SelectNative>
-        )}
-      </div>
+        ) : null}
+      />
 
       <TransactionsTab
         budgetId={budgetId}

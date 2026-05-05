@@ -47,6 +47,8 @@ import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { useRouter } from "@/i18n/navigation";
 import { routes } from "@/constants/routes";
 import type { OrgInvitation, OrgMember } from "@/types/identity";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/state/empty-state";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -500,7 +502,7 @@ function OrgNameEditor({
 
   if (editing) {
     return (
-      <div className="flex items-center gap-2">
+      <span className="flex items-center gap-2">
         <Input
           autoFocus
           value={draft}
@@ -518,13 +520,13 @@ function OrgNameEditor({
         <Button type="button" size="sm" variant="ghost" className="h-8 px-2.5" onClick={cancel}>
           <X className="h-3.5 w-3.5" />
         </Button>
-      </div>
+      </span>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 group/rename">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">{orgName}</h1>
+    <span className="flex items-center gap-2 group/rename">
+      <span className="text-2xl font-semibold tracking-tight text-foreground">{orgName}</span>
       <Button
         type="button"
         variant="ghost"
@@ -535,7 +537,7 @@ function OrgNameEditor({
       >
         <Pencil className="h-3.5 w-3.5" />
       </Button>
-    </div>
+    </span>
   );
 }
 
@@ -690,13 +692,7 @@ export default function OrganizationPage() {
 
   if (!tenant.selectedOrgId || !tenant.selectedOrganization) {
     return (
-      <section className="space-y-5">
-        <div className="surface-panel rounded-2xl p-5 md:p-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("title")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t("noOrgSelected")}</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">{t("noOrgSelectedHint")}</p>
-        </div>
-      </section>
+      <EmptyState title={t("noOrgSelected")} description={t("noOrgSelectedHint")} />
     );
   }
 
@@ -707,29 +703,21 @@ export default function OrganizationPage() {
     <section className="space-y-5 animate-fade-in-up">
 
       {/* Header — Bead 3: inline rename for owners */}
-      <div className="surface-panel flex flex-col gap-4 rounded-2xl p-5 md:flex-row md:items-center md:justify-between md:p-6">
-        <div className="flex items-center gap-4">
-          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Building2 className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            {isOwner ? (
-              <OrgNameEditor orgId={tenant.selectedOrgId} orgName={tenant.selectedOrganization.name} />
-            ) : (
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                {tenant.selectedOrganization.name}
-              </h1>
-            )}
-            <p className="mt-0.5 text-sm text-muted-foreground">{t("subtitle")}</p>
-          </div>
-        </div>
-        <Badge
-          variant="outline"
-          className={`self-start capitalize md:self-auto ${roleBadgeClass(tenant.orgRole)}`}
-        >
-          {roleLabel(tenant.orgRole, t)}
-        </Badge>
-      </div>
+      <PageHeader
+        title={isOwner ? (
+          <OrgNameEditor orgId={tenant.selectedOrgId} orgName={tenant.selectedOrganization.name} />
+        ) : tenant.selectedOrganization.name}
+        description={t("subtitle")}
+        icon={<Building2 className="h-5 w-5" />}
+        actions={(
+          <Badge
+            variant="outline"
+            className={`self-start capitalize md:self-auto ${roleBadgeClass(tenant.orgRole)}`}
+          >
+            {roleLabel(tenant.orgRole, t)}
+          </Badge>
+        )}
+      />
 
       {/* Bead 2 — Role permissions matrix */}
       <RolesMatrix />

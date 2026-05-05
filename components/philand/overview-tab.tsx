@@ -9,6 +9,8 @@ import { useTransactionsQuery } from "@/modules/transaction/hooks";
 import { cn } from "@/lib/utils";
 import type { Budget } from "@/services/budget-service";
 import type { Transaction } from "@/services/transaction-service";
+import { useRef, useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -200,15 +202,14 @@ function buildPath(values: number[], w: number, h: number) {
   return { line, area };
 }
 
-function SpendingChart({ transactions }: { transactions: Transaction[] }) {
-  const now = new Date();
-  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+function SpendingChart({ transactions, currency, year, month }: { transactions: Transaction[]; currency: string; year: number; month: number }) {
+  const days = new Date(year, month + 1, 0).getDate();
   const daily = Array(days).fill(0) as number[];
 
   for (const tx of transactions) {
     if (tx.type !== "expense") continue;
     const d = new Date(tx.date);
-    if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
+    if (d.getFullYear() === year && d.getMonth() === month) {
       daily[d.getDate() - 1] += tx.amount;
     }
   }
@@ -220,14 +221,37 @@ function SpendingChart({ transactions }: { transactions: Transaction[] }) {
 
   const { line, area } = buildPath(cumul, 520, 96);
 
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  const min = cumul.length ? Math.min(...cumul) : 0;
+  const max = cumul.length ? Math.max(...cumul) : 0;
+  const range = Math.max(1, max - min);
+
+  function pointForIndex(i: number) {
+    const w = 520;
+    const h = 96;
+    const x = (i / Math.max(1, cumul.length - 1)) * w;
+    const y = h - ((cumul[i] - min) / range) * (h - 10) - 5;
+    return { x, y };
+  }
+
   return (
-    <div>
-      <svg
-        viewBox="0 0 520 104"
-        className="w-full"
-        preserveAspectRatio="none"
-        aria-hidden
-      >
+    <div
+      ref={wrapRef}
+      className="relative"
+      onMouseLeave={() => setHoverIndex(null)}
+      onMouseMove={(e) => {
+        if (!wrapRef.current) return;
+        if (cumul.length < 2) return;
+        const rect = wrapRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const ratio = Math.min(1, Math.max(0, x / Math.max(1, rect.width)));
+        const idx = Math.round(ratio * (cumul.length - 1));
+        setHoverIndex(idx);
+      }}
+    >
+      <svg viewBox="0 0 520 104" className="w-full" preserveAspectRatio="none" aria-hidden>
         <defs>
           <linearGradient id="ov-stroke" x1="0" x2="1" y1="0" y2="0">
             <stop offset="0%"   stopColor="hsl(var(--primary))" />
@@ -249,7 +273,31 @@ function SpendingChart({ transactions }: { transactions: Transaction[] }) {
             strokeLinejoin="round"
           />
         )}
+
+        {hoverIndex != null && cumul.length >= 2 ? (() => {
+          const { x, y } = pointForIndex(hoverIndex);
+          return (
+            <g>
+              <line x1={x} x2={x} y1={0} y2={104} stroke="hsl(var(--border))" strokeDasharray="3 4" />
+              <circle cx={x} cy={y} r="4" fill="hsl(var(--card))" stroke="hsl(var(--primary))" strokeWidth="2" />
+            </g>
+          );
+        })() : null}
       </svg>
+
+      {hoverIndex != null && cumul.length >= 2 ? (
+        <div
+          className="pointer-events-none absolute top-2 rounded-xl border border-border bg-card/95 px-2.5 py-1.5 text-xs shadow-soft"
+          style={{
+            left: `${(hoverIndex / Math.max(1, cumul.length - 1)) * 100}%`,
+            transform: "translateX(-50%)",
+          }}
+        >
+          <div className="font-semibold tabular-nums text-foreground">Day {hoverIndex + 1}</div>
+          <div className="text-muted-foreground tabular-nums">{fmt(cumul[hoverIndex], currency)} spent</div>
+        </div>
+      ) : null}
+
       {/* X-axis labels */}
       <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground px-0.5">
         <span>1</span>
@@ -306,6 +354,28 @@ interface OverviewTabProps {
 
 export function OverviewTab({ budget }: OverviewTabProps) {
   const t = useTranslations("budget.overview");
+
+  // Month navigation state
+  const now = new Date();
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+
+  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+
+  function prevMonth() {
+    if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); }
+    else setViewMonth((m) => m - 1);
+  }
+  function nextMonth() {
+    if (isCurrentMonth) return; // can't navigate into future
+    if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); }
+    else setViewMonth((m) => m + 1);
+  }
+
+  const monthLabel = useMemo(
+    () => new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date(viewYear, viewMonth)),
+    [viewYear, viewMonth],
+  );
 
   const { data: envelope } = useBurnRateQuery(budget.id);
   const { data: txData } = useTransactionsQuery({
@@ -383,13 +453,36 @@ export function OverviewTab({ budget }: OverviewTabProps) {
           <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
             {/* Spending trend */}
             <section className="surface-panel rounded-2xl p-5">
-              <h2 className="mb-1 text-sm font-semibold text-foreground">
-                {t("spendingTrend")}
-              </h2>
-              <p className="mb-4 text-xs text-muted-foreground">
-                {new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date())}
-              </p>
-              <SpendingChart transactions={transactions} />
+              <div className="mb-4 flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-semibold text-foreground">{t("spendingTrend")}</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{monthLabel}</p>
+                </div>
+                {/* Month navigation */}
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={prevMonth}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    aria-label="Previous month"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="min-w-[96px] rounded-lg border border-border bg-muted px-2.5 py-1 text-center text-xs font-semibold text-foreground">
+                    {new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(new Date(viewYear, viewMonth))}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={nextMonth}
+                    disabled={isCurrentMonth}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Next month"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <SpendingChart transactions={transactions} currency={budget.currency} year={viewYear} month={viewMonth} />
             </section>
 
             {/* Category breakdown */}
