@@ -66,6 +66,7 @@ interface RawUser {
 
 interface RawOrg {
   base?: RawBase;
+  id?: string;
   name: string;
 }
 
@@ -98,7 +99,7 @@ function mapUser(raw: RawUser): AdminUser {
 
 function mapOrg(raw: RawOrg): AdminOrg {
   return {
-    id: raw.base?.id ?? "",
+    id: raw.base?.id ?? raw.id ?? "",
     name: raw.name,
     ownerId: raw.base?.owner_id ?? "",
     status: normalizeStatus(raw.base?.status),
