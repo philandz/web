@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, UserCircle2 } from "lucide-react";
 
 import { FormInput } from "@/components/form/form-input";
 import { FormTextarea } from "@/components/form/form-textarea";
+import { PageHeader } from "@/components/layout/page-header";
 import { InlineAlert } from "@/components/state/inline-alert";
 import { LoadingButton } from "@/components/state/loading-button";
 import { useToast } from "@/components/state/toast-provider";
@@ -109,10 +110,11 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl animate-fade-in-up space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
-      </div>
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        icon={<UserCircle2 className="h-5 w-5" />}
+      />
 
       <form
         onSubmit={handleSubmit((values) =>

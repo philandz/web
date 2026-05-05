@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import {
   ArrowLeft, BarChart2, CreditCard, LayoutGrid,
-  PiggyBank, Share2,
+  PiggyBank, Settings, Share2, Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -135,12 +135,20 @@ export function BudgetDetailHeader({
                 {label}
               </Badge>
             </div>
-            <p className="mt-0.5 text-[11px] capitalize text-muted-foreground sm:text-xs">
-              {budget.myRole}&nbsp;·&nbsp;{budget.currency}
-            </p>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <p className="text-[11px] capitalize text-muted-foreground sm:text-xs">
+                {budget.myRole}&nbsp;·&nbsp;{budget.currency}
+              </p>
+              {members.length > 0 && (
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground sm:text-xs">
+                  <Users className="h-3 w-3" />
+                  {members.length}
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Right: avatars */}
+          {/* Right: avatars + actions */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {/* Stacked member avatars — desktop only */}
             {visibleMembers.length > 0 && (
@@ -162,6 +170,22 @@ export function BudgetDetailHeader({
                 )}
               </div>
             )}
+            {/* Ghost action buttons */}
+            <button
+              type="button"
+              title="Share"
+              className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              Share
+            </button>
+            <button
+              type="button"
+              title="Settings"
+              className="hidden items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
 
@@ -194,6 +218,20 @@ export function BudgetDetailHeader({
                 className={cn("h-full rounded-full transition-all duration-500", barColor)}
                 style={{ width: `${Math.min(spendPct, 100)}%` }}
               />
+            </div>
+
+            {/* Spent this month / remaining row */}
+            <div className="mt-2 flex items-center justify-between text-[11px]">
+              <span className="text-muted-foreground">{t("spentThisMonth")}</span>
+              {envelope.monthlyLimit > envelope.currentSpend ? (
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  {fmt(envelope.monthlyLimit - envelope.currentSpend)}&nbsp;{t("remaining")}
+                </span>
+              ) : (
+                <span className="font-semibold text-red-500">
+                  {fmt(envelope.currentSpend - envelope.monthlyLimit)}&nbsp;{t("overBudget")}
+                </span>
+              )}
             </div>
           </div>
         )}

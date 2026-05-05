@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageLoadingState } from "@/components/state/page-loading-state";
 import { routes } from "@/constants/routes";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuthHydration } from "@/hooks/use-auth-hydration";
 import { useAuthStore } from "@/lib/auth-store";
 import { getAdminRedirect } from "@/modules/auth/route-guards";
@@ -16,12 +16,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const tAuth = useTranslations("auth.login");
   const tCommon = useTranslations("common.states");
   const tAdmin = useTranslations("admin.console");
+  const tUsers = useTranslations("admin.users");
+  const tOrgs = useTranslations("admin.orgs");
   const router = useRouter();
+  const pathname = usePathname();
   const hydrated = useAuthHydration();
   const token = useAuthStore((state) => state.token);
   const userType = useAuthStore((state) => state.userType);
   const profile = useAuthStore((state) => state.profile);
   const authReady = hydrated || Boolean(token && userType);
+
+  const pageTitle = (() => {
+    if (pathname === routes.admin) return tAdmin("title");
+    if (pathname.startsWith(routes.adminUsers)) return tUsers("pageTitle");
+    if (pathname.startsWith(routes.adminOrgs)) return tOrgs("pageTitle");
+    return tAdmin("title");
+  })();
 
   useEffect(() => {
     if (!authReady) return;
@@ -67,6 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       userType={userType}
       profileName={profile?.displayName ?? tAdmin("role")}
       profileAvatar={profile?.avatar ?? ""}
+      pageTitle={pageTitle}
       wide
     >
       {children}

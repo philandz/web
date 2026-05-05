@@ -27,6 +27,7 @@
     "income": "Income",
     "expense": "Expense",
     "spent": "Spent",
+    "noLimit": "No limit",
     "members": "members"
   },
   "create": {
@@ -60,7 +61,13 @@
     "tabCategories": "Categories",
     "tabMembers": "Members",
     "tabSettings": "Settings",
-    "add": "Add"
+    "memberSingular": "member",
+    "memberPlural": "members",
+    "percentUsed": "{percent}% used",
+    "add": "Add",
+    "spentThisMonth": "Spent this month",
+    "remaining": "remaining",
+    "overBudget": "over budget"
   },
   "overview": {
     "income": "Total Income",
@@ -205,7 +212,8 @@
     "archiveSuccess": "Category archived",
     "archiveError": "Failed to archive",
     "loadError": "Couldn't load categories",
-    "loadErrorHint": "Please try refreshing the page."
+    "loadErrorHint": "Please try refreshing the page.",
+    "readOnlyHint": "You can view categories, but only contributors, managers, and owners can create or edit them."
   },
   "catForm": {
     "createTitle": "Add Category",
