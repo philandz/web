@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { AlertCircle, ArrowDownLeft, ArrowUpRight, ListFilter, Paperclip, Plus, RefreshCw, ReceiptText, Search, TableProperties, Trash2 } from "lucide-react";
 import { DateRangeFilter, EnumFilter, FilterBadge, Pagination, SortButton, StatusChip } from "@/components/philand/data-table";
 import { TransactionDetailDrawer } from "@/components/philand/transaction-detail-drawer";
@@ -13,12 +14,14 @@ import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBulkTransactionMutation, useTransactionsQuery } from "@/modules/transaction/hooks";
 import { useCategoriesQuery } from "@/modules/category/hooks";
 import { useBudgetMembersQuery } from "@/modules/budget/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import type { Transaction, TransactionListParams, TransactionType } from "@/services/transaction-service";
 import { cn } from "@/lib/utils";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 function fmt(amount: number, currency: string) {
   return new Intl.NumberFormat("vi-VN", {
@@ -40,6 +43,8 @@ interface TransactionsTabProps {
   currency?: string;
   /** When true, shows a budget filter column (used on global transactions page) */
   showBudgetFilter?: boolean;
+  /** When true, keeps filter state in URL search params */
+  persistFiltersInUrl?: boolean;
 }
 
 export function TransactionsTab({
@@ -47,27 +52,57 @@ export function TransactionsTab({
   budgetIds,
   currency = "VND",
   showBudgetFilter = false,
+  persistFiltersInUrl = true,
 }: TransactionsTabProps) {
   const t = useTranslations("budget.transactions");
   const toast = useToast();
 
-  const [params, setParams] = useState<TransactionListParams>({
-    budgetId: budgetId || undefined,
-    budgetIds: !budgetId && budgetIds?.length ? budgetIds : undefined,
-    page: 1,
-    pageSize: 20,
-  });
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
 
-  // Sync budgetId prop changes (e.g. user switches budget on global page)
-  useEffect(() => {
-    setParams((p) => ({
-      ...p,
-      budgetId: budgetId || undefined,
-      budgetIds: !budgetId && budgetIds?.length ? budgetIds : undefined,
-      page: 1,
-    }));
-    setSelected(new Set());
-  }, [budgetId, budgetIds]);
+  const readUrlParams = useCallback(() => {
+    // Prefix keeps these scoped (budget detail already uses `tab=...`).
+    const q = searchParams.get("tx_q") || undefined;
+    const type = (searchParams.get("tx_type") as TransactionType | null) || undefined;
+    const categoryId = searchParams.get("tx_category") || undefined;
+    const dateFrom = searchParams.get("tx_from") || undefined;
+    const dateTo = searchParams.get("tx_to") || undefined;
+    const page = Number(searchParams.get("tx_page") || "1") || 1;
+    const pageSize = Number(searchParams.get("tx_pageSize") || "20") || 20;
+    const sortBy = (searchParams.get("tx_sortBy") as TransactionListParams["sortBy"] | null) || undefined;
+    const sortDir = (searchParams.get("tx_sortDir") as TransactionListParams["sortDir"] | null) || undefined;
+
+    return { q, type, categoryId, dateFrom, dateTo, page, pageSize, sortBy, sortDir };
+  }, [searchParams]);
+
+  const writeUrlParams = useCallback((next: Partial<TransactionListParams>) => {
+    if (!persistFiltersInUrl) return;
+
+    const sp = new URLSearchParams(searchParams.toString());
+    const setOrDelete = (key: string, value: string | number | undefined | null) => {
+      if (value === undefined || value === null || value === "") sp.delete(key);
+      else sp.set(key, String(value));
+    };
+
+    // Only touch keys explicitly provided, otherwise keep current URL state.
+    if ("q" in next) setOrDelete("tx_q", next.q);
+    if ("type" in next) setOrDelete("tx_type", next.type);
+    if ("categoryId" in next) setOrDelete("tx_category", next.categoryId);
+    if ("dateFrom" in next) setOrDelete("tx_from", next.dateFrom);
+    if ("dateTo" in next) setOrDelete("tx_to", next.dateTo);
+    if ("page" in next) setOrDelete("tx_page", next.page);
+    if ("pageSize" in next) setOrDelete("tx_pageSize", next.pageSize);
+    if ("sortBy" in next) setOrDelete("tx_sortBy", next.sortBy);
+    if ("sortDir" in next) setOrDelete("tx_sortDir", next.sortDir);
+
+    const qs = sp.toString();
+    startTransition(() => {
+      router.replace(qs ? `${pathname}?${qs}` : pathname);
+    });
+  }, [persistFiltersInUrl, pathname, router, searchParams, startTransition]);
+
   const [sortKey, setSortKey] = useState("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -77,6 +112,40 @@ export function TransactionsTab({
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  const [params, setParams] = useState<TransactionListParams>({
+    budgetId: budgetId || undefined,
+    budgetIds: !budgetId && budgetIds?.length ? budgetIds : undefined,
+    page: 1,
+    pageSize: 20,
+  });
+
+  // Initialize from URL (and keep in sync when user uses back/forward).
+  useEffect(() => {
+    if (!persistFiltersInUrl) return;
+    const u = readUrlParams();
+    setParams((p) => ({
+      ...p,
+      ...u,
+      budgetId: budgetId || undefined,
+      budgetIds: !budgetId && budgetIds?.length ? budgetIds : undefined,
+    }));
+    setSortKey(u.sortBy ?? "");
+    setSortDir(u.sortDir ?? "desc");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistFiltersInUrl, readUrlParams, searchParams]);
+
+  // Sync budgetId prop changes (e.g. user switches budget on global page)
+  useEffect(() => {
+    setParams((p) => ({
+      ...p,
+      budgetId: budgetId || undefined,
+      budgetIds: !budgetId && budgetIds?.length ? budgetIds : undefined,
+      page: 1,
+    }));
+    writeUrlParams({ page: 1 });
+    setSelected(new Set());
+  }, [budgetId, budgetIds, writeUrlParams]);
+
   const { data, isLoading, isError } = useTransactionsQuery(params);
   const { data: categories = [] } = useCategoriesQuery(budgetId || null);
   const { data: members = [] } = useBudgetMembersQuery(budgetId || null);
@@ -84,7 +153,7 @@ export function TransactionsTab({
   const bulkMutation = useBulkTransactionMutation();
 
   const categoryMap = useMemo(
-    () => new Map(categories.map((c) => [c.id, c.name])),
+    () => new Map(categories.map((c) => [c.id, { name: c.name, color: c.color, icon: c.icon }])),
     [categories],
   );
 
@@ -97,7 +166,11 @@ export function TransactionsTab({
   const meta = data?.meta ?? { page: 1, pageSize: 20, totalPages: 1, totalRows: 0 };
 
   function update(patch: Partial<TransactionListParams>) {
-    setParams((p) => ({ ...p, ...patch, page: patch.page ?? 1 }));
+    setParams((p) => {
+      const next = { ...p, ...patch, page: patch.page ?? 1 };
+      writeUrlParams(next);
+      return next;
+    });
     setSelected(new Set());
   }
 
@@ -162,21 +235,45 @@ export function TransactionsTab({
             <ListFilter className="h-4 w-4" />
           </Button>
 
-          {/* Add Transaction button */}
-          {budgetId && (
-            <Button size="sm" onClick={() => setCreateOpen(true)} className="shrink-0">
-              <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">{t("addTransaction")}</span>
-            </Button>
-          )}
-
-          {/* Quick Add button */}
-          {budgetId && (
-            <Button size="sm" variant="outline" onClick={() => setQuickAddOpen(true)} className="shrink-0">
-              <TableProperties className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">{t("quickAdd")}</span>
-            </Button>
-          )}
+          {/* Add transaction — split button */}
+          {budgetId ? (
+            <DropdownMenu>
+              <div className="flex shrink-0 items-stretch">
+                {/* Left: direct open form */}
+                <Button
+                  size="sm"
+                  className="rounded-r-none border-r border-r-white/20 pr-3"
+                  onClick={() => setCreateOpen(true)}
+                >
+                  <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">{t("addTransaction")}</span>
+                </Button>
+                {/* Right: chevron dropdown */}
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" className="rounded-l-none px-2">
+                    <span className="text-xs">▾</span>
+                  </Button>
+                </DropdownMenuTrigger>
+              </div>
+              <DropdownMenuContent align="end" className="min-w-[210px]">
+                <DropdownMenuItem onClick={() => setCreateOpen(true)}>
+                  <ReceiptText className="mr-2 h-4 w-4" />
+                  <div>
+                    <div className="font-semibold">{t("addTransaction")}</div>
+                    <div className="text-xs text-muted-foreground">Full form — date, amount, category</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setQuickAddOpen(true)}>
+                  <TableProperties className="mr-2 h-4 w-4" />
+                  <div>
+                    <div className="font-semibold">{t("quickAdd")}</div>
+                    <div className="text-xs text-muted-foreground">Spreadsheet — paste or CSV</div>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </div>
 
         {/* Row 2: secondary filters — stacked on mobile, inline on desktop */}
@@ -229,16 +326,39 @@ export function TransactionsTab({
         </div>
       </div>
       {hasFilters && (
-        <div className="flex flex-wrap gap-1.5">
-          {params.type && <FilterBadge label={params.type} onClear={() => update({ type: undefined })} />}
-          {params.categoryId && (
-            <FilterBadge
-              label={categories.find((c) => c.id === params.categoryId)?.name ?? params.categoryId}
-              onClear={() => update({ categoryId: undefined })}
-            />
-          )}
-          {params.dateFrom && <FilterBadge label={`From ${params.dateFrom}`} onClear={() => update({ dateFrom: undefined })} />}
-          {params.dateTo && <FilterBadge label={`To ${params.dateTo}`} onClear={() => update({ dateTo: undefined })} />}
+        <div className="space-y-1.5">
+          {/* Summary pills */}
+          {transactions.length > 0 && (() => {
+            const filteredIncome  = transactions.filter((tx) => tx.type === "income").reduce((s, tx) => s + tx.amount, 0);
+            const filteredExpense = transactions.filter((tx) => tx.type === "expense").reduce((s, tx) => s + tx.amount, 0);
+            return (
+              <div className="flex flex-wrap items-center gap-2">
+                {filteredIncome > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:text-emerald-400">
+                    ↑ {fmt(filteredIncome, currency)}
+                  </span>
+                )}
+                {filteredExpense > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-600 dark:border-red-800 dark:text-red-400">
+                    ↓ {fmt(filteredExpense, currency)}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground">{meta.totalRows} results</span>
+              </div>
+            );
+          })()}
+          {/* Active filter chips */}
+          <div className="flex flex-wrap gap-1.5">
+            {params.type && <FilterBadge label={params.type} onClear={() => update({ type: undefined })} />}
+            {params.categoryId && (
+              <FilterBadge
+                label={categoryMap.get(params.categoryId)?.name ?? params.categoryId}
+                onClear={() => update({ categoryId: undefined })}
+              />
+            )}
+            {params.dateFrom && <FilterBadge label={`From ${params.dateFrom}`} onClear={() => update({ dateFrom: undefined })} />}
+            {params.dateTo && <FilterBadge label={`To ${params.dateTo}`} onClear={() => update({ dateTo: undefined })} />}
+          </div>
         </div>
       )}
 
@@ -342,8 +462,24 @@ export function TransactionsTab({
                     <td className="max-w-[200px] px-4 py-3 font-medium text-foreground">
                       <p className="truncate">{tx.description}</p>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {categoryMap.get(tx.categoryId ?? "") ?? "—"}
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const cat = categoryMap.get(tx.categoryId ?? "");
+                        if (!cat) return <span className="text-muted-foreground">—</span>;
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold"
+                            style={{
+                              background: `${cat.color}18`,
+                              color: cat.color,
+                              border: `1px solid ${cat.color}33`,
+                            }}
+                          >
+                            {cat.icon && <span>{cat.icon}</span>}
+                            {cat.name}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className={cn(
                       "px-4 py-3 text-right font-semibold tabular-nums",
@@ -455,8 +591,8 @@ export function TransactionsTab({
                       })()}
                       <p className="text-[11px] text-muted-foreground">
                         {fmtDate(tx.date)}
-                        {categoryMap.get(tx.categoryId ?? "")
-                          ? ` · ${categoryMap.get(tx.categoryId ?? "")}`
+                        {categoryMap.get(tx.categoryId ?? "")?.name
+                          ? ` · ${categoryMap.get(tx.categoryId ?? "")?.name}`
                           : ""}
                       </p>
                     </div>

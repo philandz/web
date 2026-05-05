@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/state/toast-provider";
 import { useArchiveCategoryMutation, useCategoriesQuery, useDeleteCategoryMutation } from "@/modules/category/hooks";
+import type { BudgetRole } from "@/services/budget-service";
 import type { Category, CategoryType } from "@/services/category-service";
 import { cn } from "@/lib/utils";
 
@@ -34,9 +35,11 @@ interface CategoryRowProps {
   onDetail: (c: Category) => void;
   onArchive: (c: Category) => void;
   onDelete: (c: Category) => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
-function CategoryRow({ category, currency, onEdit, onDetail, onArchive, onDelete }: CategoryRowProps) {
+function CategoryRow({ category, currency, onEdit, onDetail, onArchive, onDelete, canEdit, canDelete }: CategoryRowProps) {
   const t = useTranslations("budget.categories");
   const usagePct = category.usagePct ?? 0;
   const barColor =
@@ -136,7 +139,7 @@ function CategoryRow({ category, currency, onEdit, onDetail, onArchive, onDelete
 
       {/* Actions */}
       <div
-        className="opacity-0 transition-opacity group-hover:opacity-100"
+        className={cn("transition-opacity", canEdit || canDelete ? "opacity-0 group-hover:opacity-100" : "hidden")}
         onClick={(e) => e.stopPropagation()}
       >
         <DropdownMenu>
@@ -146,16 +149,22 @@ function CategoryRow({ category, currency, onEdit, onDetail, onArchive, onDelete
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(category)}>
-              {t("edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onArchive(category)}>
-              {t("archive")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={() => onDelete(category)}>
-              {t("delete")}
-            </DropdownMenuItem>
+            {canEdit ? (
+              <>
+                <DropdownMenuItem onClick={() => onEdit(category)}>
+                  {t("edit")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onArchive(category)}>
+                  {t("archive")}
+                </DropdownMenuItem>
+              </>
+            ) : null}
+            {canEdit && canDelete ? <DropdownMenuSeparator /> : null}
+            {canDelete ? (
+              <DropdownMenuItem className="text-destructive" onClick={() => onDelete(category)}>
+                {t("delete")}
+              </DropdownMenuItem>
+            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -178,6 +187,8 @@ interface CategorySectionProps {
   onArchive: (c: Category) => void;
   onDelete: (c: Category) => void;
   onAdd: (type: CategoryType) => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 function CategorySection({
@@ -191,6 +202,8 @@ function CategorySection({
   onArchive,
   onDelete,
   onAdd,
+  canEdit,
+  canDelete,
 }: CategorySectionProps) {
   const t = useTranslations("budget.categories");
 
@@ -204,10 +217,12 @@ function CategorySection({
             {categories.length} {t("items")}
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => onAdd(type)}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
-          {t("add")}
-        </Button>
+        {canEdit ? (
+          <Button size="sm" variant="outline" onClick={() => onAdd(type)}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            {t("add")}
+          </Button>
+        ) : null}
       </div>
 
       {/* Column headers (desktop only) */}
@@ -232,10 +247,12 @@ function CategorySection({
           <div>
             <p className="text-sm text-muted-foreground">{t("empty")}</p>
           </div>
-          <Button size="sm" variant="outline" onClick={() => onAdd(type)}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            {t("add")}
-          </Button>
+          {canEdit ? (
+            <Button size="sm" variant="outline" onClick={() => onAdd(type)}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              {t("add")}
+            </Button>
+          ) : null}
         </div>
       ) : (
         <div className="divide-y divide-border/40">
@@ -249,6 +266,8 @@ function CategorySection({
               onDetail={onDetail}
               onArchive={onArchive}
               onDelete={onDelete}
+              canEdit={canEdit}
+              canDelete={canDelete}
             />
           ))}
         </div>
@@ -264,11 +283,13 @@ function CategorySection({
 interface CategoriesTabProps {
   budgetId: string;
   currency?: string;
+  myRole?: BudgetRole;
 }
 
 export function CategoriesTab({
   budgetId,
   currency = "VND",
+  myRole = "contributor",
 }: CategoriesTabProps) {
   const t = useTranslations("budget.categories");
   const toast = useToast();
@@ -284,6 +305,9 @@ export function CategoriesTab({
   const [formOpen, setFormOpen] = useState(false);
   const [formType, setFormType] = useState<CategoryType>("expense");
   const [showArchived, setShowArchived] = useState(false);
+
+  const canEdit = myRole === "owner" || myRole === "manager" || myRole === "contributor";
+  const canDelete = myRole === "owner" || myRole === "manager";
 
   const active   = categories.filter((c) => !c.archived);
   const archived = categories.filter((c) => c.archived);
@@ -338,6 +362,8 @@ export function CategoriesTab({
         onArchive={handleArchive}
         onDelete={setDeleteTarget}
         onAdd={openAdd}
+        canEdit={canEdit}
+        canDelete={canDelete}
       />
 
       <CategorySection
@@ -351,7 +377,15 @@ export function CategoriesTab({
         onArchive={handleArchive}
         onDelete={setDeleteTarget}
         onAdd={openAdd}
+        canEdit={canEdit}
+        canDelete={canDelete}
       />
+
+      {!canEdit ? (
+        <div className="surface-panel rounded-2xl px-5 py-4 text-sm text-muted-foreground md:px-6">
+          {t("readOnlyHint")}
+        </div>
+      ) : null}
 
       {/* Archived section */}
       {archived.length > 0 && (

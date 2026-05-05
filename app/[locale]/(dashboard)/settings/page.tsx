@@ -1,8 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Paintbrush2, SlidersHorizontal } from "lucide-react";
+import { Paintbrush2, Settings2, SlidersHorizontal } from "lucide-react";
 
+import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
@@ -15,11 +16,12 @@ export default function SettingsPage() {
   const tenant = useTenantContext();
 
   return (
-    <section className="space-y-5">
-      <header className="surface-panel rounded-2xl p-5 md:p-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
-      </header>
+    <section className="space-y-5 animate-fade-in-up">
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        icon={<Settings2 className="h-5 w-5" />}
+      />
 
       <article className="surface-panel rounded-2xl p-5 md:p-6">
         <div className="mb-4 flex items-start gap-3">

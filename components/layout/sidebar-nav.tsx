@@ -8,8 +8,6 @@ import {
   Building2,
   ChevronDown,
   LayoutDashboard,
-  Settings2,
-  UserCircle2,
   Users,
   Wallet,
   ArrowLeftRight,
@@ -37,7 +35,6 @@ interface SidebarNavProps {
   onNavigateAdminOrgs?: () => void;
   onNavigateBudgets?: () => void;
   onNavigateTransactions?: () => void;
-  onNavigateSettings: () => void;
   onSignOut: () => void;
 }
 
@@ -97,7 +94,6 @@ export function SidebarNav({
   onNavigateAdminOrgs,
   onNavigateBudgets,
   onNavigateTransactions,
-  onNavigateSettings,
   onSignOut,
 }: SidebarNavProps) {
   const tShell = useTranslations("dashboard.shell");
@@ -120,8 +116,6 @@ export function SidebarNav({
 
   const isRoot = pathname === "/" || pathname === "";
   const isOrgs = pathname === "/organization" || pathname.startsWith("/organization/") || pathname.includes("select-organization");
-  const isProfile = pathname.includes("profile");
-  const isSettings = pathname.includes("settings");
   const isAdminUsers = pathname.includes("admin/users");
   const isAdminOrgs = pathname.includes("admin/organizations");
   const isBudgets = pathname === "/budgets" || pathname.startsWith("/budgets/");
@@ -186,24 +180,6 @@ export function SidebarNav({
           </>
         ) : null}
       </nav>
-
-      {/* Secondary nav — only for normal users */}
-      {userType !== "super_admin" ? (
-        <div className="mt-4 border-t border-border/50 px-1 pt-4 space-y-0.5">
-          <NavItem
-            icon={UserCircle2}
-            label={tShell("profile")}
-            active={isProfile}
-            onClick={() => router.push("/profile")}
-          />
-          <NavItem
-            icon={Settings2}
-            label={tShell("settings")}
-            active={isSettings}
-            onClick={onNavigateSettings}
-          />
-        </div>
-      ) : null}
 
       {/* User menu — bottom */}
       <div ref={profileRef} className="relative mt-auto px-1 pt-4">
