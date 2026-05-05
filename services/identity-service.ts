@@ -88,6 +88,21 @@ export const identityService = {
     };
   },
 
+  async loginWithGoogle(idToken: string): Promise<LoginResult> {
+    const raw = await apiClient.post<RawLoginResponse>(`${BASE_PATH}/auth/google`, {
+      id_token: idToken,
+    });
+    return {
+      token: raw.access_token,
+      userType: normalizeUserType(raw.user_type),
+      organizations: raw.organizations.map((org) => ({
+        id: org.id,
+        name: org.name,
+        role: normalizeOrgRole(org.role),
+      })),
+    };
+  },
+
   async profile(): Promise<IdentityProfile> {
     const raw = await apiClient.get<RawProfileResponse>(`${BASE_PATH}/profile`);
 
