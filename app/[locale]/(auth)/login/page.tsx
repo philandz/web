@@ -9,6 +9,7 @@ import { AuthButton } from "@/components/auth/auth-button";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { InlineAlert } from "@/components/state/inline-alert";
+import { LoadingSpinner } from "@/components/state/loading-spinner";
 import { routes } from "@/constants/routes";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/lib/auth-store";
@@ -32,21 +33,40 @@ declare global {
             callback: (response: { credential: string }) => void;
             auto_select?: boolean;
           }) => void;
-          renderButton: (
-            element: HTMLElement,
-            options: {
-              theme?: string;
-              size?: string;
-              width?: number;
-              text?: string;
-              shape?: string;
-            }
-          ) => void;
+          renderButton: (parent: HTMLElement, options: {
+            theme?: "outline" | "filled_blue" | "filled_black";
+            size?: "large" | "medium" | "small";
+            width?: number;
+            text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+          }) => void;
           prompt: () => void;
         };
       };
     };
   }
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z"
+      />
+    </svg>
+  );
 }
 
 function GoogleSignInButton({
@@ -73,30 +93,23 @@ function GoogleSignInButton({
       window.google.accounts.id.renderButton(containerRef.current, {
         theme: "outline",
         size: "large",
-        width: containerRef.current.offsetWidth || 400,
+        width: 500,
         text: "continue_with",
-        shape: "rectangular",
       });
       setSdkReady(true);
     }
 
-    // If SDK already loaded
     if (window.google) {
       initGoogle();
       return;
     }
 
-    // Load SDK script
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
     script.onload = initGoogle;
     document.head.appendChild(script);
-
-    return () => {
-      // cleanup: remove script if component unmounts before load
-    };
   }, [clientId, onCredential]);
 
   if (!clientId) return null;
@@ -104,16 +117,21 @@ function GoogleSignInButton({
   return (
     <div
       className={cn(
-        "w-full overflow-hidden rounded-xl transition-opacity",
-        loading && "pointer-events-none opacity-50",
+        "relative h-11 w-full rounded-xl",
+        (loading || !sdkReady) && "pointer-events-none opacity-60",
       )}
     >
-      <div ref={containerRef} className="w-full" />
-      {!sdkReady && (
-        <div className="flex h-10 w-full items-center justify-center rounded-xl border border-border bg-card text-sm text-muted-foreground">
-          Loading Google…
-        </div>
-      )}
+      {/* Styled layer — visual only, clicks pass through */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition duration-200 hover:bg-muted/70">
+        {loading ? <LoadingSpinner className="h-3.5 w-3.5" /> : <GoogleIcon />}
+        <span>Continue with Google</span>
+      </div>
+
+      {/* Google's rendered button — transparent overlay, receives clicks */}
+      <div
+        ref={containerRef}
+        className="absolute inset-0 overflow-hidden opacity-0 [&>div]:!h-full [&>div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full"
+      />
     </div>
   );
 }

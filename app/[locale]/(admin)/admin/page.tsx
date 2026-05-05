@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { Building2, ShieldCheck, Users } from "lucide-react";
 
+import { PageHeader } from "@/components/layout/page-header";
 import { StaggerItem } from "@/components/motion/stagger-item";
-import { PageToolbar } from "@/components/philand/page-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuthStore } from "@/lib/auth-store";
@@ -20,20 +20,16 @@ export default function AdminPage() {
   const superAdminCount = users.filter((u) => u.userType === "super_admin").length;
   return (
     <div className="space-y-6">
-      <StaggerItem delay={0}><PageToolbar /></StaggerItem>
-      <StaggerItem delay={40}>
-        <Card className="rounded-2xl border-none bg-gradient-to-r from-slate-900 to-slate-800 text-white">
-          <CardContent className="flex flex-col gap-4 pt-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-slate-300">{t("badge")}</p>
-              <h1 className="text-3xl font-semibold">{t("title")}</h1>
-              <p className="mt-1 text-sm text-slate-300">{t("loggedInAs", { name: profile?.displayName ?? t("role"), email: profile?.email ?? "-" })}</p>
-            </div>
-            <Badge className="bg-highlight text-slate-900 self-start md:self-auto"><ShieldCheck className="mr-1 h-3.5 w-3.5" /> {t("role")}</Badge>
-          </CardContent>
-        </Card>
+      <StaggerItem delay={0}>
+        <PageHeader
+          title={t("title")}
+          description={t("loggedInAs", { name: profile?.displayName ?? t("role"), email: profile?.email ?? "-" })}
+          eyebrow={t("badge")}
+          icon={<ShieldCheck className="h-5 w-5" />}
+          actions={<Badge className="bg-highlight text-slate-900"><ShieldCheck className="mr-1 h-3.5 w-3.5" /> {t("role")}</Badge>}
+        />
       </StaggerItem>
-      <StaggerItem delay={80}>
+      <StaggerItem delay={40}>
         <div className="grid gap-4 sm:grid-cols-3">
           {[
             { label: t("kpiUsers"), value: users.length, icon: Users },

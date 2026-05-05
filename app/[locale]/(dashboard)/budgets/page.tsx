@@ -7,8 +7,10 @@ import {
   PiggyBank, Plus, Search, Share2, Wallet,
 } from "lucide-react";
 
+import { PageHeader } from "@/components/layout/page-header";
 import { BudgetCard } from "@/components/philand/budget-card";
 import { CreateBudgetDialog } from "@/components/philand/create-budget-dialog";
+import { EmptyState } from "@/components/state/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select";
@@ -97,12 +99,7 @@ export default function BudgetsPage() {
   // ── No org selected ──
   if (!orgId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-          <Wallet className="h-7 w-7 text-muted-foreground/60" />
-        </div>
-        <p className="text-sm font-medium text-foreground">{t("noOrg")}</p>
-      </div>
+      <EmptyState title={t("noOrg")} />
     );
   }
 
@@ -111,18 +108,17 @@ export default function BudgetsPage() {
   return (
     <div className="animate-fade-in-up space-y-6">
       {/* ── Page header ── */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {t("title")}
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{t("subtitle")}</p>
-        </div>
-        <Button size="sm" onClick={() => setShowCreate(true)} className="shrink-0">
-          <Plus className="h-4 w-4 sm:mr-1.5" />
-          <span className="hidden sm:inline">{t("create")}</span>
-        </Button>
-      </div>
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        icon={<Wallet className="h-5 w-5" />}
+        actions={(
+          <Button size="sm" onClick={() => setShowCreate(true)} className="shrink-0">
+            <Plus className="h-4 w-4 sm:mr-1.5" />
+            <span className="hidden sm:inline">{t("create")}</span>
+          </Button>
+        )}
+      />
 
       {/* ── Toolbar ── */}
       <div className="space-y-2.5">
@@ -226,17 +222,16 @@ export default function BudgetsPage() {
           ))}
         </div>
       ) : budgets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/20 py-24 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-            <Wallet className="h-7 w-7 text-muted-foreground/60" />
-          </div>
-          <p className="text-sm font-semibold text-foreground">{t("emptyTitle")}</p>
-          <p className="mt-1.5 max-w-xs text-sm text-muted-foreground">{t("emptySubtitle")}</p>
-          <Button size="sm" className="mt-5" onClick={() => setShowCreate(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            {t("create")}
-          </Button>
-        </div>
+        <EmptyState
+          title={t("emptyTitle")}
+          description={t("emptySubtitle")}
+          action={(
+            <Button size="sm" onClick={() => setShowCreate(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              {t("create")}
+            </Button>
+          )}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {budgets.map((budget) => (
