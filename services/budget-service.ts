@@ -245,11 +245,11 @@ export const budgetService = {
 
   async addMember(
     budgetId: string,
-    input: { userId: string; role: BudgetRole }
+    input: { email: string; role: BudgetRole }
   ): Promise<BudgetMember> {
     const raw = await apiClient.post<{ member: RawMember }>(
       `${BASE}/budgets/${budgetId}/members`,
-      { user_id: input.userId, role: input.role }
+      { email: input.email, role: input.role }
     );
     return mapMember(raw.member);
   },

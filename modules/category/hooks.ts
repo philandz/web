@@ -15,6 +15,16 @@ export function useCategoriesQuery(budgetId: string | null) {
   });
 }
 
+export function useCategoryQuery(categoryId: string | null) {
+  return useQuery({
+    queryKey: categoryKeys.detail(categoryId ?? ""),
+    queryFn: () => categoryService.getCategory(categoryId!),
+    enabled: Boolean(categoryId),
+    retry: false,
+    throwOnError: false,
+  });
+}
+
 export function useCreateCategoryMutation(budgetId: string) {
   const qc = useQueryClient();
   return useMutation({
