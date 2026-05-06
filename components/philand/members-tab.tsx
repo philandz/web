@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { MoreHorizontal, UserPlus } from "lucide-react";
+import { MoreHorizontal, UserPlus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,6 +13,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { SectionLoadingState } from "@/components/state/section-loading-state";
 import { useToast } from "@/components/state/toast-provider";
 import { useAddMemberMutation, useBudgetMembersQuery, useRemoveMemberMutation, useUpdateMemberRoleMutation } from "@/modules/budget/hooks";
+import { useOrgMembersQuery } from "@/modules/tenant/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import type { BudgetMember, BudgetRole } from "@/services/budget-service";
 import { cn } from "@/lib/utils";
@@ -46,20 +47,36 @@ function RoleBadge({ role }: { role: BudgetRole }) {
 // Invite dialog
 // ---------------------------------------------------------------------------
 
-function InviteMemberDialog({ open, onClose, budgetId }: { open: boolean; onClose: () => void; budgetId: string }) {
+function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }: { open: boolean; onClose: () => void; budgetId: string; orgId: string; existingMembers: BudgetMember[] }) {
   const t = useTranslations("budget.members");
   const toast = useToast();
   const mutation = useAddMemberMutation(budgetId);
-  const [userId, setUserId] = useState("");
+  const { data: orgMembers = [], isLoading: loadingMembers } = useOrgMembersQuery(orgId);
+  const [search, setSearch] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
   const [role, setRole] = useState<BudgetRole>("contributor");
+
+  const currentUserId = useAuthStore((s) => s.profile?.id);
+
+  const existingMemberIds = useMemo(() => new Set(existingMembers.map((m) => m.userId)), [existingMembers]);
+
+  const filteredMembers = useMemo(() => {
+    return orgMembers.filter((m) => {
+      if (m.userId === currentUserId) return false;
+      if (existingMemberIds.has(m.userId)) return false;
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return m.displayName.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+    });
+  }, [orgMembers, search, currentUserId, existingMemberIds]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!userId.trim()) return;
+    if (!selectedUserId) return;
     mutation.mutate(
-      { userId: userId.trim(), role },
+      { userId: selectedUserId, role },
       {
-        onSuccess: () => { toast.success(t("inviteSuccess")); onClose(); setUserId(""); setRole("contributor"); },
+        onSuccess: () => { toast.success(t("inviteSuccess")); onClose(); setSelectedUserId(""); setSearch(""); setRole("contributor"); },
         onError: () => toast.error(t("inviteError")),
       }
     );
@@ -71,13 +88,45 @@ function InviteMemberDialog({ open, onClose, budgetId }: { open: boolean; onClos
         <DialogHeader><DialogTitle>{t("inviteTitle")}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label>{t("userId")}</Label>
-            <Input
-              required
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder={t("userIdPlaceholder")}
-            />
+            <Label>{t("selectUser")}</Label>
+            {loadingMembers ? (
+              <p className="text-sm text-muted-foreground">{t("loading")}</p>
+            ) : (
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setSelectedUserId(""); }}
+                    placeholder={t("searchPlaceholder")}
+                    className="pl-9"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-muted/30">
+                  {filteredMembers.length === 0 ? (
+                    <p className="p-3 text-center text-sm text-muted-foreground">{t("noMembersFound")}</p>
+                  ) : (
+                    filteredMembers.map((m) => (
+                      <button
+                        key={m.userId}
+                        type="button"
+                        onClick={() => setSelectedUserId(m.userId)}
+                        className={cn(
+                          "flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-muted/60",
+                          selectedUserId === m.userId && "bg-muted"
+                        )}
+                      >
+                        <UserAvatar name={m.displayName} size={28} fallbackClassName="text-xs" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{m.displayName}</p>
+                          <p className="truncate text-xs text-muted-foreground">{m.email}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>{t("role")}</Label>
@@ -90,7 +139,7 @@ function InviteMemberDialog({ open, onClose, budgetId }: { open: boolean; onClos
           {mutation.isError ? <p className="text-xs text-destructive">{t("inviteError")}</p> : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button type="submit" disabled={mutation.isPending || !selectedUserId}>
               {mutation.isPending ? t("inviting") : t("invite")}
             </Button>
           </DialogFooter>
@@ -159,10 +208,11 @@ function ChangeRoleDialog({ member, budgetId, onClose }: { member: BudgetMember;
 
 interface MembersTabProps {
   budgetId: string;
+  orgId: string;
   myRole: BudgetRole;
 }
 
-export function MembersTab({ budgetId, myRole }: MembersTabProps) {
+export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
   const t = useTranslations("budget.members");
   const toast = useToast();
   const profile = useAuthStore((s) => s.profile);
@@ -274,6 +324,8 @@ export function MembersTab({ budgetId, myRole }: MembersTabProps) {
         open={localInviteOpen}
         onClose={() => setLocalInviteOpen(false)}
         budgetId={budgetId}
+        orgId={orgId}
+        existingMembers={members}
       />
 
       {/* Change role dialog */}
