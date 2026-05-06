@@ -432,4 +432,27 @@ export const transactionService = {
       })),
     };
   },
+
+  async updateRecurrenceRule(entryId: string, recurrenceRule: string): Promise<Transaction> {
+    const raw = await apiClient.patch<RawEntry>(`${BASE}/entries/${entryId}/recurrence`, {
+      recurrence_rule: recurrenceRule,
+    });
+    return mapEntry(raw);
+  },
+
+  async cancelRecurrence(entryId: string): Promise<Transaction> {
+    const raw = await apiClient.request<RawEntry>(`${BASE}/entries/${entryId}/recurrence`, { method: "DELETE" });
+    return mapEntry(raw);
+  },
+
+  async listSplitLegs(entryId: string): Promise<{ splitGroupId: string; legs: Transaction[] }> {
+    const raw = await apiClient.get<{
+      split_group_id: string;
+      legs: RawEntry[];
+    }>(`${BASE}/entries/${entryId}/split-legs`);
+    return {
+      splitGroupId: raw.split_group_id,
+      legs: (raw.legs ?? []).map(mapEntry),
+    };
+  },
 };
