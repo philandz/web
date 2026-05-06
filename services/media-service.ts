@@ -83,6 +83,10 @@ export const mediaService = {
     return r.download_url;
   },
 
+  async deleteFile(fileId: string): Promise<void> {
+    await apiClient.request(`${BASE_PATH}/files/${fileId}`, { method: "DELETE" });
+  },
+
   /**
    * Full upload flow: init → PUT to S3 → complete → get presigned download URL.
    * Returns a presigned GET URL valid for the configured download TTL.

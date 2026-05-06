@@ -413,7 +413,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
   return (
     <div className="space-y-4">
       {/* ── KPI cards ── */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-4">
         <SummaryCard
           label={t("income")}
           value={fmt(income, budget.currency)}

@@ -17,6 +17,7 @@ export const budgetKeys = {
 export const categoryKeys = {
   all: ["categories"] as const,
   list: (budgetId: string) => [...categoryKeys.all, budgetId] as const,
+  detail: (categoryId: string) => [...categoryKeys.all, "detail", categoryId] as const,
 };
 
 export const transactionKeys = {
