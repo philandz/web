@@ -53,30 +53,30 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
   const mutation = useAddMemberMutation(budgetId);
   const { data: orgMembers = [], isLoading: loadingMembers } = useOrgMembersQuery(orgId);
   const [search, setSearch] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedEmail, setSelectedEmail] = useState("");
   const [role, setRole] = useState<BudgetRole>("contributor");
 
   const currentUserId = useAuthStore((s) => s.profile?.id);
 
-  const existingMemberIds = useMemo(() => new Set(existingMembers.map((m) => m.userId)), [existingMembers]);
+  const existingEmails = useMemo(() => new Set(existingMembers.map((m) => m.email)), [existingMembers]);
 
   const filteredMembers = useMemo(() => {
     return orgMembers.filter((m) => {
       if (m.userId === currentUserId) return false;
-      if (existingMemberIds.has(m.userId)) return false;
+      if (existingEmails.has(m.email)) return false;
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return m.displayName.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
     });
-  }, [orgMembers, search, currentUserId, existingMemberIds]);
+  }, [orgMembers, search, currentUserId, existingEmails]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedUserId) return;
+    if (!selectedEmail) return;
     mutation.mutate(
-      { userId: selectedUserId, role },
+      { email: selectedEmail, role },
       {
-        onSuccess: () => { toast.success(t("inviteSuccess")); onClose(); setSelectedUserId(""); setSearch(""); setRole("contributor"); },
+        onSuccess: () => { toast.success(t("inviteSuccess")); onClose(); setSelectedEmail(""); setSearch(""); setRole("contributor"); },
         onError: () => toast.error(t("inviteError")),
       }
     );
@@ -97,7 +97,7 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     value={search}
-                    onChange={(e) => { setSearch(e.target.value); setSelectedUserId(""); }}
+                    onChange={(e) => { setSearch(e.target.value); setSelectedEmail(""); }}
                     placeholder={t("searchPlaceholder")}
                     className="pl-9"
                   />
@@ -110,10 +110,10 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                       <button
                         key={m.userId}
                         type="button"
-                        onClick={() => setSelectedUserId(m.userId)}
+                        onClick={() => setSelectedEmail(m.email)}
                         className={cn(
                           "flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-muted/60",
-                          selectedUserId === m.userId && "bg-muted"
+                          selectedEmail === m.email && "bg-muted"
                         )}
                       >
                         <UserAvatar name={m.displayName} size={28} fallbackClassName="text-xs" />
@@ -139,7 +139,7 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
           {mutation.isError ? <p className="text-xs text-destructive">{t("inviteError")}</p> : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
-            <Button type="submit" disabled={mutation.isPending || !selectedUserId}>
+            <Button type="submit" disabled={mutation.isPending || !selectedEmail}>
               {mutation.isPending ? t("inviting") : t("invite")}
             </Button>
           </DialogFooter>

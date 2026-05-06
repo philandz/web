@@ -83,6 +83,11 @@ export const categoryService = {
     return (raw.categories ?? []).map(mapCategory);
   },
 
+  async getCategory(categoryId: string): Promise<Category> {
+    const raw = await apiClient.get<RawCategory>(`${BASE}/categories/${categoryId}`);
+    return mapCategory(raw);
+  },
+
   async createCategory(
     budgetId: string,
     input: { name: string; type: CategoryType; icon?: string; color?: string; plannedAmount?: number }
