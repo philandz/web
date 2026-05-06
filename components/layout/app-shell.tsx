@@ -70,7 +70,7 @@ export function AppShell({ userType, profileName, profileAvatar, pageTitle, chil
 
       {/* Main content */}
       <main className="flex-1 overflow-x-hidden">
-        <div className={cn("container py-6 pb-8 pt-20 md:pt-6", wide ? "max-w-6xl" : "max-w-4xl")}>
+        <div className={cn("container py-6 pb-8 pt-20 md:pt-6 px-4 sm:px-6", wide ? "max-w-6xl" : "max-w-5xl")}>
           {children}
         </div>
       </main>
