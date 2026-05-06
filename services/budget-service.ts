@@ -275,7 +275,7 @@ export const budgetService = {
   // Envelope limit
   async setEnvelope(budgetId: string, monthlyLimit: number): Promise<EnvelopeLimit> {
     const raw = await apiClient.request<{ envelope: RawEnvelope }>(
-      `${BASE}/budgets/${budgetId}/envelope`,
+      `${BASE}/budgets/${budgetId}/envelope-limit`,
       { method: "PUT", body: { monthly_limit: monthlyLimit } }
     );
     return mapEnvelope(raw.envelope);
