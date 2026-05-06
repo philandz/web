@@ -26,8 +26,15 @@ export interface Category {
 // Raw shapes — gateway returns flat objects
 // ---------------------------------------------------------------------------
 
+interface RawBase {
+  id?: string;
+  created_at?: number;
+  updated_at?: number;
+}
+
 interface RawCategory {
-  id: string;
+  base?: RawBase;
+  id?: string;
   budget_id: string;
   name: string;
   // gateway maps proto enum int → field name "cat_type"
@@ -50,7 +57,7 @@ function toCatType(v: number | string): CategoryType {
 
 function mapCategory(raw: RawCategory): Category {
   return {
-    id: raw.id,
+    id: raw.id ?? raw.base?.id ?? "",
     budgetId: raw.budget_id,
     name: raw.name,
     type: toCatType(raw.cat_type),
