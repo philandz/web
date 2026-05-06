@@ -914,7 +914,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
         {activeTab === "overview" ? <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} /> : null}
         {activeTab === "transactions" ? <BudgetTransactionsMock budget={budget} /> : null}
         {activeTab === "categories" ? <CategoriesTab budgetId={budget.id} currency={budget.currency} myRole={budget.myRole} /> : null}
-        {activeTab === "members" ? <MembersTab budgetId={budget.id} myRole={budget.myRole} /> : null}
+        {activeTab === "members" ? <MembersTab budgetId={budget.id} orgId={budget.orgId} myRole={budget.myRole} /> : null}
         {activeTab === "settings" ? <SettingsTab budget={budget} myRole={budget.myRole} /> : null}
       </div>
     </div>
