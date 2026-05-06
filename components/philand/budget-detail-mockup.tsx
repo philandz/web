@@ -794,7 +794,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
   const barColor = spendPct == null ? "hsl(var(--border))" : spendPct >= 100 ? "hsl(var(--expense))" : spendPct >= 80 ? "hsl(38 85% 50%)" : "hsl(var(--primary))";
 
   return (
-    <div className="mx-auto max-w-[1080px]">
+    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
       <Panel className="overflow-hidden">
         <div style={{ height: 3, background: `linear-gradient(90deg, ${cfg.stripe}, ${cfg.stripe}88)` }} />
 
@@ -881,7 +881,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
             </div>
           </div>
 
-          <div className="-mx-5 flex gap-1 border-b border-border px-5">
+          <div className="-mx-4 sm:-mx-6 flex gap-1 border-b border-border px-4 sm:px-6 overflow-x-auto scrollbar-hide -webkit-overflow-scrolling-touch">
             {([
               { id: "overview", label: tDetail("tabOverview") },
               { id: "transactions", label: tDetail("tabTransactions") },
@@ -914,7 +914,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
         {activeTab === "overview" ? <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} /> : null}
         {activeTab === "transactions" ? <BudgetTransactionsMock budget={budget} /> : null}
         {activeTab === "categories" ? <CategoriesTab budgetId={budget.id} currency={budget.currency} myRole={budget.myRole} /> : null}
-        {activeTab === "members" ? <MembersTab budgetId={budget.id} myRole={budget.myRole} /> : null}
+        {activeTab === "members" ? <MembersTab budgetId={budget.id} orgId={budget.orgId} myRole={budget.myRole} /> : null}
         {activeTab === "settings" ? <SettingsTab budget={budget} myRole={budget.myRole} /> : null}
       </div>
     </div>

@@ -76,7 +76,7 @@ export function useBudgetMembersQuery(budgetId: string | null) {
 export function useAddMemberMutation(budgetId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { userId: string; role: BudgetRole }) =>
+    mutationFn: (input: { email: string; role: BudgetRole }) =>
       budgetService.addMember(budgetId, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: budgetKeys.members(budgetId) }),
   });

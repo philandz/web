@@ -91,8 +91,36 @@ export interface BulkImportResult {
 // Raw shapes — gateway returns flat objects
 // ---------------------------------------------------------------------------
 
+interface RawBase {
+  id?: string;
+  created_at?: number;
+  updated_at?: number;
+  created_by?: string;
+}
+
+interface RawAttachment {
+  base?: RawBase;
+  id?: string;
+  entry_id?: string;
+  file_id?: string;
+  file_name?: string;
+  created_by?: string;
+  created_at?: number;
+}
+
+interface RawComment {
+  base?: RawBase;
+  id?: string;
+  entry_id?: string;
+  body?: string;
+  created_by?: string;
+  created_at?: number;
+  updated_at?: number;
+}
+
 interface RawEntry {
-  id: string;
+  base?: RawBase;
+  id?: string;
   budget_id: string;
   category_id?: string;
   kind: number | string;   // 1=expense, 2=income
@@ -123,7 +151,7 @@ function toKind(v: number | string): TransactionType {
 
 function mapEntry(raw: RawEntry): Transaction {
   return {
-    id: raw.id,
+    id: raw.id ?? raw.base?.id ?? "",
     budgetId: raw.budget_id,
     categoryId: raw.category_id || undefined,
     type: toKind(raw.kind),
@@ -134,8 +162,8 @@ function mapEntry(raw: RawEntry): Transaction {
     isRecurring: raw.is_recurring ?? false,
     hasAttachment: raw.has_attachment ?? false,
     notes: raw.notes || undefined,
-    createdBy: raw.created_by,
-    createdAt: raw.created_at ?? 0,
+    createdBy: raw.created_by ?? raw.base?.created_by,
+    createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
   };
 }
 
@@ -252,24 +280,26 @@ export const transactionService = {
   },
 
   async listAttachments(entryId: string): Promise<TransactionAttachment[]> {
-    const raw = await apiClient.get<{ attachments: Array<{
-      id: string; entry_id: string; file_id: string;
-      file_name: string; created_by: string; created_at: number;
-    }> }>(`${BASE}/entries/${entryId}/attachments`);
+    const raw = await apiClient.get<{ attachments: RawAttachment[] }>(`${BASE}/entries/${entryId}/attachments`);
     return (raw.attachments ?? []).map((a) => ({
-      id: a.id, entryId: a.entry_id, fileId: a.file_id,
-      fileName: a.file_name, createdBy: a.created_by, createdAt: a.created_at,
+      id: a.id ?? a.base?.id ?? "",
+      entryId: a.entry_id ?? "",
+      fileId: a.file_id ?? "",
+      fileName: a.file_name ?? "",
+      createdBy: a.created_by ?? a.base?.created_by ?? "",
+      createdAt: a.created_at ?? a.base?.created_at ?? 0,
     }));
   },
 
   async attachFile(entryId: string, fileId: string, fileName: string): Promise<TransactionAttachment> {
-    const raw = await apiClient.post<{
-      id: string; entry_id: string; file_id: string;
-      file_name: string; created_by: string; created_at: number;
-    }>(`${BASE}/entries/${entryId}/attachments`, { file_id: fileId, file_name: fileName });
+    const raw = await apiClient.post<RawAttachment>(`${BASE}/entries/${entryId}/attachments`, { file_id: fileId, file_name: fileName });
     return {
-      id: raw.id, entryId: raw.entry_id, fileId: raw.file_id,
-      fileName: raw.file_name, createdBy: raw.created_by, createdAt: raw.created_at,
+      id: raw.id ?? raw.base?.id ?? "",
+      entryId: raw.entry_id ?? "",
+      fileId: raw.file_id ?? "",
+      fileName: raw.file_name ?? "",
+      createdBy: raw.created_by ?? raw.base?.created_by ?? "",
+      createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
     };
   },
 
@@ -282,30 +312,39 @@ export const transactionService = {
   // ---------------------------------------------------------------------------
 
   async listComments(entryId: string): Promise<TransactionComment[]> {
-    const raw = await apiClient.get<{ comments: Array<{
-      id: string; entry_id: string; body: string;
-      created_by: string; created_at: number; updated_at: number;
-    }> }>(`${BASE}/entries/${entryId}/comments`);
+    const raw = await apiClient.get<{ comments: RawComment[] }>(`${BASE}/entries/${entryId}/comments`);
     return (raw.comments ?? []).map((c) => ({
-      id: c.id, entryId: c.entry_id, body: c.body,
-      createdBy: c.created_by, createdAt: c.created_at, updatedAt: c.updated_at,
+      id: c.id ?? c.base?.id ?? "",
+      entryId: c.entry_id ?? "",
+      body: c.body ?? "",
+      createdBy: c.created_by ?? c.base?.created_by ?? "",
+      createdAt: c.created_at ?? c.base?.created_at ?? 0,
+      updatedAt: c.updated_at ?? c.base?.updated_at ?? 0,
     }));
   },
 
   async addComment(entryId: string, body: string): Promise<TransactionComment> {
-    const raw = await apiClient.post<{
-      id: string; entry_id: string; body: string;
-      created_by: string; created_at: number; updated_at: number;
-    }>(`${BASE}/entries/${entryId}/comments`, { body });
-    return { id: raw.id, entryId: raw.entry_id, body: raw.body, createdBy: raw.created_by, createdAt: raw.created_at, updatedAt: raw.updated_at };
+    const raw = await apiClient.post<RawComment>(`${BASE}/entries/${entryId}/comments`, { body });
+    return {
+      id: raw.id ?? raw.base?.id ?? "",
+      entryId: raw.entry_id ?? "",
+      body: raw.body ?? "",
+      createdBy: raw.created_by ?? raw.base?.created_by ?? "",
+      createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
+      updatedAt: raw.updated_at ?? raw.base?.updated_at ?? 0,
+    };
   },
 
   async editComment(commentId: string, body: string): Promise<TransactionComment> {
-    const raw = await apiClient.patch<{
-      id: string; entry_id: string; body: string;
-      created_by: string; created_at: number; updated_at: number;
-    }>(`${BASE}/comments/${commentId}`, { body });
-    return { id: raw.id, entryId: raw.entry_id, body: raw.body, createdBy: raw.created_by, createdAt: raw.created_at, updatedAt: raw.updated_at };
+    const raw = await apiClient.patch<RawComment>(`${BASE}/comments/${commentId}`, { body });
+    return {
+      id: raw.id ?? raw.base?.id ?? "",
+      entryId: raw.entry_id ?? "",
+      body: raw.body ?? "",
+      createdBy: raw.created_by ?? raw.base?.created_by ?? "",
+      createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
+      updatedAt: raw.updated_at ?? raw.base?.updated_at ?? 0,
+    };
   },
 
   async deleteComment(commentId: string): Promise<void> {
@@ -391,6 +430,29 @@ export const transactionService = {
         error: r.error,
         entryId: r.entry_id,
       })),
+    };
+  },
+
+  async updateRecurrenceRule(entryId: string, recurrenceRule: string): Promise<Transaction> {
+    const raw = await apiClient.patch<RawEntry>(`${BASE}/entries/${entryId}/recurrence`, {
+      recurrence_rule: recurrenceRule,
+    });
+    return mapEntry(raw);
+  },
+
+  async cancelRecurrence(entryId: string): Promise<Transaction> {
+    const raw = await apiClient.request<RawEntry>(`${BASE}/entries/${entryId}/recurrence`, { method: "DELETE" });
+    return mapEntry(raw);
+  },
+
+  async listSplitLegs(entryId: string): Promise<{ splitGroupId: string; legs: Transaction[] }> {
+    const raw = await apiClient.get<{
+      split_group_id: string;
+      legs: RawEntry[];
+    }>(`${BASE}/entries/${entryId}/split-legs`);
+    return {
+      splitGroupId: raw.split_group_id,
+      legs: (raw.legs ?? []).map(mapEntry),
     };
   },
 };

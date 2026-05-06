@@ -136,6 +136,7 @@ jobs:
           image="${{ secrets.HARBOR_HOST }}/philand/web:${version}"
           docker build \
             --build-arg NEXT_PUBLIC_API_URL=https://v2.philand.io.vn \
+            --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
             -t "$image" .
           docker push "$image"
 
