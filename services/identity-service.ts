@@ -7,7 +7,8 @@ interface RawLoginResponse {
   access_token: string;
   user_type: string | number;
   organizations: Array<{
-    id: string;
+    id?: string;
+    base?: { id?: string };
     name: string;
     role: string | number;
   }>;
@@ -81,7 +82,7 @@ export const identityService = {
       token: raw.access_token,
       userType: normalizeUserType(raw.user_type),
       organizations: raw.organizations.map((org) => ({
-        id: org.id,
+        id: org.base?.id ?? org.id ?? "",
         name: org.name,
         role: normalizeOrgRole(org.role)
       }))
@@ -96,7 +97,7 @@ export const identityService = {
       token: raw.access_token,
       userType: normalizeUserType(raw.user_type),
       organizations: raw.organizations.map((org) => ({
-        id: org.id,
+        id: org.base?.id ?? org.id ?? "",
         name: org.name,
         role: normalizeOrgRole(org.role),
       })),
@@ -155,7 +156,8 @@ export const identityService = {
   async inviteMember(orgId: string, input: { inviteeEmail: string; orgRole: AppOrgRole }): Promise<InvitationResult> {
     const raw = await apiClient.post<{
       invitation: {
-        id: string;
+        id?: string;
+        base?: { id?: string };
         invitee_email: string;
         org_role: string | number;
         status: string | number;
@@ -168,7 +170,7 @@ export const identityService = {
     });
 
     return {
-      invitationId: raw.invitation?.id ?? "",
+      invitationId: raw.invitation?.base?.id ?? raw.invitation?.id ?? "",
       inviteeEmail: raw.invitation?.invitee_email ?? "",
       orgRole: normalizeOrgRole(raw.invitation?.org_role ?? "member"),
       status: String(raw.invitation?.status ?? "pending"),
@@ -208,7 +210,8 @@ export const identityService = {
   async listOrgInvitations(orgId: string): Promise<OrgInvitation[]> {
     const raw = await apiClient.get<{
       invitations: Array<{
-        id: string;
+        id?: string;
+        base?: { id?: string };
         invitee_email: string;
         org_role: string | number;
         expires_at: number;
@@ -217,7 +220,7 @@ export const identityService = {
     }>(`${BASE_PATH}/organizations/${orgId}/invitations`);
 
     return raw.invitations.map((inv) => ({
-      id: inv.id,
+      id: inv.base?.id ?? inv.id ?? "",
       inviteeEmail: inv.invitee_email,
       orgRole: normalizeOrgRole(inv.org_role),
       expiresAt: inv.expires_at,
