@@ -251,5 +251,21 @@ export const identityService = {
       token: input.token,
       new_password: input.newPassword
     });
+  },
+
+  async logout(): Promise<void> {
+    await apiClient.post<{ message?: string }>(`${BASE_PATH}/logout`, {});
+  },
+
+  async refreshToken(): Promise<{ accessToken: string }> {
+    const raw = await apiClient.post<{ access_token: string }>(`${BASE_PATH}/refresh`, {});
+    return { accessToken: raw.access_token };
+  },
+
+  async changePassword(input: { currentPassword: string; newPassword: string }): Promise<void> {
+    await apiClient.post<{ message?: string }>(`${BASE_PATH}/update`, {
+      current_password: input.currentPassword,
+      new_password: input.newPassword,
+    });
   }
 };

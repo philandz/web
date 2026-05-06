@@ -85,6 +85,29 @@ export function useResetPasswordMutation() {
   });
 }
 
+export function useLogoutMutation() {
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+
+  return useMutation({
+    mutationFn: identityService.logout,
+    onSuccess: () => {
+      clearAuth();
+    },
+    onError: () => {
+      clearAuth();
+    },
+  });
+}
+
+export function useChangePasswordMutation(onUnauthorized: () => void) {
+  return useMutation({
+    mutationFn: identityService.changePassword,
+    onError: (error: unknown) => {
+      handleAuthError(error, { onUnauthorized });
+    },
+  });
+}
+
 export function useOrganizationsQuery() {
   const token = useAuthStore((state) => state.token);
   const organizations = useAuthStore((state) => state.organizations);
