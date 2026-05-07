@@ -1,0 +1,27 @@
+name: Branch Policy Enforcement
+
+on:
+  push:
+    branches:
+      - '**'
+
+permissions:
+  contents: write
+
+jobs:
+  enforce-branch-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name
+        run: |
+          ALLOWED_BRANCHES="^(develop|sandbox|main)$"
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          
+          if [[ ! "$BRANCH_NAME" =~ $ALLOWED_BRANCHES ]]; then
+            echo "ERROR: Branch '$BRANCH_NAME' is not allowed."
+            echo "Only branches matching $ALLOWED_BRANCHES are permitted."
+            echo "Please commit to 'develop' branch directly instead."
+            exit 1
+          fi
+          
+          echo "Branch name '$BRANCH_NAME' is allowed."
