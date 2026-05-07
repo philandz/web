@@ -90,7 +90,7 @@ export const identityService = {
   },
 
   async loginWithGoogle(idToken: string): Promise<LoginResult> {
-    const raw = await apiClient.post<RawLoginResponse>(`${BASE_PATH}/login/google`, {
+    const raw = await apiClient.post<RawLoginResponse>(`${BASE_PATH}/auth/google`, {
       id_token: idToken,
     });
     return {
