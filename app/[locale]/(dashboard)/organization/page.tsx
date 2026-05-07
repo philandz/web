@@ -276,7 +276,7 @@ function ChangeRoleDialog({ member, orgId, onClose }: { member: OrgMember; orgId
         <DialogHeader><DialogTitle>{t("changeRoleTitle")}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-            <UserAvatar name={member.displayName} size={32} fallbackClassName="text-[11px]" />
+            <UserAvatar name={member.displayName} src={member.avatar} size={32} fallbackClassName="text-[11px]" />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{member.displayName}</p>
               <p className="truncate text-xs text-muted-foreground">{member.email}</p>
@@ -319,7 +319,7 @@ function RemoveDialog({ member, orgId, onClose }: { member: OrgMember; orgId: st
         <DialogHeader><DialogTitle>{t("removeTitle")}</DialogTitle></DialogHeader>
         <p className="text-sm text-muted-foreground">{t("removeDescription")}</p>
         <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-          <UserAvatar name={member.displayName} size={32} fallbackClassName="text-[11px]" />
+          <UserAvatar name={member.displayName} src={member.avatar} size={32} fallbackClassName="text-[11px]" />
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-foreground">{member.displayName}</p>
             <p className="truncate text-xs text-muted-foreground">{member.email}</p>
@@ -758,7 +758,7 @@ export default function OrganizationPage() {
                   key={member.userId}
                   className="group flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-muted/40 md:px-6"
                 >
-                  <UserAvatar name={member.displayName} size={36} fallbackClassName="text-[12px]" />
+                  <UserAvatar name={member.displayName} src={member.avatar} size={36} fallbackClassName="text-[12px]" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="truncate text-sm font-medium text-foreground">
