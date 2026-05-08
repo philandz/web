@@ -838,7 +838,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                     className={cn(i > 0 && "-ml-2")}
                     aria-label={tDetail("tabMembers")}
                   >
-                    <UserAvatar name={m.displayName} size={28} className="ring-2 ring-card" fallbackClassName="text-[10px]" />
+                    <UserAvatar name={m.displayName} src={m.avatar} size={28} className="ring-2 ring-card" fallbackClassName="text-[10px]" />
                   </button>
                 ))}
               </div>

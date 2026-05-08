@@ -116,7 +116,7 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                           selectedEmail === m.email && "bg-muted"
                         )}
                       >
-                        <UserAvatar name={m.displayName} size={28} fallbackClassName="text-xs" />
+                        <UserAvatar name={m.displayName} src={m.avatar} size={28} fallbackClassName="text-xs" />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">{m.displayName}</p>
                           <p className="truncate text-xs text-muted-foreground">{m.email}</p>
@@ -176,7 +176,7 @@ function ChangeRoleDialog({ member, budgetId, onClose }: { member: BudgetMember;
         <DialogHeader><DialogTitle>{t("changeRoleTitle")}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-            <UserAvatar name={member.displayName} size={36} fallbackClassName="text-xs" />
+            <UserAvatar name={member.displayName} src={member.avatar} size={36} fallbackClassName="text-xs" />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{member.displayName}</p>
               <p className="truncate text-xs text-muted-foreground">{member.email}</p>
@@ -259,14 +259,13 @@ export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
           const isMe = member.userId === currentUserId;
           const canChangeRole = isOwner && !isMe && member.role !== "owner";
           const canRemove = canManage && !isMe && member.role !== "owner";
-          const avatarSrc = isMe ? (profile?.avatar ?? undefined) : undefined;
 
           return (
             <div key={member.userId} className="flex items-center gap-3 px-5 py-3.5 md:px-6">
               {/* Avatar */}
               <UserAvatar
                 name={member.displayName}
-                src={avatarSrc}
+                src={member.avatar}
                 size={38}
                 fallbackClassName="text-xs font-semibold"
               />
@@ -344,7 +343,7 @@ export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
           <p className="text-sm text-muted-foreground">{t("removeDescription")}</p>
           {removeMember ? (
             <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-              <UserAvatar name={removeMember.displayName} size={36} fallbackClassName="text-xs" />
+              <UserAvatar name={removeMember.displayName} src={removeMember.avatar} size={36} fallbackClassName="text-xs" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">{removeMember.displayName}</p>
                 <p className="truncate text-xs text-muted-foreground">{removeMember.email}</p>
