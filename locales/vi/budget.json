@@ -276,7 +276,8 @@
     "cancel": "Hủy",
     "save": "Lưu",
     "saving": "Đang lưu...",
-    "you": "Bạn"
+    "you": "Bạn",
+    "pendingInvite": "Chờ xác nhận"
   },
   "settings": {
     "generalTitle": "Thông tin chung",
