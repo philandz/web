@@ -788,8 +788,17 @@ export function BudgetDetailWithTabs({ budget, activeTab, onTab }: { budget: Bud
 
   const { data: members = [] } = useBudgetMembersQuery(budget.id);
   const { data: envelope } = useBurnRateQuery(budget.id);
+  const { data: txData } = useTransactionsQuery({ budgetId: budget.id, pageSize: 1000 });
 
   const cfg = TYPE_CFG[budget.type] ?? TYPE_CFG.standard;
+
+  const { totalIncome, totalExpense, netBalance } = useMemo(() => {
+    const items = txData?.items ?? [];
+    const income = items.filter((tx) => tx.type === "income").reduce((s, tx) => s + tx.amount, 0);
+    const expense = items.filter((tx) => tx.type === "expense").reduce((s, tx) => s + tx.amount, 0);
+    return { totalIncome: income, totalExpense: expense, netBalance: income - expense };
+  }, [txData]);
+
   const spendPct = envelope?.monthlyLimit ? Math.min(100, (envelope.currentSpend / envelope.monthlyLimit) * 100) : null;
   const barColor = spendPct == null ? "hsl(var(--border))" : spendPct >= 100 ? "hsl(var(--expense))" : spendPct >= 80 ? "hsl(38 85% 50%)" : "hsl(var(--primary))";
 
@@ -828,26 +837,20 @@ export function BudgetDetailWithTabs({ budget, activeTab, onTab }: { budget: Bud
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="flex items-center">
-                {members.slice(0, 4).map((m, i) => (
-                  <button
-                    key={m.userId}
-                    type="button"
-                    onClick={() => onTab("members")}
-                    className={cn(i > 0 && "-ml-2")}
-                    aria-label={tDetail("tabMembers")}
-                  >
-                    <UserAvatar name={m.displayName} src={m.avatar} size={28} className="ring-2 ring-card" fallbackClassName="text-[10px]" />
-                  </button>
-                ))}
+            {/* Right: Total Budget summary */}
+            <div className="flex shrink-0 flex-col items-end text-right">
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Total Budget</span>
+              <span className={cn(
+                "text-lg font-bold tabular-nums",
+                netBalance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+              )}>
+                {fmt(netBalance, budget.currency)}
+              </span>
+              <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+                <span>+{fmtShort(totalIncome, budget.currency)}</span>
+                <span>-</span>
+                <span>{fmtShort(totalExpense, budget.currency)}</span>
               </div>
-              <button type="button" className="h-8 rounded-lg px-2 text-xs font-semibold text-muted-foreground hover:bg-muted" title="Share" onClick={() => onTab("members")}>
-                Share
-              </button>
-              <button type="button" className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted" title="Settings" aria-label="Settings" onClick={() => onTab("settings")}>
-                ⚙
-              </button>
             </div>
           </div>
 
