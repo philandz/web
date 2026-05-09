@@ -21,6 +21,7 @@ import { SelectNative } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
+import { useAuthStore } from "@/lib/auth-store";
 
 import type { Budget, BudgetType } from "@/services/budget-service";
 import type { Transaction, TransactionType, TransactionListParams } from "@/services/transaction-service";
@@ -407,6 +408,10 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
   const { data: categories = [] } = useCategoriesQuery(budget.id);
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
 
+  const { data: members = [] } = useBudgetMembersQuery(budget.id);
+  const memberMap = useMemo(() => new Map(members.map((m) => [m.userId, m])), [members]);
+  const profile = useAuthStore((s) => s.profile);
+
   const bulkMutation = useBulkTransactionMutation();
 
   let filtered = transactions.filter((tx) => {
@@ -713,11 +718,25 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
                         "text-[14px] font-extrabold tabular-nums tracking-[-.02em]",
                         isIncome ? "text-income" : "text-expense",
                       )}>
-                        {isIncome ? "+" : "−"}{fmtShort(tx.amount, budget.currency)}
+                        {isIncome ? "+" : "−"}{fmt(tx.amount, budget.currency)}
                       </span>
                     </td>
                     <td className="px-3 py-[11px]">
-                      <UserAvatar name={tx.createdBy ?? ""} size={24} fallbackClassName="text-[10px]" />
+                      {(() => {
+                        const creator = tx.createdBy ? memberMap.get(tx.createdBy) : undefined;
+                        const isMe = tx.createdBy === profile?.id;
+                        const avatarSrc = isMe ? profile?.avatar : creator?.avatar;
+                        return creator ? (
+                          <UserAvatar
+                            name={creator.displayName}
+                            src={avatarSrc}
+                            size={24}
+                            fallbackClassName="text-[10px]"
+                          />
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        );
+                      })()}
                     </td>
                     <td className="px-2 py-[11px]">
                       <div className={cn("flex gap-1 text-xs text-muted-foreground transition-opacity", isHover || isActive ? "opacity-100" : "opacity-0")}>
@@ -782,14 +801,23 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
 // Header + tabs shell (pixel-spec)
 // ---------------------------------------------------------------------------
 
-export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budget; activeTab: string; onTab: (t: string) => void }) {
+export function BudgetDetailWithTabs({ budget, activeTab, onTab }: { budget: Budget; activeTab: string; onTab: (t: string) => void }) {
   const tDetail = useTranslations("budget.detail");
   const tShell = useTranslations("dashboard.shell");
 
   const { data: members = [] } = useBudgetMembersQuery(budget.id);
   const { data: envelope } = useBurnRateQuery(budget.id);
+  const { data: txData } = useTransactionsQuery({ budgetId: budget.id, pageSize: 1000 });
 
   const cfg = TYPE_CFG[budget.type] ?? TYPE_CFG.standard;
+
+  const { totalIncome, totalExpense, netBalance } = useMemo(() => {
+    const items = txData?.items ?? [];
+    const income = items.filter((tx) => tx.type === "income").reduce((s, tx) => s + tx.amount, 0);
+    const expense = items.filter((tx) => tx.type === "expense").reduce((s, tx) => s + tx.amount, 0);
+    return { totalIncome: income, totalExpense: expense, netBalance: income - expense };
+  }, [txData]);
+
   const spendPct = envelope?.monthlyLimit ? Math.min(100, (envelope.currentSpend / envelope.monthlyLimit) * 100) : null;
   const barColor = spendPct == null ? "hsl(var(--border))" : spendPct >= 100 ? "hsl(var(--expense))" : spendPct >= 80 ? "hsl(38 85% 50%)" : "hsl(var(--primary))";
 
@@ -828,26 +856,20 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="flex items-center">
-                {members.slice(0, 4).map((m, i) => (
-                  <button
-                    key={m.userId}
-                    type="button"
-                    onClick={() => onTab("members")}
-                    className={cn(i > 0 && "-ml-2")}
-                    aria-label={tDetail("tabMembers")}
-                  >
-                    <UserAvatar name={m.displayName} size={28} className="ring-2 ring-card" fallbackClassName="text-[10px]" />
-                  </button>
-                ))}
+            {/* Right: Total Budget summary */}
+            <div className="flex shrink-0 flex-col items-end text-right">
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Total Budget</span>
+              <span className={cn(
+                "text-lg font-bold tabular-nums",
+                netBalance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+              )}>
+                {fmt(netBalance, budget.currency)}
+              </span>
+              <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+                <span>+{fmtShort(totalIncome, budget.currency)}</span>
+                <span>-</span>
+                <span>{fmtShort(totalExpense, budget.currency)}</span>
               </div>
-              <button type="button" className="h-8 rounded-lg px-2 text-xs font-semibold text-muted-foreground hover:bg-muted" title="Share" onClick={() => onTab("members")}>
-                Share
-              </button>
-              <button type="button" className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted" title="Settings" aria-label="Settings" onClick={() => onTab("settings")}>
-                ⚙
-              </button>
             </div>
           </div>
 
@@ -855,9 +877,15 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
             <div className="mb-1.5 flex items-baseline justify-between text-xs">
               <span className="text-muted-foreground">
                 <span className="text-sm font-bold text-foreground tabular-nums">
-                  {fmtShort(envelope?.currentSpend ?? 0, budget.currency)}
+                  {envelope?.monthlyLimit && envelope.monthlyLimit > 0
+                    ? fmtShort(envelope.currentSpend, budget.currency)
+                    : `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(envelope?.currentSpend ?? 0)} ${budget.currency}`}
                 </span>
-                <span> / {fmtShort(envelope?.monthlyLimit ?? 0, budget.currency)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {envelope?.monthlyLimit && envelope.monthlyLimit > 0
+                    ? <> / {fmtShort(envelope.monthlyLimit, budget.currency)}</>
+                    : <span className="tabular-nums">/∞</span>}
+                </span>
               </span>
               {spendPct != null ? (
                 <span className={cn(
@@ -872,8 +900,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
               <div className="h-full rounded-full transition-all duration-500 ease-smooth" style={{ width: `${spendPct ?? 0}%`, background: barColor }} />
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Spent this month</span>
-              {envelope?.monthlyLimit ? (
+              {envelope?.monthlyLimit && envelope.monthlyLimit > 0 ? (
                 <span className="font-semibold text-income">
                   {fmtShort(envelope.monthlyLimit - envelope.currentSpend, budget.currency)} remaining
                 </span>
@@ -881,7 +908,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
             </div>
           </div>
 
-          <div className="-mx-4 sm:-mx-6 flex gap-1 border-b border-border px-4 sm:px-6 overflow-x-auto scrollbar-hide -webkit-overflow-scrolling-touch">
+          <div className="-mx-4 sm:-mx-6 flex gap-1 border-b border-border px-4 sm:px-6 overflow-x-auto no-scrollbar -webkit-overflow-scrolling-touch">
             {([
               { id: "overview", label: tDetail("tabOverview") },
               { id: "transactions", label: tDetail("tabTransactions") },

@@ -29,6 +29,7 @@ export interface BudgetMember {
   userId: string;
   displayName: string;
   email: string;
+  avatar: string | null;
   role: BudgetRole;
 }
 
@@ -62,32 +63,13 @@ export interface BudgetListParams {
 
 // ---------------------------------------------------------------------------
 // Raw response shapes
-// ---------------------------------------------------------------------------
-
-interface RawBase {
-  id: string;
-  created_at?: number;
-  updated_at?: number;
-}
-
-interface RawBudget {
-  // Gateway flattens base fields to top level
-  id?: string;
-  base?: RawBase;
-  org_id: string;
-  name: string;
-  budget_type: number | string;
-  currency: string;
-  my_role: number | string;
-  created_at?: number;
-  updated_at?: number;
-}
 
 interface RawMember {
   budget_id: string;
   user_id: string;
   display_name: string;
   email: string;
+  avatar: string | null;
   role: number | string;
 }
 
@@ -103,7 +85,40 @@ interface RawTemplate {
   id: string;
   name: string;
   description: string;
+  budget_type: string;
+}
+
+interface RawEnvelope {
+  budget_id: string;
+  monthly_limit: number;
+  current_spend: number;
+  burn_rate_pct: number;
+  limit_exceeded: boolean;
+}
+
+interface RawTemplate {
+  id: string;
+  name: string;
+  description: string;
+  budget_type: string;
+}
+
+interface RawBase {
+  id: string;
+  created_at?: number;
+  updated_at?: number;
+}
+
+interface RawBudget {
+  id?: string;
+  base?: RawBase;
+  org_id: string;
+  name: string;
   budget_type: number | string;
+  currency: string;
+  my_role: number | string;
+  created_at?: number;
+  updated_at?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -146,6 +161,7 @@ function mapMember(raw: RawMember): BudgetMember {
     userId: raw.user_id,
     displayName: raw.display_name,
     email: raw.email,
+    avatar: raw.avatar ?? null,
     role: toBudgetRole(raw.role),
   };
 }
@@ -245,11 +261,11 @@ export const budgetService = {
 
   async addMember(
     budgetId: string,
-    input: { email: string; role: BudgetRole }
+    input: { userId: string; role: BudgetRole }
   ): Promise<BudgetMember> {
     const raw = await apiClient.post<{ member: RawMember }>(
       `${BASE}/budgets/${budgetId}/members`,
-      { email: input.email, role: input.role }
+      { user_id: input.userId, role: input.role }
     );
     return mapMember(raw.member);
   },
@@ -274,18 +290,18 @@ export const budgetService = {
 
   // Envelope limit
   async setEnvelope(budgetId: string, monthlyLimit: number): Promise<EnvelopeLimit> {
-    const raw = await apiClient.request<{ envelope: RawEnvelope }>(
+    const raw = await apiClient.request<RawEnvelope>(
       `${BASE}/budgets/${budgetId}/envelope-limit`,
       { method: "PUT", body: { monthly_limit: monthlyLimit } }
     );
-    return mapEnvelope(raw.envelope);
+    return mapEnvelope(raw);
   },
 
   async getBurnRate(budgetId: string): Promise<EnvelopeLimit> {
-    const raw = await apiClient.get<{ envelope: RawEnvelope }>(
+    const raw = await apiClient.get<RawEnvelope>(
       `${BASE}/budgets/${budgetId}/burn-rate`
     );
-    return mapEnvelope(raw.envelope);
+    return mapEnvelope(raw);
   },
 
   // Rollover policy

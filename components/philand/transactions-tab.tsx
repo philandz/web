@@ -506,7 +506,7 @@ export function TransactionsTab({
                           {creator ? (
                             <UserAvatar
                               name={creator.displayName}
-                              src={isMe ? (profile?.avatar ?? undefined) : undefined}
+                              src={creator.avatar}
                               size={26}
                               fallbackClassName="text-[10px] font-semibold"
                               className="ring-1 ring-border/50"
@@ -582,7 +582,7 @@ export function TransactionsTab({
                         return creator ? (
                           <UserAvatar
                             name={creator.displayName}
-                            src={isMe ? (profile?.avatar ?? undefined) : undefined}
+                            src={creator.avatar}
                             size={16}
                             fallbackClassName="text-[8px] font-semibold"
                             className="ring-1 ring-border/50"

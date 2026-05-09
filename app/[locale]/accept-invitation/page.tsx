@@ -9,9 +9,10 @@ import { InlineAlert } from "@/components/state/inline-alert";
 import { routes } from "@/constants/routes";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/lib/auth-store";
+import { isApiError } from "@/lib/http/errors";
 import { identityService } from "@/services/identity-service";
 
-type PageState = "loading" | "success" | "success-authenticated" | "no-account" | "error" | "missing-token";
+type PageState = "loading" | "success" | "success-authenticated" | "failed" | "missing-token";
 
 export default function AcceptInvitationPage() {
   const t = useTranslations("auth.acceptInvitation");
@@ -23,6 +24,8 @@ export default function AcceptInvitationPage() {
   const setOrganizations = useAuthStore((state) => state.setOrganizations);
 
   const [state, setState] = useState<PageState>(token ? "loading" : "missing-token");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showRegisterCta, setShowRegisterCta] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -46,12 +49,11 @@ export default function AcceptInvitationPage() {
         }
       })
       .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("FAILED_PRECONDITION") || msg.includes("failed_precondition")) {
-          setState("no-account");
-        } else {
-          setState("error");
-        }
+        const message = isApiError(err) ? err.message : t("error");
+        const isNoAccount = isApiError(err) && err.code === "failed_precondition";
+        setErrorMessage(message);
+        setShowRegisterCta(isNoAccount);
+        setState("failed");
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -80,26 +82,24 @@ export default function AcceptInvitationPage() {
               {t("signIn")}
             </Link>
           </>
-        ) : state === "no-account" ? (
+        ) : state === "failed" ? (
           <>
-            <InlineAlert tone="error">{t("noAccount")}</InlineAlert>
-            <Link
-              href={token ? `${routes.signup}?invitation=${token}` : routes.signup}
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition hover:bg-muted/70"
-            >
-              {t("createAccount")}
-            </Link>
-          </>
-        ) : state === "error" ? (
-          <>
-            <InlineAlert tone="error">{t("error")}</InlineAlert>
-            <p className="text-center text-sm text-muted-foreground">{t("requestNew")}</p>
-            <Link
-              href={routes.login}
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition hover:bg-muted/70"
-            >
-              {t("goHome")}
-            </Link>
+            <InlineAlert tone="error">{errorMessage}</InlineAlert>
+            {showRegisterCta ? (
+              <Link
+                href={token ? `${routes.signup}?invitation=${token}` : routes.signup}
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition hover:bg-muted/70"
+              >
+                {t("createAccount")}
+              </Link>
+            ) : (
+              <Link
+                href={routes.login}
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition hover:bg-muted/70"
+              >
+                {t("goHome")}
+              </Link>
+            )}
           </>
         ) : (
           <>

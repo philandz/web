@@ -8,7 +8,7 @@ import { routes } from "@/constants/routes";
 
 import { BudgetDetailHeader } from "@/components/philand/budget-detail-header";
 import { InvestBudgetView } from "@/components/philand/invest-budget-view";
-import { BudgetDetailMockup } from "@/components/philand/budget-detail-mockup";
+import { BudgetDetailWithTabs } from "@/components/philand/budget-detail-with-tabs";
 import { PageErrorState } from "@/components/state/page-error-state";
 import { PageLoadingState } from "@/components/state/page-loading-state";
 import { useBudgetMembersQuery, useBudgetQuery } from "@/modules/budget/hooks";
@@ -91,7 +91,7 @@ export default function BudgetDetailPage() {
 
   return (
     <div className="animate-fade-in-up">
-      <BudgetDetailMockup
+      <BudgetDetailWithTabs
         budget={budget}
         activeTab={activeTab}
         onTab={(tab) => handleTabChange(tab)}

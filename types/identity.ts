@@ -42,6 +42,7 @@ export interface OrgMember {
   userId: string;
   email: string;
   displayName: string;
+  avatar: string | null;
   role: AppOrgRole;
   status: "active" | "invited";
   joinedAt: number;
