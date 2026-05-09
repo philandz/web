@@ -137,6 +137,7 @@ export const identityService = {
         user_id: string;
         email: string;
         display_name: string;
+        avatar: string | null;
         role: string | number;
         status: string;
         joined_at: number;
@@ -147,6 +148,7 @@ export const identityService = {
       userId: m.user_id,
       email: m.email,
       displayName: m.display_name,
+      avatar: m.avatar ?? null,
       role: normalizeOrgRole(m.role),
       status: m.status === "invited" ? "invited" : "active",
       joinedAt: m.joined_at
