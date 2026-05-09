@@ -261,11 +261,11 @@ export const budgetService = {
 
   async addMember(
     budgetId: string,
-    input: { email: string; role: BudgetRole }
+    input: { userId: string; role: BudgetRole }
   ): Promise<BudgetMember> {
     const raw = await apiClient.post<{ member: RawMember }>(
       `${BASE}/budgets/${budgetId}/members`,
-      { email: input.email, role: input.role }
+      { user_id: input.userId, role: input.role }
     );
     return mapMember(raw.member);
   },
@@ -290,18 +290,18 @@ export const budgetService = {
 
   // Envelope limit
   async setEnvelope(budgetId: string, monthlyLimit: number): Promise<EnvelopeLimit> {
-    const raw = await apiClient.request<{ envelope: RawEnvelope }>(
+    const raw = await apiClient.request<RawEnvelope>(
       `${BASE}/budgets/${budgetId}/envelope-limit`,
       { method: "PUT", body: { monthly_limit: monthlyLimit } }
     );
-    return mapEnvelope(raw.envelope);
+    return mapEnvelope(raw);
   },
 
   async getBurnRate(budgetId: string): Promise<EnvelopeLimit> {
-    const raw = await apiClient.get<{ envelope: RawEnvelope }>(
+    const raw = await apiClient.get<RawEnvelope>(
       `${BASE}/budgets/${budgetId}/burn-rate`
     );
-    return mapEnvelope(raw.envelope);
+    return mapEnvelope(raw);
   },
 
   // Rollover policy

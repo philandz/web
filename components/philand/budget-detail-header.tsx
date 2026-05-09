@@ -98,6 +98,12 @@ export function BudgetDetailHeader({
       maximumFractionDigits: 0,
     }).format(n);
 
+  const fmtNumber = (n: number) =>
+    new Intl.NumberFormat("vi-VN", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(n);
+
   return (
     <div className="surface-panel overflow-hidden rounded-2xl">
       {/* ── Type-colored top stripe ── */}
@@ -196,10 +202,12 @@ export function BudgetDetailHeader({
             <div className="mb-1.5 flex items-center justify-between gap-2">
               <div className="flex items-baseline gap-1 text-sm">
                 <span className="font-semibold tabular-nums text-foreground">
-                  {fmt(envelope.currentSpend)}
+                  {envelope.monthlyLimit > 0 ? fmt(envelope.currentSpend) : `${fmtNumber(envelope.currentSpend)} ${budget.currency}`}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  / {fmt(envelope.monthlyLimit)}
+                  {envelope.monthlyLimit > 0
+                    ? <> / {fmt(envelope.monthlyLimit)}</>
+                    : <span className="tabular-nums">/∞</span>}
                 </span>
               </div>
               <span className={cn(
@@ -220,18 +228,19 @@ export function BudgetDetailHeader({
               />
             </div>
 
-            {/* Spent this month / remaining row */}
+            {/* Remaining / over budget row */}
             <div className="mt-2 flex items-center justify-between text-[11px]">
-              <span className="text-muted-foreground">{t("spentThisMonth")}</span>
-              {envelope.monthlyLimit > envelope.currentSpend ? (
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {fmt(envelope.monthlyLimit - envelope.currentSpend)}&nbsp;{t("remaining")}
-                </span>
-              ) : (
-                <span className="font-semibold text-red-500">
-                  {fmt(envelope.currentSpend - envelope.monthlyLimit)}&nbsp;{t("overBudget")}
-                </span>
-              )}
+              {envelope.monthlyLimit > 0 ? (
+                envelope.monthlyLimit > envelope.currentSpend ? (
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    {fmt(envelope.monthlyLimit - envelope.currentSpend)}&nbsp;{t("remaining")}
+                  </span>
+                ) : (
+                  <span className="font-semibold text-red-500">
+                    {fmt(envelope.currentSpend - envelope.monthlyLimit)}&nbsp;{t("overBudget")}
+                  </span>
+                )
+              ) : null}
             </div>
           </div>
         )}
