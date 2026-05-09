@@ -21,6 +21,7 @@ import { SelectNative } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
+import { useAuthStore } from "@/lib/auth-store";
 
 import type { Budget, BudgetType } from "@/services/budget-service";
 import type { Transaction, TransactionType, TransactionListParams } from "@/services/transaction-service";
@@ -407,6 +408,10 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
   const { data: categories = [] } = useCategoriesQuery(budget.id);
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
 
+  const { data: members = [] } = useBudgetMembersQuery(budget.id);
+  const memberMap = useMemo(() => new Map(members.map((m) => [m.userId, m])), [members]);
+  const profile = useAuthStore((s) => s.profile);
+
   const bulkMutation = useBulkTransactionMutation();
 
   let filtered = transactions.filter((tx) => {
@@ -713,11 +718,25 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
                         "text-[14px] font-extrabold tabular-nums tracking-[-.02em]",
                         isIncome ? "text-income" : "text-expense",
                       )}>
-                        {isIncome ? "+" : "−"}{fmtShort(tx.amount, budget.currency)}
+                        {isIncome ? "+" : "−"}{fmt(tx.amount, budget.currency)}
                       </span>
                     </td>
                     <td className="px-3 py-[11px]">
-                      <UserAvatar name={tx.createdBy ?? ""} size={24} fallbackClassName="text-[10px]" />
+                      {(() => {
+                        const creator = tx.createdBy ? memberMap.get(tx.createdBy) : undefined;
+                        const isMe = tx.createdBy === profile?.id;
+                        const avatarSrc = isMe ? profile?.avatar : creator?.avatar;
+                        return creator ? (
+                          <UserAvatar
+                            name={creator.displayName}
+                            src={avatarSrc}
+                            size={24}
+                            fallbackClassName="text-[10px]"
+                          />
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        );
+                      })()}
                     </td>
                     <td className="px-2 py-[11px]">
                       <div className={cn("flex gap-1 text-xs text-muted-foreground transition-opacity", isHover || isActive ? "opacity-100" : "opacity-0")}>
