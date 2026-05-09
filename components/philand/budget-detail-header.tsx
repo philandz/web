@@ -1,15 +1,15 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
   ArrowLeft, BarChart2, CreditCard, LayoutGrid,
-  PiggyBank, Settings, Share2, Users,
+  PiggyBank, Share2, Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { UserAvatar } from "@/components/ui/user-avatar";
 import { Link } from "@/i18n/navigation";
 import { useBurnRateQuery } from "@/modules/budget/hooks";
-import { useAuthStore } from "@/lib/auth-store";
+import { useTransactionsQuery } from "@/modules/transaction/hooks";
 import { routes } from "@/constants/routes";
 import { cn } from "@/lib/utils";
 import type { Budget, BudgetMember, BudgetType } from "@/services/budget-service";
@@ -77,12 +77,17 @@ export function BudgetDetailHeader({
   members,
 }: BudgetDetailHeaderProps) {
   const t = useTranslations("budget.detail");
-  const profile = useAuthStore((s) => s.profile);
   const { data: envelope } = useBurnRateQuery(budget.id);
+  const { data: txData } = useTransactionsQuery({ budgetId: budget.id, pageSize: 1000 });
 
   const { Icon, iconBg, badge, label, stripe } = TYPE_CONFIG[budget.type];
-  const visibleMembers = members.slice(0, 4);
-  const overflow = members.length - visibleMembers.length;
+
+  const { totalIncome, totalExpense, netBalance } = useMemo(() => {
+    const items = txData?.items ?? [];
+    const income = items.filter((tx) => tx.type === "income").reduce((s, tx) => s + tx.amount, 0);
+    const expense = items.filter((tx) => tx.type === "expense").reduce((s, tx) => s + tx.amount, 0);
+    return { totalIncome: income, totalExpense: expense, netBalance: income - expense };
+  }, [txData]);
 
   const spendPct = envelope?.burnRatePct ?? null;
   const barColor =
@@ -154,44 +159,20 @@ export function BudgetDetailHeader({
             </div>
           </div>
 
-          {/* Right: avatars + actions */}
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {/* Stacked member avatars — desktop only */}
-            {visibleMembers.length > 0 && (
-              <div className="hidden items-center sm:flex">
-                <div className="flex -space-x-2">
-                  {visibleMembers.map((m) => (
-                    <UserAvatar
-                      key={m.userId}
-                      name={m.displayName}
-                      src={m.userId === profile?.id ? (profile?.avatar ?? undefined) : undefined}
-                      size={28}
-                      className="ring-2 ring-card"
-                      fallbackClassName="text-[9px]"
-                    />
-                  ))}
-                </div>
-                {overflow > 0 && (
-                  <span className="ml-2 text-xs text-muted-foreground">+{overflow}</span>
-                )}
-              </div>
-            )}
-            {/* Ghost action buttons */}
-            <button
-              type="button"
-              title="Share"
-              className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
-            >
-              <Share2 className="h-3.5 w-3.5" />
-              Share
-            </button>
-            <button
-              type="button"
-              title="Settings"
-              className="hidden items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"
-            >
-              <Settings className="h-3.5 w-3.5" />
-            </button>
+          {/* Right: Total Budget summary */}
+          <div className="flex shrink-0 flex-col items-end text-right">
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Total Budget</span>
+            <span className={cn(
+              "text-lg font-bold tabular-nums",
+              netBalance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+            )}>
+              {fmt(netBalance)}
+            </span>
+            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span>+{fmtNumber(totalIncome)}</span>
+              <span>-</span>
+              <span>{fmtNumber(totalExpense)}</span>
+            </div>
           </div>
         </div>
 
