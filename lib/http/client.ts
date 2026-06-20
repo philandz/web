@@ -1,6 +1,7 @@
 import { createApiError, createNetworkError, isForbiddenError, isUnauthorizedError, type ApiError } from "@/lib/http/errors";
 import type { RequestMetadata } from "@/lib/http/types";
 import { reportObservabilityEvent } from "@/lib/observability/client";
+import { extractBudgetIdFromPath, readSharingSession } from "@/lib/sharing/session";
 
 type RequestContext = {
   path: string;
@@ -86,10 +87,28 @@ class ApiClient {
   constructor(private readonly baseUrl: string) {
     this.useRequest(async (context) => {
       const headers = withDefaultHeaders(context.init.headers);
-      const token = this.authHandlers.getToken?.();
+      const path = context.path;
 
-      if (token && !headers.has("Authorization")) {
-        headers.set("Authorization", `Bearer ${token}`);
+      // For sharing routes, prefer the guest session token over the
+      // JWT when the budget id is in the path. The gateway will
+      // translate the `SharingSession` header to the gRPC
+      // `x-session-token` metadata.
+      const budgetId = extractBudgetIdFromPath(path);
+      if (budgetId) {
+        const guestToken = readSharingSession(budgetId);
+        if (guestToken) {
+          headers.set("Authorization", `SharingSession ${guestToken}`);
+        } else {
+          const jwt = this.authHandlers.getToken?.();
+          if (jwt && !headers.has("Authorization")) {
+            headers.set("Authorization", `Bearer ${jwt}`);
+          }
+        }
+      } else {
+        const token = this.authHandlers.getToken?.();
+        if (token && !headers.has("Authorization")) {
+          headers.set("Authorization", `Bearer ${token}`);
+        }
       }
 
       headers.set("X-Request-Id", context.metadata.requestId);
