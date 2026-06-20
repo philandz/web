@@ -34,7 +34,6 @@ export interface Transfer {
   toUserId: string;
   toName: string;
   amount: number;
-  deepLink: string;
 }
 
 export interface Settlement {
@@ -87,7 +86,6 @@ interface RawTransfer {
   to_user_id: string;
   to_name: string;
   amount: number;
-  deep_link: string;
 }
 
 interface RawSettlement {
@@ -140,7 +138,6 @@ function mapTransfer(raw: RawTransfer): Transfer {
     toUserId: raw.to_user_id,
     toName: raw.to_name,
     amount: raw.amount,
-    deepLink: raw.deep_link,
   };
 }
 
