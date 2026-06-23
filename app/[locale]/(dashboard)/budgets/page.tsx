@@ -238,7 +238,13 @@ export default function BudgetsPage() {
             <BudgetCard
               key={budget.id}
               budget={budget}
-              onClick={() => router.push(routes.budgetDetail(budget.id))}
+              onClick={() =>
+                router.push(
+                  budget.type === "sharing"
+                    ? routes.sharingDetail(budget.id)
+                    : routes.budgetDetail(budget.id),
+                )
+              }
             />
           ))}
         </div>

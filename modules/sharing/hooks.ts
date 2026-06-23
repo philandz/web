@@ -176,6 +176,14 @@ export function usePreviewJoinLinkMutation() {
   });
 }
 
+// Owner/Manager calls this to mint a fresh join link. Each call
+// produces a new token; the link expiry is set on the backend.
+export function useGenerateJoinLinkMutation() {
+  return useMutation<{ token: string; joinUrl: string; expiresAt: number }, Error, string>({
+    mutationFn: (budgetId: string) => sharingService.generateJoinLink(budgetId),
+  });
+}
+
 export function useJoinAsGuestMutation() {
   return useMutation<JoinAsGuestResult, Error, { token: string; displayName: string }>({
     mutationFn: ({ token, displayName }) => sharingService.joinAsGuest(token, displayName),

@@ -1,14 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { BalancePill } from "@/components/ui/balance-pill";
 import { useParticipantsQuery, useRevokeParticipantMutation } from "@/modules/sharing/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { UserX } from "lucide-react";
+import { UserPlus, UserX } from "lucide-react";
 import { useToast } from "@/components/state/toast-provider";
 import { Loader2 } from "lucide-react";
+import { InviteMemberDialog } from "./invite-member-dialog";
 
 type SharingMembersCardProps = {
   budgetId: string;
@@ -19,8 +21,12 @@ export function SharingMembersCard({ budgetId }: SharingMembersCardProps) {
   const currentUserId = useAuthStore((state) => state.profile?.id);
   const toast = useToast();
   const revokeMutation = useRevokeParticipantMutation();
+  const [inviteOpen, setInviteOpen] = useState(false);
 
-  const isOwnerOrManager = false; // Would come from org role check
+  const isOwnerOrManager = true; // For sharing budgets, the caller is
+  // always at least a member of the parent budget; the sharing
+  // service enforces the actual role on the backend. Showing the
+  // button unconditionally keeps the UX simple for now.
 
   function handleRevoke(participantId: string, displayName: string) {
     if (!confirm(`Remove ${displayName} from this budget?`)) return;
@@ -60,7 +66,19 @@ export function SharingMembersCard({ budgetId }: SharingMembersCardProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-foreground">Members</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground">Members</h3>
+        {isOwnerOrManager && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setInviteOpen(true)}
+          >
+            <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+            Invite
+          </Button>
+        )}
+      </div>
       <div className="space-y-2">
         {participants.map((participant) => (
           <div
@@ -103,6 +121,12 @@ export function SharingMembersCard({ budgetId }: SharingMembersCardProps) {
           </div>
         ))}
       </div>
+
+      <InviteMemberDialog
+        budgetId={budgetId}
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+      />
     </div>
   );
 }

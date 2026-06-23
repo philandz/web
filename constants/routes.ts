@@ -14,5 +14,6 @@ export const routes = {
   settings: "/settings",
   budgets: "/budgets",
   budgetDetail: (id: string) => `/budgets/${id}`,
+  sharingDetail: (id: string) => `/sharing/${id}`,
   transactions: "/transactions",
 } as const;
