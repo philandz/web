@@ -181,3 +181,59 @@ export function useJoinAsGuestMutation() {
     mutationFn: ({ token, displayName }) => sharingService.joinAsGuest(token, displayName),
   });
 }
+
+// `useAcceptJoinLinkMutation` is the authenticated-member path: the caller
+// already has a JWT and only needs to bind a chosen display name to their
+// existing user on the new sharing budget. The mutation passes the JWT
+// through the gateway; the backend upserts a member participant row.
+export function useAcceptJoinLinkMutation() {
+  const qc = useQueryClient();
+  return useMutation<{ budgetId: string }, Error, { token: string; displayName: string }>({
+    mutationFn: async ({ token, displayName }) => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sharing/join-link/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ token, display_name: displayName }),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`accept failed: ${res.status} ${body}`);
+      }
+      const data = (await res.json()) as { budget_id: string };
+      return { budgetId: data.budget_id };
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: sharingKeys.participants(data.budgetId) });
+    },
+  });
+}
+
+// `useCurrentParticipantQuery` returns the participant record for the
+// caller in the given budget. The backend's `listParticipants` does not
+// expose the underlying user_id for members, so we match by display name
+// (case-insensitive). Pass `kind` to disambiguate "member me" from
+// "guest me" when the same display name could be either.
+export function useCurrentParticipantQuery(
+  budgetId: string,
+  selfDisplayName: string | undefined,
+  kind: "MEMBER" | "GUEST" = "MEMBER"
+) {
+  return useQuery<ParticipantInfo | null>({
+    queryKey: [...sharingKeys.participants(budgetId), "self", kind, selfDisplayName ?? ""] as const,
+    queryFn: async () => {
+      const all = await sharingService.listParticipants(budgetId);
+      const target = selfDisplayName?.toLowerCase();
+      if (!target) return null;
+      return (
+        all.find(
+          (p) =>
+            p.displayName.toLowerCase() === target &&
+            ((kind === "MEMBER" && p.kind === "MEMBER") ||
+              (kind === "GUEST" && p.kind === "GUEST"))
+        ) ?? null
+      );
+    },
+    enabled: Boolean(budgetId && selfDisplayName),
+  });
+}
