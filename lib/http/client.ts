@@ -1,7 +1,11 @@
 import { createApiError, createNetworkError, isForbiddenError, isUnauthorizedError, type ApiError } from "@/lib/http/errors";
 import type { RequestMetadata } from "@/lib/http/types";
 import { reportObservabilityEvent } from "@/lib/observability/client";
-import { extractBudgetIdFromPath, readSharingSession } from "@/lib/sharing/session";
+import {
+  clearSharingSession,
+  extractBudgetIdFromPath,
+  readSharingSession
+} from "@/lib/sharing/session";
 
 type RequestContext = {
   path: string;
@@ -123,13 +127,25 @@ class ApiClient {
       };
     });
 
-    this.useError((error) => {
+    this.useError((error, context) => {
       if (isUnauthorizedError(error)) {
         this.authHandlers.onUnauthorized?.(error);
       }
 
       if (isForbiddenError(error)) {
         this.authHandlers.onForbidden?.(error);
+      }
+
+      // If the failing request hit a sharing budget path and the server
+      // rejected the credentials, the persisted guest session token is
+      // stale (revoked participant, expired token, etc). Purge it from
+      // localStorage so the next request does not retry with the same
+      // dead token. (Bug 3)
+      if (isUnauthorizedError(error)) {
+        const budgetId = extractBudgetIdFromPath(context.path);
+        if (budgetId) {
+          clearSharingSession(budgetId);
+        }
       }
     });
   }

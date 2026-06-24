@@ -66,6 +66,30 @@ export function clearSharingSession(budgetId: string): void {
 }
 
 /**
+ * Remove ALL stored guest session tokens (every key starting with
+ * `STORAGE_KEY_PREFIX`). Used by the auth logout flow to ensure a
+ * user who joined budgets as a guest doesn't leave orphaned tokens
+ * behind. The keys are per-budget, so revoking a single guest token
+ * does not invalidate others — but a full logout should scrub them
+ * all (Bug 2).
+ */
+export function clearAllSharingSessions(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const k = window.localStorage.key(i);
+      if (k && k.startsWith(STORAGE_KEY_PREFIX)) toRemove.push(k);
+    }
+    for (const k of toRemove) {
+      window.localStorage.removeItem(k);
+    }
+  } catch {
+    // ignore quota / privacy errors
+  }
+}
+
+/**
  * Extract the budget_id from a sharing API path. Returns null if the
  * path is not a sharing path, or the budget id is not present.
  *
