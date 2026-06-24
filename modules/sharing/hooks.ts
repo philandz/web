@@ -138,10 +138,11 @@ export function useActivityQuery(input: { budgetId: string; since?: number; limi
 // Comments
 // ---------------------------------------------------------------------------
 
-export function useCommentsQuery(expenseId: string) {
+export function useCommentsQuery(expenseId: string | undefined) {
   return useQuery<ExpenseComment[]>({
-    queryKey: sharingKeys.comments(expenseId),
-    queryFn: () => sharingService.listComments(expenseId),
+    queryKey: sharingKeys.comments(expenseId ?? ""),
+    queryFn: () => sharingService.listComments(expenseId!),
+    enabled: Boolean(expenseId),
   });
 }
 

@@ -57,7 +57,7 @@ export function ExpenseDetailSheet({
   const toast = useToast();
 
   const { data: comments, isLoading: commentsLoading } = useCommentsQuery(
-    expense?.id ?? ""
+    expense?.id
   );
   const addComment = useAddCommentMutation();
   const deleteComment = useDeleteCommentMutation();
