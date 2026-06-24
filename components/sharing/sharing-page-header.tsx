@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { AnimatedAmount } from "@/components/sharing/animated-amount";
-import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { Link } from "@/i18n/navigation";
 import { routes } from "@/constants/routes";
 import { cn } from "@/lib/utils";
@@ -105,10 +104,6 @@ export function SharingPageHeader({
 
           {/* Right cluster: total + primary actions */}
           <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
-            <div className="hidden md:block">
-              <LanguageSwitcher compact />
-            </div>
-
             <div className="flex flex-col items-start sm:items-end">
               <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                 {t("budget.totalSpent")}
