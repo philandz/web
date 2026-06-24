@@ -38,6 +38,7 @@
     "leaveBudgetConfirm": "Are you sure you want to leave this sharing budget?",
     "revokeParticipant": "Remove",
     "revokeConfirm": "Remove {name} from this sharing budget?",
+    "inviteFirstCta": "Invite your first member",
     "you": "You"
   },
   "expense": {

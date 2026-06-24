@@ -38,6 +38,7 @@
     "leaveBudgetConfirm": "Bạn có chắc muốn rời khỏi chia sẻ chi tiêu này không?",
     "revokeParticipant": "Xóa",
     "revokeConfirm": "Xóa {name} khỏi chia sẻ chi tiêu này?",
+    "inviteFirstCta": "Mời thành viên đầu tiên",
     "you": "Bạn"
   },
   "expense": {

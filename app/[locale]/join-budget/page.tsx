@@ -123,7 +123,10 @@ function ValidFormState({
         onSuccess: (result) => {
           // Redirect after brief success display
           setTimeout(() => {
-            router.push(`/${locale}/(dashboard)/sharing/${result.budgetId}`);
+            // Route groups like (dashboard) are NOT part of the URL
+            // in the Next.js App Router — strip them or use the
+            // helper which already does the right thing.
+            router.push(`/${locale}/sharing/${result.budgetId}`);
           }, 800);
         },
       }
