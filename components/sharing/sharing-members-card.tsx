@@ -15,6 +15,7 @@ import {
   useRevokeParticipantMutation,
   useSettlementQuery,
 } from "@/modules/sharing/hooks";
+import { formatCurrency, useFormatLocale } from "@/lib/format";
 import { InviteMemberDialog } from "./invite-member-dialog";
 
 type SharingMembersCardProps = {
@@ -27,6 +28,7 @@ export function SharingMembersCard({
   budgetName = "Sharing Budget",
 }: SharingMembersCardProps) {
   const t = useTranslations("sharing");
+  const locale = useFormatLocale();
   const toast = useToast();
   const { data: participants, isLoading } = useParticipantsQuery(budgetId);
   const { data: settlement } = useSettlementQuery(budgetId);
@@ -170,7 +172,7 @@ export function SharingMembersCard({
                     }
                   >
                     {balance > 0 ? "+" : ""}
-                    {new Intl.NumberFormat("vi-VN").format(balance)}
+                    {formatCurrency(balance, "VND", locale)}
                   </span>
                 ) : (
                   <UserCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />

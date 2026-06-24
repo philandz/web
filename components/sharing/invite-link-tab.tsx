@@ -6,6 +6,7 @@ import { Check, Copy, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/state/toast-provider";
+import { formatDuration, useFormatLocale } from "@/lib/format";
 
 type InviteLinkTabProps = {
   link: string;
@@ -14,15 +15,15 @@ type InviteLinkTabProps = {
   onRegenerate: () => void;
 };
 
-function formatTimeLeft(expiresAt: number): string {
+function isExpired(expiresAt: number): boolean {
   const ms = expiresAt * 1000 - Date.now();
-  if (ms <= 0) return "expired";
-  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  if (days > 0) return `${days}d ${hours}h`;
-  const mins = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
+  return ms <= 0;
+}
+
+function formatTimeLeft(expiresAt: number, locale: string): string {
+  const ms = expiresAt * 1000 - Date.now();
+  if (ms <= 0) return "";
+  return formatDuration(ms, locale);
 }
 
 export function InviteLinkTab({
@@ -32,6 +33,7 @@ export function InviteLinkTab({
   onRegenerate,
 }: InviteLinkTabProps) {
   const t = useTranslations("sharing");
+  const locale = useFormatLocale();
   const toast = useToast();
   const [copied, setCopied] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -55,8 +57,8 @@ export function InviteLinkTab({
     }
   }
 
-  const timeLeft = expiresAt ? formatTimeLeft(expiresAt) : null;
-  const expired = timeLeft === "expired";
+  const timeLeft = expiresAt ? formatTimeLeft(expiresAt, locale) : null;
+  const expired = expiresAt ? isExpired(expiresAt) : false;
 
   return (
     <div className="space-y-3 px-6 pb-4">

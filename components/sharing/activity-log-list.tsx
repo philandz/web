@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Clock, History } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatRelativeTime, useFormatLocale } from "@/lib/format";
 import type { ActivityLogEntry } from "@/services/sharing-service";
 
 type ActivityLogListProps = {
@@ -37,23 +38,9 @@ const ACTION_KEY: Record<string, string> = {
   "participant.revoked": "participantRevoked",
 };
 
-function formatRelativeTime(timestamp: number): string {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d`;
-  const date = new Date(timestamp);
-  return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
 export function ActivityLogList({ budgetId }: ActivityLogListProps) {
   const t = useTranslations("sharing");
+  const locale = useFormatLocale();
   const { data: entries, isLoading } = useActivityQuery({ budgetId, limit: 50 });
 
   if (isLoading) {
@@ -137,7 +124,7 @@ export function ActivityLogList({ budgetId }: ActivityLogListProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-foreground">{label}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {formatRelativeTime(entry.createdAt)}
+                    {formatRelativeTime(entry.createdAt, locale)}
                   </p>
                 </div>
               </div>

@@ -4,26 +4,23 @@ import { useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDuration, useFormatLocale } from "@/lib/format";
 
 type InviteQrTabProps = {
   link: string;
   expiresAt: number;
 };
 
-function formatTimeLeft(expiresAt: number): string {
+function formatTimeLeft(expiresAt: number, locale: string): string {
   const ms = expiresAt * 1000 - Date.now();
-  if (ms <= 0) return "expired";
-  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  if (days > 0) return `${days}d ${hours}h`;
-  const mins = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
+  if (ms <= 0) return "";
+  return formatDuration(ms, locale);
 }
 
 export function InviteQrTab({ link, expiresAt }: InviteQrTabProps) {
   const t = useTranslations("sharing");
-  const timeLeft = expiresAt ? formatTimeLeft(expiresAt) : null;
+  const locale = useFormatLocale();
+  const timeLeft = expiresAt ? formatTimeLeft(expiresAt, locale) : null;
 
   // Inline SVG download: serialize the QR code so the user can save it.
   function handleDownload() {

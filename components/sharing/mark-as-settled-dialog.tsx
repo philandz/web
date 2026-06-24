@@ -11,6 +11,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { ArrowRight, AlertTriangle, Loader2 } from "lucide-react";
 import { useMarkSettledMutation, useSettlementsQuery } from "@/modules/sharing/hooks";
 import { useToast } from "@/components/state/toast-provider";
+import { formatDateTime, useFormatLocale } from "@/lib/format";
 
 type Transfer = {
   fromParticipantId: string;
@@ -27,9 +28,8 @@ type MarkAsSettledDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-function formatTime(ts: number): string {
-  const d = new Date(ts);
-  return d.toLocaleString();
+function formatTime(ts: number, locale: string): string {
+  return formatDateTime(ts, locale);
 }
 
 export function MarkAsSettledDialog({
@@ -39,6 +39,7 @@ export function MarkAsSettledDialog({
   onOpenChange,
 }: MarkAsSettledDialogProps) {
   const t = useTranslations("sharing");
+  const locale = useFormatLocale();
   const [note, setNote] = useState("");
   const toast = useToast();
   const markSettled = useMarkSettledMutation();
@@ -106,6 +107,7 @@ export function MarkAsSettledDialog({
                   typeof duplicate.settledAt === "number"
                     ? duplicate.settledAt
                     : Date.parse(duplicate.settledAt as unknown as string),
+                  locale,
                 ),
               })}
             </p>
