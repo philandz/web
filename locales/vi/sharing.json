@@ -61,7 +61,9 @@
     "owesYou": "{name} nợ bạn",
     "youOwe": "Bạn nợ {name}",
     "settledUp": "Đã cân bằng",
-    "addFirst": "Thêm khoản chi đầu tiên"
+    "addFirst": "Thêm khoản chi đầu tiên",
+    "details": "Chi tiết khoản chi",
+    "splitBreakdown": "Phân chia"
   },
   "splitMethod": {
     "splitEqual": "Chia đều",
@@ -157,7 +159,8 @@
     "back": "Quay lại",
     "next": "Tiếp theo",
     "required": "Bắt buộc",
-    "optional": "Tùy chọn"
+    "optional": "Tùy chọn",
+    "edit": "Sửa"
   },
   "header": {
     "invite": "Mời",

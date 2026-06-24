@@ -7,10 +7,12 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCommentsQuery, useAddCommentMutation, useDeleteCommentMutation } from "@/modules/sharing/hooks";
+import { useParticipantNameLookup } from "@/modules/sharing/participant-name-lookup";
 import type { Expense, ExpenseComment } from "@/services/sharing-service";
 import { useToast } from "@/components/state/toast-provider";
 import { Loader2, Trash2, Edit, MessageCircle } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useTranslations } from "next-intl";
 
 type ExpenseDetailSheetProps = {
   expense: Expense | null;
@@ -52,9 +54,11 @@ export function ExpenseDetailSheet({
   onDelete,
   onEdit,
 }: ExpenseDetailSheetProps) {
+  const t = useTranslations("sharing");
   const [commentText, setCommentText] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const toast = useToast();
+  const { resolve: resolveName } = useParticipantNameLookup(expense?.budgetId ?? "");
 
   const { data: comments, isLoading: commentsLoading } = useCommentsQuery(
     expense?.id
@@ -99,7 +103,7 @@ export function ExpenseDetailSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col">
           <SheetHeader className="shrink-0 border-b border-border/60 px-5 py-4">
-            <SheetTitle>Expense Details</SheetTitle>
+            <SheetTitle>{t("expense.details")}</SheetTitle>
           </SheetHeader>
 
           <SheetBody className="flex-1 overflow-y-auto space-y-6">
@@ -115,18 +119,18 @@ export function ExpenseDetailSheet({
                 </span>
                 {expense.categoryId && (
                   <Badge variant="secondary" className="text-xs">
-                    Category
+                    {t("expense.category")}
                   </Badge>
                 )}
               </div>
               <p className="text-sm text-muted-foreground">
-                Paid by {expense.paidBy}
+                {t("expense.paidBy", { name: resolveName(expense.paidBy) })}
               </p>
             </div>
 
             {/* Split breakdown */}
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-foreground">Split breakdown</h4>
+              <h4 className="text-sm font-semibold text-foreground">{t("expense.splitBreakdown")}</h4>
               <div className="space-y-2">
                 {expense.legs.map((leg) => (
                   <div
@@ -134,8 +138,8 @@ export function ExpenseDetailSheet({
                     className="flex items-center justify-between p-3 rounded-xl bg-muted/50"
                   >
                     <div className="flex items-center gap-2">
-                      <UserAvatar name={leg.userId} size={28} />
-                      <span className="text-sm font-medium">{leg.userId}</span>
+                      <UserAvatar name={resolveName(leg.userId)} size={28} />
+                      <span className="text-sm font-medium">{resolveName(leg.userId)}</span>
                     </div>
                     <MoneyAmount value={leg.amount} size="sm" sign="neutral" />
                   </div>
@@ -147,7 +151,7 @@ export function ExpenseDetailSheet({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                <h4 className="text-sm font-semibold text-foreground">Comments</h4>
+                <h4 className="text-sm font-semibold text-foreground">{t("comment.comments")}</h4>
               </div>
 
               {commentsLoading ? (
@@ -190,7 +194,7 @@ export function ExpenseDetailSheet({
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No comments yet
+                  {t("comment.noComments")}
                 </p>
               )}
 
@@ -227,7 +231,7 @@ export function ExpenseDetailSheet({
           <SheetFooter className="shrink-0 border-t border-border/60 px-5 py-4">
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-                Close
+                {t("form.close")}
               </Button>
               {isOwnerOrPayer && (
                 <Button
@@ -236,7 +240,7 @@ export function ExpenseDetailSheet({
                   onClick={() => onEdit?.(expense)}
                 >
                   <Edit className="h-4 w-4 mr-1.5" />
-                  Edit
+                  {t("form.edit")}
                 </Button>
               )}
               <Button
@@ -245,7 +249,7 @@ export function ExpenseDetailSheet({
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2 className="h-4 w-4 mr-1.5" />
-                Delete
+                {t("form.delete")}
               </Button>
             </div>
           </SheetFooter>

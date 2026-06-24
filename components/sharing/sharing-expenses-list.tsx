@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpensesQuery } from "@/modules/sharing/hooks";
+import { useParticipantNameLookup } from "@/modules/sharing/participant-name-lookup";
 import { cn } from "@/lib/utils";
 import type { Expense } from "@/services/sharing-service";
 
@@ -65,6 +66,7 @@ export function SharingExpensesList({
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: expenses, isLoading } = useExpensesQuery(budgetId);
+  const { resolve: resolveName } = useParticipantNameLookup(budgetId);
 
   const filtered = useMemo(() => {
     if (!expenses) return [];
@@ -73,9 +75,10 @@ export function SharingExpensesList({
     return expenses.filter(
       (e) =>
         e.description.toLowerCase().includes(q) ||
-        e.paidBy.toLowerCase().includes(q),
+        e.paidBy.toLowerCase().includes(q) ||
+        resolveName(e.paidBy).toLowerCase().includes(q),
     );
-  }, [expenses, searchQuery]);
+  }, [expenses, searchQuery, resolveName]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, { header: string; key: string; items: Expense[] }>();
@@ -167,14 +170,14 @@ export function SharingExpensesList({
                         stripeClass,
                       )}
                     >
-                      <UserAvatar name={expense.paidBy} size={36} className="shrink-0" />
+                      <UserAvatar name={resolveName(expense.paidBy)} size={36} className="shrink-0" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-foreground">
                           {expense.description}
                         </p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                           <span className="text-xs text-muted-foreground">
-                            {expense.paidBy}
+                            {resolveName(expense.paidBy)}
                           </span>
                           {legSummary && (
                             <>

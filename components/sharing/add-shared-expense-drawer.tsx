@@ -12,6 +12,7 @@ import { useToast } from "@/components/state/toast-provider";
 import { useAuthStore } from "@/lib/auth-store";
 import { Loader2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import type { SplitMethod, AddExpenseItemInput } from "@/services/sharing-service";
 
 type AddSharedExpenseDrawerProps = {
@@ -43,6 +44,7 @@ export function AddSharedExpenseDrawer({
   open,
   onOpenChange,
 }: AddSharedExpenseDrawerProps) {
+  const t = useTranslations("sharing");
   const [tab, setTab] = useState<Tab>("equal");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -231,7 +233,7 @@ export function AddSharedExpenseDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col p-0">
         <SheetHeader className="shrink-0 border-b border-border/60 px-5 py-4">
-          <SheetTitle>Add expense</SheetTitle>
+          <SheetTitle>{t("budget.addExpense")}</SheetTitle>
         </SheetHeader>
 
         <SheetBody className="flex-1 overflow-y-auto space-y-5 px-5 py-4">
@@ -466,7 +468,7 @@ export function AddSharedExpenseDrawer({
 
               <Button variant="outline" size="sm" onClick={addItem} className="w-full">
                 <Plus className="h-4 w-4 mr-1.5" />
-                Add item
+                {t("item.addItem")}
               </Button>
             </div>
           )}
@@ -475,7 +477,7 @@ export function AddSharedExpenseDrawer({
         <SheetFooter className="shrink-0 border-t border-border/60 px-5 py-4">
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleClose} disabled={addExpense.isPending}>
-              Cancel
+              {t("form.cancel")}
             </Button>
             <Button
               variant="default"

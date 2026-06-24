@@ -122,6 +122,7 @@ export interface ParticipantInfo {
   joinedAt: number;
   lastSeenAt: number;
   revoked: boolean;
+  userId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +250,7 @@ interface RawParticipant {
   joined_at: number;
   last_seen_at: number;
   revoked: boolean;
+  user_id?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -363,6 +365,7 @@ function mapParticipant(raw: RawParticipant): ParticipantInfo {
     joinedAt: raw.joined_at,
     lastSeenAt: raw.last_seen_at,
     revoked: raw.revoked,
+    userId: raw.user_id,
   };
 }
 

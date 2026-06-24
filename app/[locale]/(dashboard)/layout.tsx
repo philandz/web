@@ -34,21 +34,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const profile = useAuthStore((state) => state.profile);
   const authReady = hydrated || Boolean(token && userType);
 
-  // Sharing routes are open to guests — skip auth + AppShell. The
-  // page itself wraps content in SharingBudgetView which has its
-  // own header + bottom-bar.
-  if (isSharingRoute(pathname)) {
-    return <>{children}</>;
-  }
-
   useEffect(() => {
     if (!authReady) return;
+    if (isSharingRoute(pathname)) return;
 
     const redirectTo = getDashboardRedirect({ token, userType, selectedOrgId }, pathname);
     if (redirectTo) {
       router.replace(redirectTo);
     }
   }, [authReady, pathname, router, selectedOrgId, token, userType]);
+
+  // Sharing routes are open to guests — skip auth + AppShell. The
+  // page itself wraps content in SharingBudgetView which has its
+  // own header + bottom-bar.
+  if (isSharingRoute(pathname)) {
+    return <>{children}</>;
+  }
 
   if (!authReady) {
     return (

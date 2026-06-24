@@ -13,6 +13,7 @@ import {
   useParticipantsQuery,
   useMarkSettledMutation,
 } from "@/modules/sharing/hooks";
+import { useParticipantNameLookup } from "@/modules/sharing/participant-name-lookup";
 import { MarkAsSettledDialog } from "./mark-as-settled-dialog";
 
 type SharingSettlementCardProps = {
@@ -25,6 +26,7 @@ export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) 
   const { data: confirmations, isLoading: confLoading } =
     useSettlementsQuery(budgetId);
   const { data: participants } = useParticipantsQuery(budgetId);
+  const { resolve: resolveName } = useParticipantNameLookup(budgetId);
   const markSettled = useMarkSettledMutation();
   const [selectedTransfer, setSelectedTransfer] = useState<{
     fromParticipantId: string;
@@ -36,8 +38,10 @@ export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) 
 
   const participantNameById = useMemo(() => {
     const map = new Map<string, string>();
+    // Key by user_id (identity user_id), not the participant row UUID,
+    // because settlement transfers use user_id in their from/to fields.
     (participants ?? []).forEach((p) => {
-      map.set(p.participantId, p.displayName);
+      if (p.userId) map.set(p.userId, p.displayName);
     });
     return map;
   }, [participants]);
@@ -149,10 +153,10 @@ export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) 
               {settledConfirmed.map((c) => {
                 const fromName =
                   participantNameById.get(c.fromParticipantId) ??
-                  c.fromParticipantId;
+                  resolveName(c.fromParticipantId);
                 const toName =
                   participantNameById.get(c.toParticipantId) ??
-                  c.toParticipantId;
+                  resolveName(c.toParticipantId);
                 return (
                   <div
                     key={c.id}

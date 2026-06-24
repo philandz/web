@@ -61,7 +61,9 @@
     "owesYou": "{name} owes you",
     "youOwe": "You owe {name}",
     "settledUp": "Settled up",
-    "addFirst": "Add your first expense"
+    "addFirst": "Add your first expense",
+    "details": "Expense Details",
+    "splitBreakdown": "Split breakdown"
   },
   "splitMethod": {
     "splitEqual": "Equal",
@@ -157,7 +159,8 @@
     "back": "Back",
     "next": "Next",
     "required": "Required",
-    "optional": "Optional"
+    "optional": "Optional",
+    "edit": "Edit"
   },
   "header": {
     "invite": "Invite",
