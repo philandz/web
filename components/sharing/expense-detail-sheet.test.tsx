@@ -39,6 +39,27 @@ vi.mock("@/components/state/toast-provider", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
+vi.mock("@/lib/auth-store", () => ({
+  useAuthStore: vi.fn((sel?: (s: { profile: { id: string; displayName: string } }) => unknown) =>
+    sel ? sel({ profile: { id: "u1", displayName: "Alice" } }) : { profile: { id: "u1", displayName: "Alice" } }
+  ),
+}));
+
+vi.mock("@/modules/sharing/participant-name-lookup", () => ({
+  useParticipantNameLookup: () => ({
+    resolve: (userId: string) => {
+      if (userId === "u1") return "Alice";
+      if (userId === "u2") return "Bob";
+      if (userId.startsWith("g_")) return "Guest";
+      return userId;
+    },
+  }),
+}));
+
 const expense: Expense = {
   id: "e1",
   budgetId: "b1",
@@ -109,7 +130,7 @@ describe("ExpenseDetailSheet", () => {
   it("Close button calls onOpenChange(false)", () => {
     render(<ExpenseDetailSheet expense={expense} open={true} onOpenChange={onOpenChange} />);
     const closeBtns = screen.getAllByRole("button");
-    const closeBtn = closeBtns.find((b) => b.textContent === "Close");
+    const closeBtn = closeBtns.find((b) => b.textContent === "form.close");
     expect(closeBtn).toBeInTheDocument();
     fireEvent.click(closeBtn!);
     expect(onOpenChange).toHaveBeenCalledWith(false);

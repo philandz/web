@@ -33,6 +33,10 @@ vi.mock("@/components/state/toast-provider", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 vi.mock("@/lib/auth-store", () => ({
   useAuthStore: () => ({ profile: { id: "u1" } }),
 }));
@@ -75,9 +79,9 @@ describe("AddSharedExpenseDrawer", () => {
 
   it("cancel button calls onOpenChange(false)", () => {
     render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
-    // Cancel is in SheetFooter
+    // Cancel is in SheetFooter; the test mock returns the i18n key as-is
     const buttons = screen.getAllByRole("button");
-    const cancelBtn = buttons.find((b) => b.textContent === "Cancel");
+    const cancelBtn = buttons.find((b) => b.textContent === "form.cancel");
     expect(cancelBtn).toBeInTheDocument();
     fireEvent.click(cancelBtn!);
     expect(onOpenChange).toHaveBeenCalledWith(false);
