@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Loader2, ShieldAlert, Check, ArrowRight } from "lucide-react";
 
+import { useAuthStore } from "@/lib/auth-store";
+import { sanitizeReturnTo } from "@/modules/auth/return-to";
 import { usePreviewJoinLinkMutation, useJoinAsGuestMutation } from "@/modules/sharing/hooks";
 import type { JoinLinkPreview } from "@/services/sharing-service";
 
@@ -92,10 +94,12 @@ function ValidFormState({
   preview,
   token,
   locale,
+  returnTo,
 }: {
   preview: JoinLinkPreview;
   token: string;
   locale: string;
+  returnTo: string | null;
 }) {
   const router = useRouter();
   const joinMutation = useJoinAsGuestMutation();
@@ -123,10 +127,10 @@ function ValidFormState({
         onSuccess: (result) => {
           // Redirect after brief success display
           setTimeout(() => {
-            // Route groups like (dashboard) are NOT part of the URL
-            // in the Next.js App Router — strip them or use the
-            // helper which already does the right thing.
-            router.push(`/${locale}/sharing/${result.budgetId}`);
+            // Prefer the explicit return_to (preserved across the
+            // signup/login round-trip) when present; otherwise land
+            // on the canonical sharing detail page for the budget.
+            router.push(returnTo ?? `/${locale}/sharing/${result.budgetId}`);
           }, 800);
         },
       }
@@ -157,6 +161,11 @@ function ValidFormState({
   return (
     <Card>
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Preserve return_to through signup → login round-trip */}
+        {returnTo ? (
+          <input type="hidden" name="return_to" value={returnTo} />
+        ) : null}
+
         {/* Budget info pill */}
         <div className="flex items-center justify-center gap-2">
           <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
@@ -224,13 +233,24 @@ function ValidFormState({
 export default function JoinBudgetPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const locale = (params.locale as string) ?? "en";
   const token = searchParams.get("token");
+  const returnTo = sanitizeReturnTo(searchParams.get("return_to"));
+
+  const authToken = useAuthStore((state) => state.token);
 
   const [state, setState] = useState<PageState>("loading");
   const [preview, setPreview] = useState<JoinLinkPreview | null>(null);
 
   const previewMutation = usePreviewJoinLinkMutation();
+
+  // Logged-in users don't need the guest form — send them straight to the
+  // intended destination (preserved return_to, or the canonical sharing page).
+  useEffect(() => {
+    if (!authToken) return;
+    router.replace(returnTo ?? `/${locale}/sharing`);
+  }, [authToken, returnTo, locale, router]);
 
   useEffect(() => {
     if (!token) {
@@ -252,6 +272,10 @@ export default function JoinBudgetPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  if (authToken) {
+    return <LoadingState />;
+  }
+
   if (state === "loading" || !token) {
     return <LoadingState />;
   }
@@ -261,7 +285,14 @@ export default function JoinBudgetPage() {
   }
 
   if (state === "form" && preview) {
-    return <ValidFormState preview={preview} token={token} locale={locale} />;
+    return (
+      <ValidFormState
+        preview={preview}
+        token={token}
+        locale={locale}
+        returnTo={returnTo}
+      />
+    );
   }
 
   return null;

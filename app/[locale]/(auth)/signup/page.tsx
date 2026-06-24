@@ -15,6 +15,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { applyServerValidationErrors, getFormErrorMessage } from "@/lib/form-errors";
 import { createSignupFormSchema, type SignupFormValues } from "@/modules/auth/forms";
 import { useSignupMutation } from "@/modules/auth/hooks";
+import { sanitizeReturnTo } from "@/modules/auth/return-to";
 import { identityService } from "@/services/identity-service";
 
 export default function SignupPage() {
@@ -23,6 +24,7 @@ export default function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const invitationToken = searchParams.get("invitation");
+  const returnTo = sanitizeReturnTo(searchParams.get("return_to"));
 
   const [formError, setFormError] = useState<string | null>(null);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
@@ -54,7 +56,7 @@ export default function SignupPage() {
         // User can ask for a new invite after logging in.
       }
     }
-    router.push(routes.login);
+    router.push(returnTo ? `${routes.login}?return_to=${encodeURIComponent(returnTo)}` : routes.login);
   }
 
   const isPending = mutation.isPending || acceptingInvite;
