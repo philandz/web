@@ -11,6 +11,15 @@ import { useAuthHydration } from "@/hooks/use-auth-hydration";
 import { useAuthStore } from "@/lib/auth-store";
 import { getDashboardRedirect } from "@/modules/auth/route-guards";
 
+// Sharing-budget pages are reachable by guests (no JWT, only a
+// `sharing_session_<budgetId>` in localStorage). They render their
+// own shell via SharingBudgetView, so the AppShell / auth guard
+// should be bypassed for these paths.
+function isSharingRoute(pathname: string): boolean {
+  const stripped = pathname.replace(/^\/(en|vi)/, "");
+  return stripped.startsWith("/sharing/") || stripped === "/sharing";
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   // Route-group guard for normal users: keeps pages focused on UI rendering.
   const tAuth = useTranslations("auth.login");
@@ -24,6 +33,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const selectedOrgId = useAuthStore((state) => state.selectedOrgId);
   const profile = useAuthStore((state) => state.profile);
   const authReady = hydrated || Boolean(token && userType);
+
+  // Sharing routes are open to guests — skip auth + AppShell. The
+  // page itself wraps content in SharingBudgetView which has its
+  // own header + bottom-bar.
+  if (isSharingRoute(pathname)) {
+    return <>{children}</>;
+  }
 
   useEffect(() => {
     if (!authReady) return;
