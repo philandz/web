@@ -60,7 +60,8 @@
     "youPaid": "Bạn đã trả",
     "owesYou": "{name} nợ bạn",
     "youOwe": "Bạn nợ {name}",
-    "settledUp": "Đã cân bằng"
+    "settledUp": "Đã cân bằng",
+    "addFirst": "Thêm khoản chi đầu tiên"
   },
   "splitMethod": {
     "splitEqual": "Chia đều",

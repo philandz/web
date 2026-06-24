@@ -60,7 +60,8 @@
     "youPaid": "You paid",
     "owesYou": "{name} owes you",
     "youOwe": "You owe {name}",
-    "settledUp": "Settled up"
+    "settledUp": "Settled up",
+    "addFirst": "Add your first expense"
   },
   "splitMethod": {
     "splitEqual": "Equal",
