@@ -105,6 +105,7 @@ vi.mock("@/modules/sharing/hooks", () => ({
   useExpensesQuery: () => hooksState.expenses,
   useParticipantsQuery: () => hooksState.participants,
   useSettlementQuery: () => hooksState.settlement,
+  useDeleteExpenseMutation: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 function setHooks(expenses: any, participants: any, settlement = { data: undefined }) {

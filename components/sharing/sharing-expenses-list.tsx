@@ -25,7 +25,7 @@ const CATEGORY_STRIPE: Record<string, string> = {
   default: "border-l-amber-400",
 };
 
-function formatDateHeader(dateStr: string): string {
+function formatDateHeader(dateStr: string, t: (key: string) => string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -33,10 +33,10 @@ function formatDateHeader(dateStr: string): string {
   const weekAgo = new Date(today.getTime() - 7 * 86400000);
   const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-  if (dateOnly.getTime() === today.getTime()) return "Today";
-  if (dateOnly.getTime() === yesterday.getTime()) return "Yesterday";
-  if (dateOnly >= weekAgo) return "This week";
-  return "Older";
+  if (dateOnly.getTime() === today.getTime()) return t("time.today");
+  if (dateOnly.getTime() === yesterday.getTime()) return t("time.yesterday");
+  if (dateOnly >= weekAgo) return t("time.thisWeek");
+  return t("time.older");
 }
 
 function getDateKey(dateStr: string): string {
@@ -84,7 +84,7 @@ export function SharingExpensesList({
     const map = new Map<string, { header: string; key: string; items: Expense[] }>();
     for (const expense of filtered) {
       const key = getDateKey(expense.expenseDate);
-      const header = formatDateHeader(expense.expenseDate);
+      const header = formatDateHeader(expense.expenseDate, t);
       const groupKey = `${header}|${key}`;
       if (!map.has(groupKey)) {
         map.set(groupKey, { header, key: groupKey, items: [] });
@@ -145,8 +145,8 @@ export function SharingExpensesList({
       {grouped.length === 0 ? (
         <EmptyState
           icon={<Search className="h-6 w-6" />}
-          title="No matches"
-          description={`No expenses match "${searchQuery}"`}
+          title={t("budget.noMatches")}
+          description={t("budget.noMatchesDesc", { query: searchQuery })}
         />
       ) : (
         <div className="space-y-5">

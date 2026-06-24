@@ -33,7 +33,7 @@ export function SharingMobileTabs({ active, onChange }: SharingMobileTabsProps) 
               aria-selected={isActive}
               onClick={() => onChange(value)}
               className={cn(
-                "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all",
+                "flex shrink-0 items-center gap-1.5 rounded-lg min-h-[44px] px-3 py-2.5 text-xs font-medium transition-all",
                 isActive
                   ? "bg-amber-500/12 text-amber-600 dark:text-amber-400"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/60",

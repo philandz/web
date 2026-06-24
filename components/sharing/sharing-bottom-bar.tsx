@@ -25,7 +25,7 @@ export function SharingBottomBar({
         <button
           type="button"
           onClick={onInvite}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card/80 px-3 py-2.5 text-xs font-medium text-foreground hover-lift active:scale-[0.98] transition"
+          className="flex flex-1 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card/80 px-3 py-2.5 text-xs font-medium text-foreground hover-lift active:scale-[0.98] transition"
         >
           <UserPlus className="h-4 w-4" />
           {t("bottomBar.invite")}
@@ -33,7 +33,7 @@ export function SharingBottomBar({
         <button
           type="button"
           onClick={onAddExpense}
-          className="flex flex-[1.4] items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground shadow-soft hover-lift active:scale-[0.98] transition"
+          className="flex flex-[1.4] min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground shadow-soft hover-lift active:scale-[0.98] transition"
         >
           <Plus className="h-4 w-4" />
           {t("bottomBar.addExpense")}
@@ -43,7 +43,7 @@ export function SharingBottomBar({
           onClick={onMarkSettled}
           disabled={!hasUnsettled}
           className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card/80 px-3 py-2.5 text-xs font-medium transition active:scale-[0.98]",
+            "flex flex-1 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card/80 px-3 py-2.5 text-xs font-medium transition active:scale-[0.98]",
             hasUnsettled
               ? "text-foreground hover-lift"
               : "text-muted-foreground opacity-50 cursor-not-allowed",

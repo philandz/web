@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { AmountInput } from "@/components/ui/amount-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -30,6 +30,9 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "percentage", label: "Percentage" },
   { value: "by_item", label: "By item" },
 ];
+
+// Label placeholders for the tab strip are filled in by the component via
+// t() so locale fallback doesn't strip them out.
 
 function formatVND(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
@@ -92,12 +95,15 @@ export function AddSharedExpenseDrawer({
     return 0;
   }, [numericAmount, selectedParticipantIds.length, tab, totalWeight]);
 
-  // Initialize selected participants when drawer opens
-  useState(() => {
+  // Initialize selected participants when the participants query resolves
+  // and the user hasn't already chosen anyone. (Was previously implemented
+  // with `useState(() => …)` which only runs once at mount — too early for
+  // the async participants query — so `selectedParticipantIds` stayed [].)
+  useEffect(() => {
     if (participants && selectedParticipantIds.length === 0) {
       setSelectedParticipantIds(participants.map((p) => p.participantId));
     }
-  });
+  }, [participants]);
 
   function buildLegs() {
     const ids = selectedParticipantIds.length > 0 ? selectedParticipantIds : participants?.map((p) => p.participantId) ?? [];
@@ -178,10 +184,10 @@ export function AddSharedExpenseDrawer({
       },
       {
         onSuccess: () => {
-          toast.success("Expense added");
+          toast.success(t("comment.commentAdded"));
           handleClose();
         },
-        onError: () => toast.error("Failed to add expense"),
+        onError: () => toast.error(t("errors.errorGeneric")),
       }
     );
   }
@@ -251,7 +257,7 @@ export function AddSharedExpenseDrawer({
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What was this for?"
+            placeholder={t("splitMethod.descriptionPlaceholder")}
             className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
 
@@ -272,7 +278,7 @@ export function AddSharedExpenseDrawer({
           {/* Tab content */}
           {tab === "equal" && (
             <div className="space-y-3">
-              <p className="text-sm font-medium text-foreground">Split equally</p>
+              <p className="text-sm font-medium text-foreground">{t("splitMethod.equalLabel")}</p>
               <div className="flex flex-wrap gap-2">
                 {participants?.map((p) => (
                   <button
@@ -297,7 +303,7 @@ export function AddSharedExpenseDrawer({
 
           {tab === "custom" && (
             <div className="space-y-3">
-              <p className="text-sm font-medium text-foreground">Custom amounts</p>
+              <p className="text-sm font-medium text-foreground">{t("splitMethod.customLabel")}</p>
               <div className="space-y-2">
                 {selectedParticipantIds.map((id) => {
                   const participant = participants?.find((p) => p.participantId === id);
@@ -318,16 +324,16 @@ export function AddSharedExpenseDrawer({
                 })}
               </div>
               <div className="flex justify-between text-sm pt-2 border-t border-border/60">
-                <span className="text-muted-foreground">Total</span>
+                <span className="text-muted-foreground">{t("splitMethod.customTotal")}</span>
                 <span className={cn(
                   "tabular-nums font-medium",
-                  Object.values(customAmounts).reduce((s, v) => s + (parseInt(v?.replace(/\D/g, "") || "0"), 0), 0) === numericAmount
+                  Object.values(customAmounts).reduce((s, v) => s + (parseInt(v?.replace(/\D/g, "") || "0")), 0) === numericAmount
                     ? "text-emerald-600"
                     : "text-red-600"
                 )}>
                   {formatVND(
                     Object.values(customAmounts).reduce(
-                      (s, v) => s + (parseInt(v?.replace(/\D/g, "") || "0"), 0),
+                      (s, v) => s + (parseInt(v?.replace(/\D/g, "") || "0")),
                       0
                     )
                   )}
@@ -338,7 +344,7 @@ export function AddSharedExpenseDrawer({
 
           {tab === "weighted" && (
             <div className="space-y-3">
-              <p className="text-sm font-medium text-foreground">Weighted split</p>
+              <p className="text-sm font-medium text-foreground">{t("splitMethod.weightedHeading")}</p>
               <div className="space-y-2">
                 {selectedParticipantIds.map((id) => {
                   const participant = participants?.find((p) => p.participantId === id);
@@ -368,7 +374,7 @@ export function AddSharedExpenseDrawer({
           {tab === "percentage" && (
             <div className="space-y-3">
               <div className="flex justify-between">
-                <p className="text-sm font-medium text-foreground">Percentage split</p>
+                <p className="text-sm font-medium text-foreground">{t("splitMethod.percentageHeading")}</p>
                 <span className={cn(
                   "text-sm tabular-nums font-medium",
                   totalPercentage === 100 ? "text-emerald-600" : "text-red-600"
@@ -409,7 +415,7 @@ export function AddSharedExpenseDrawer({
           {tab === "by_item" && (
             <div className="space-y-3">
               <div className="flex justify-between">
-                <p className="text-sm font-medium text-foreground">Items</p>
+                <p className="text-sm font-medium text-foreground">{t("splitMethod.byItemHeading")}</p>
                 <span className={cn(
                   "text-sm tabular-nums font-medium",
                   itemsTotal === numericAmount ? "text-emerald-600" : "text-red-600"
@@ -426,7 +432,7 @@ export function AddSharedExpenseDrawer({
                         type="text"
                         value={item.label}
                         onChange={(e) => updateItem(itemIndex, "label", e.target.value)}
-                        placeholder="Item name"
+                        placeholder={t("splitMethod.itemNamePlaceholder")}
                         className="flex-1 rounded-lg border border-border bg-card px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       />
                       <input
@@ -482,16 +488,23 @@ export function AddSharedExpenseDrawer({
             <Button
               variant="default"
               onClick={handleSubmit}
-              disabled={!isValid || addExpense.isPending}
+              disabled={
+                !isValid ||
+                addExpense.isPending ||
+                !participants ||
+                selectedParticipantIds.length === 0
+              }
               className="flex-1"
             >
               {addExpense.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                  Adding...
+                  {t("form.submitting")}
                 </>
+              ) : selectedParticipantIds.length === 0 ? (
+                t("splitMethod.needParticipants")
               ) : (
-                "Add expense"
+                t("form.submit")
               )}
             </Button>
           </div>

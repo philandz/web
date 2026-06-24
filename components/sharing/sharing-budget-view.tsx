@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useExpensesQuery, useParticipantsQuery, useSettlementQuery } from "@/modules/sharing/hooks";
+import { useExpensesQuery, useParticipantsQuery, useSettlementQuery, useDeleteExpenseMutation } from "@/modules/sharing/hooks";
 import { useToast } from "@/components/state/toast-provider";
 import type { Expense } from "@/services/sharing-service";
 
@@ -38,6 +38,7 @@ export function SharingBudgetView({
   const { data: expenses } = useExpensesQuery(budgetId);
   const { data: participants } = useParticipantsQuery(budgetId);
   const { data: settlement } = useSettlementQuery(budgetId);
+  const deleteExpense = useDeleteExpenseMutation();
 
   const totalSpent = useMemo(
     () => expenses?.reduce((sum, e) => sum + e.totalAmount, 0) ?? 0,
@@ -148,8 +149,13 @@ export function SharingBudgetView({
           if (!open) setSelectedExpense(null);
         }}
         onDelete={(expenseId) => {
-          toast.success(t("expense.deleteExpenseSuccess"));
-          setSelectedExpense(null);
+          deleteExpense.mutate(expenseId, {
+            onSuccess: () => {
+              toast.success(t("expense.deleteExpenseSuccess"));
+              setSelectedExpense(null);
+            },
+            onError: () => toast.error(t("expense.deleteExpenseError")),
+          });
         }}
       />
 

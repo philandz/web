@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCommentsQuery, useAddCommentMutation, useDeleteCommentMutation } from "@/modules/sharing/hooks";
 import { useParticipantNameLookup } from "@/modules/sharing/participant-name-lookup";
+import { useAuthStore } from "@/lib/auth-store";
 import type { Expense, ExpenseComment } from "@/services/sharing-service";
 import { useToast } from "@/components/state/toast-provider";
 import { Loader2, Trash2, Edit, MessageCircle } from "lucide-react";
@@ -66,7 +67,13 @@ export function ExpenseDetailSheet({
   const addComment = useAddCommentMutation();
   const deleteComment = useDeleteCommentMutation();
 
-  const isOwnerOrPayer = false; // Would come from auth context
+  const currentUserId = useAuthStore((state) => state.profile?.id);
+  const isOwnerOrPayer = Boolean(
+    expense &&
+      currentUserId &&
+      (expense.paidBy === currentUserId ||
+        (expense as Expense & { createdBy?: string }).createdBy === currentUserId)
+  );
 
   function handleAddComment() {
     if (!commentText.trim() || !expense) return;
@@ -75,17 +82,17 @@ export function ExpenseDetailSheet({
       {
         onSuccess: () => {
           setCommentText("");
-          toast.success("Comment added");
+          toast.success(t("comment.commentAdded"));
         },
-        onError: () => toast.error("Failed to add comment"),
+        onError: () => toast.error(t("comment.commentAddedError")),
       }
     );
   }
 
   function handleDeleteComment(commentId: string) {
     deleteComment.mutate(commentId, {
-      onSuccess: () => toast.success("Comment deleted"),
-      onError: () => toast.error("Failed to delete comment"),
+      onSuccess: () => toast.success(t("comment.commentDeleted")),
+      onError: () => toast.error(t("comment.commentDeletedError")),
     });
   }
 
@@ -184,7 +191,7 @@ export function ExpenseDetailSheet({
                         <button
                           onClick={() => handleDeleteComment(comment.id)}
                           className="p-1 text-muted-foreground hover:text-destructive transition-colors"
-                          aria-label="Delete comment"
+                          aria-label={t("comment.deleteComment")}
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
@@ -210,7 +217,7 @@ export function ExpenseDetailSheet({
                       handleAddComment();
                     }
                   }}
-                  placeholder="Add a comment..."
+                  placeholder={t("comment.commentInputPlaceholder")}
                   className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 <Button
@@ -221,7 +228,7 @@ export function ExpenseDetailSheet({
                   {addComment.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    "Post"
+                    t("comment.addCommentCta")
                   )}
                 </Button>
               </div>
@@ -259,10 +266,10 @@ export function ExpenseDetailSheet({
       <ConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
-        title="Delete expense"
-        description="Are you sure you want to delete this expense? This action cannot be undone."
+        title={t("expense.deleteExpense")}
+        description={t("expense.deleteExpenseConfirm")}
         destructive
-        confirmLabel="Delete"
+        confirmLabel={t("form.delete")}
         onConfirm={handleDelete}
       />
     </>

@@ -27,7 +27,9 @@
     "filterLodging": "Lưu trú",
     "filterActivities": "Hoạt động",
     "filterOther": "Khác",
-    "searchPlaceholder": "Tìm chi tiêu…"
+    "searchPlaceholder": "Tìm chi tiêu…",
+    "noMatches": "Không có kết quả",
+    "noMatchesDesc": "Không có chi tiêu nào khớp \"{query}\""
   },
   "members": {
     "title": "Thành viên",
@@ -53,8 +55,9 @@
     "removeReceipt": "Xóa",
     "receiptThumbnail": "Ảnh hóa đơn",
     "deleteExpense": "Xóa chi tiêu",
-    "deleteExpenseConfirm": "Bạn có chắc muốn xóa chi tiêu này không?",
+    "deleteExpenseConfirm": "Bạn có chắc muốn xóa chi tiêu này không? Hành động này không thể hoàn tác.",
     "deleteExpenseSuccess": "Đã xóa chi tiêu",
+    "deleteExpenseError": "Không thể xóa chi tiêu",
     "addedBy": "Thêm bởi {name}",
     "expenseDate": "{date}",
     "youPaid": "Bạn đã trả",
@@ -80,7 +83,14 @@
     "customDesc": "Đặt số tiền cụ thể cho từng người",
     "weightedDesc": "Mỗi người trả theo tỷ lệ",
     "percentageDesc": "Mỗi người trả theo phần trăm",
-    "byItemDesc": "Gán từng món cho người thanh toán"
+    "byItemDesc": "Gán từng món cho người thanh toán",
+    "customTotal": "Tổng",
+    "weightedHeading": "Chia theo tỷ lệ",
+    "percentageHeading": "Chia theo phần trăm",
+    "byItemHeading": "Các món",
+    "descriptionPlaceholder": "Mua gì vậy?",
+    "itemNamePlaceholder": "Tên món",
+    "needParticipants": "Hãy thêm người tham gia để tiếp tục"
   },
   "item": {
     "itemLabel": "Tên món",
@@ -102,7 +112,11 @@
     "noComments": "Chưa có bình luận",
     "noCommentsHint": "Hãy là người đầu tiên bình luận",
     "commentAdded": "Đã thêm bình luận",
-    "comments": "Bình luận"
+    "comments": "Bình luận",
+    "addCommentCta": "Đăng",
+    "commentInputPlaceholder": "Thêm bình luận…",
+    "commentAddedError": "Không thể thêm bình luận",
+    "commentDeletedError": "Không thể xóa bình luận"
   },
   "receipt": {
     "attachReceipt": "Đính kèm hóa đơn",

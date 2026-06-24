@@ -412,11 +412,16 @@ export const sharingService = {
   }): Promise<Expense> {
     const splitMethodNum = SPLIT_METHOD_TO_NUM[input.splitMethod];
 
-    // Build legs payload; for percentage the third slot carries basis-points
+    // Build legs payload; for percentage the third slot (weight) carries
+    // basis-points (0-10000). The UI captures percentages 0-100, so we
+    // convert here at the wire boundary.
     const legs = input.legs.map((l) => ({
       user_id: l.userId,
       amount: l.amount,
-      weight: l.weight ?? 0,
+      weight:
+        input.splitMethod === "percentage"
+          ? Math.round((l.weight ?? 0) * 100)
+          : l.weight ?? 0,
     }));
 
     // Build items payload; only used for BY_ITEM split

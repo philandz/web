@@ -54,9 +54,15 @@ export function SharingMembersCard({
     }>) {
       const from = row.fromUserId ?? row.from_user_id ?? "";
       const to = row.toUserId ?? row.to_user_id ?? "";
-      const amt = Number(row.amount ?? 0);
-      if (from) map.set(from, (map.get(from) ?? 0) - amt);
-      if (to) map.set(to, (map.get(to) ?? 0) + amt);
+      const amt: number = Number(row.amount ?? 0);
+      if (from) {
+        const cur: number = map.get(from) ?? 0;
+        map.set(from, cur - amt);
+      }
+      if (to) {
+        const cur: number = map.get(to) ?? 0;
+        map.set(to, cur + amt);
+      }
     }
     return map;
   }, [settlement]);
@@ -132,7 +138,12 @@ export function SharingMembersCard({
           {participants.map((p) => {
             const isGuest =
               p.kind === "GUEST" || (typeof p.kind === "number" && p.kind === 2);
-            const balance = balanceByParticipant.get(p.participantId) ?? 0;
+            // Settlement rows use the identity user_id (not the participant
+            // row UUID). Members carry `userId`; guests carry no identity
+            // user_id so their balance is always 0 here.
+            const balance: number = p.userId
+              ? balanceByParticipant.get(p.userId) ?? 0
+              : 0;
             const hasBalance = Math.abs(balance) > 0;
             return (
               <div
