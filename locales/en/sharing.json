@@ -157,6 +157,45 @@
     "required": "Required",
     "optional": "Optional"
   },
+  "header": {
+    "invite": "Invite",
+    "inviteAria": "Invite members",
+    "addExpense": "Add expense",
+    "backToSharing": "Back to sharing budgets"
+  },
+  "tabs": {
+    "members": "Members",
+    "expenses": "Expenses",
+    "settle": "Settle",
+    "activity": "Activity"
+  },
+  "invite": {
+    "title": "Invite to {budget}",
+    "tabLink": "Link",
+    "tabQr": "QR code",
+    "tabShare": "Share to",
+    "copyLink": "Copy",
+    "copied": "Copied!",
+    "regenerate": "Generate new link",
+    "regenerateConfirm": "Generate a new link? The old one will keep working until it expires.",
+    "expiresIn": "Expires in {time}",
+    "expired": "Expired",
+    "scanToJoin": "Scan to join — link expires in {time}",
+    "downloadQr": "Download QR",
+    "share": {
+      "zalo": "Zalo",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "sms": "SMS",
+      "copy": "Copy link"
+    },
+    "shareMessage": "Join my sharing budget: {url}"
+  },
+  "bottomBar": {
+    "invite": "Invite",
+    "addExpense": "Add",
+    "markSettled": "Settle"
+  },
   "errors": {
     "errorGeneric": "Something went wrong. Please try again.",
     "errorNotFound": "Not found",

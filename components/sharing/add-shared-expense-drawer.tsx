@@ -279,7 +279,7 @@ export function AddSharedExpenseDrawer({
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all",
                       selectedParticipantIds.includes(p.participantId)
-                        ? "bg-[#0d9488] text-white"
+                        ? "bg-accent text-accent-foreground"
                         : "bg-muted text-muted-foreground hover:bg-muted/80"
                     )}
                   >
@@ -451,7 +451,7 @@ export function AddSharedExpenseDrawer({
                             className={cn(
                               "text-xs px-2 py-0.5 rounded-full transition-all",
                               item.assignedTo.includes(id)
-                                ? "bg-[#0d9488] text-white"
+                                ? "bg-accent text-accent-foreground"
                                 : "bg-muted text-muted-foreground"
                             )}
                           >

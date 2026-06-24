@@ -1,132 +1,217 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Loader2, UserCheck, UserMinus, UserPlus, Users } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { BalancePill } from "@/components/ui/balance-pill";
-import { useParticipantsQuery, useRevokeParticipantMutation } from "@/modules/sharing/hooks";
-import { useAuthStore } from "@/lib/auth-store";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { UserPlus, UserX } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/state/toast-provider";
-import { Loader2 } from "lucide-react";
+import {
+  useParticipantsQuery,
+  useRevokeParticipantMutation,
+  useSettlementQuery,
+} from "@/modules/sharing/hooks";
 import { InviteMemberDialog } from "./invite-member-dialog";
 
 type SharingMembersCardProps = {
   budgetId: string;
+  budgetName?: string;
 };
 
-export function SharingMembersCard({ budgetId }: SharingMembersCardProps) {
-  const { data: participants, isLoading } = useParticipantsQuery(budgetId);
-  const currentUserId = useAuthStore((state) => state.profile?.id);
+export function SharingMembersCard({
+  budgetId,
+  budgetName = "Sharing Budget",
+}: SharingMembersCardProps) {
+  const t = useTranslations("sharing");
   const toast = useToast();
+  const { data: participants, isLoading } = useParticipantsQuery(budgetId);
+  const { data: settlement } = useSettlementQuery(budgetId);
   const revokeMutation = useRevokeParticipantMutation();
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [confirmRevoke, setConfirmRevoke] = useState<
+    | { id: string; displayName: string }
+    | null
+  >(null);
 
-  const isOwnerOrManager = true; // For sharing budgets, the caller is
-  // always at least a member of the parent budget; the sharing
-  // service enforces the actual role on the backend. Showing the
-  // button unconditionally keeps the UX simple for now.
+  // Map participant id -> net balance from the settlement response.
+  // The settlement rows use user_id; for guests that's "g_<uuid>".
+  const balanceByParticipant = useMemo(() => {
+    const map = new Map<string, number>();
+    const transfers = settlement?.transfers ?? [];
+    // The settlement response shape — adjust if backend uses different keys.
+    for (const row of transfers as Array<{
+      fromUserId?: string;
+      from_user_id?: string;
+      toUserId?: string;
+      to_user_id?: string;
+      amount?: number;
+    }>) {
+      const from = row.fromUserId ?? row.from_user_id ?? "";
+      const to = row.toUserId ?? row.to_user_id ?? "";
+      const amt = Number(row.amount ?? 0);
+      if (from) map.set(from, (map.get(from) ?? 0) - amt);
+      if (to) map.set(to, (map.get(to) ?? 0) + amt);
+    }
+    return map;
+  }, [settlement]);
 
-  function handleRevoke(participantId: string, displayName: string) {
-    if (!confirm(`Remove ${displayName} from this budget?`)) return;
+  function performRevoke() {
+    if (!confirmRevoke) return;
     revokeMutation.mutate(
-      { budgetId, participantId },
+      { budgetId, participantId: confirmRevoke.id },
       {
-        onSuccess: () => toast.success(`${displayName} removed`),
-        onError: () => toast.error("Failed to remove participant"),
-      }
+        onSuccess: () => {
+          toast.success(t("members.revokeParticipant"));
+          setConfirmRevoke(null);
+        },
+        onError: () => {
+          toast.error(t("form.confirm"));
+          setConfirmRevoke(null);
+        },
+      },
     );
   }
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        <div className="h-5 w-32 bg-muted animate-pulse rounded" />
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
-            <div className="flex-1 h-4 bg-muted animate-pulse rounded" />
-            <div className="w-16 h-6 bg-muted animate-pulse rounded-full" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (!participants || participants.length === 0) {
-    return (
-      <EmptyState
-        icon={<UserX className="h-6 w-6" />}
-        title="No participants"
-        description="Participants will appear here once they join"
-      />
+      <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <Skeleton className="h-5 w-5 rounded" />
+          <Skeleton className="h-5 w-32 rounded" />
+        </div>
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-2">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-28 rounded" />
+                <Skeleton className="h-3 w-16 rounded" />
+              </div>
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </section>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Members</h3>
-        {isOwnerOrManager && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setInviteOpen(true)}
-          >
-            <UserPlus className="mr-1.5 h-3.5 w-3.5" />
-            Invite
-          </Button>
-        )}
-      </div>
-      <div className="space-y-2">
-        {participants.map((participant) => (
-          <div
-            key={participant.participantId}
-            className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors"
-          >
-            <UserAvatar
-              name={participant.displayName}
-              size={36}
-              className="shrink-0"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-medium truncate">
-                  {participant.displayName}
-                </span>
-                {participant.kind === "GUEST" && (
-                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                    Guest
-                  </span>
-                )}
-              </div>
-            </div>
-            <BalancePill value={0} size="sm" />
-            {isOwnerOrManager && participant.participantId !== currentUserId && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-destructive"
-                onClick={() => handleRevoke(participant.participantId, participant.displayName)}
-                disabled={revokeMutation.isPending}
-              >
-                {revokeMutation.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  "Revoke"
-                )}
-              </Button>
-            )}
+    <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
+      <header className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+            <Users className="h-4 w-4" />
           </div>
-        ))}
-      </div>
+          <h3 className="text-base font-semibold text-foreground">
+            {t("members.title")}
+          </h3>
+          {participants && participants.length > 0 && (
+            <Badge variant="secondary" className="text-[10px]">
+              {participants.length}
+            </Badge>
+          )}
+        </div>
+      </header>
+
+      {!participants || participants.length === 0 ? (
+        <EmptyState
+          icon={<UserPlus className="h-6 w-6" />}
+          title={t("members.inviteFirstCta")}
+          description={t("budget.emptyExpenses")}
+          actionLabel={t("header.invite")}
+          onAction={() => setInviteOpen(true)}
+        />
+      ) : (
+        <div className="divide-y divide-border/40">
+          {participants.map((p) => {
+            const isGuest =
+              p.kind === "GUEST" || (typeof p.kind === "number" && p.kind === 2);
+            const balance = balanceByParticipant.get(p.participantId) ?? 0;
+            const hasBalance = Math.abs(balance) > 0;
+            return (
+              <div
+                key={p.participantId}
+                className="flex items-center gap-3 py-2.5"
+              >
+                <UserAvatar name={p.displayName} size={36} className="shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {p.displayName}
+                    </span>
+                    {isGuest && (
+                      <Badge
+                        variant="outline"
+                        className="border-border/60 text-[10px] text-muted-foreground"
+                      >
+                        {t("members.guest")}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {hasBalance
+                      ? balance > 0
+                        ? t("expense.owesYou", { name: p.displayName })
+                        : t("expense.youOwe", { name: p.displayName })
+                      : t("expense.settledUp")}
+                  </p>
+                </div>
+                {hasBalance ? (
+                  <span
+                    className={
+                      "shrink-0 text-sm font-semibold tabular-nums " +
+                      (balance > 0
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400")
+                    }
+                  >
+                    {balance > 0 ? "+" : ""}
+                    {new Intl.NumberFormat("vi-VN").format(balance)}
+                  </span>
+                ) : (
+                  <UserCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => setConfirmRevoke({ id: p.participantId, displayName: p.displayName })}
+                  aria-label={t("members.revokeParticipant")}
+                >
+                  <UserMinus className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <InviteMemberDialog
         budgetId={budgetId}
+        budgetName={budgetName}
         open={inviteOpen}
         onOpenChange={setInviteOpen}
       />
-    </div>
+
+      <ConfirmDialog
+        open={confirmRevoke !== null}
+        onOpenChange={(open) => !open && setConfirmRevoke(null)}
+        title={t("members.revokeParticipant")}
+        description={
+          confirmRevoke
+            ? t("members.revokeConfirm", { name: confirmRevoke.displayName })
+            : ""
+        }
+        confirmLabel={t("members.revokeParticipant")}
+        cancelLabel={t("form.cancel")}
+        onConfirm={performRevoke}
+        destructive
+        loading={revokeMutation.isPending}
+      />
+    </section>
   );
 }

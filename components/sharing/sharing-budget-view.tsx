@@ -1,21 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { Plus } from "lucide-react";
-import { Shell } from "./shell";
-import { SharingSettlementCard } from "./sharing-settlement-card";
-import { SharingExpensesList } from "./sharing-expenses-list";
-import { SharingMembersCard } from "./sharing-members-card";
-import { ActivityLogList } from "./activity-log-list";
-import { ExpenseDetailSheet } from "./expense-detail-sheet";
-import { AddSharedExpenseDrawer } from "./add-shared-expense-drawer";
-import { MoneyAmount } from "@/components/ui/money-amount";
-import { AvatarStack } from "@/components/ui/avatar-stack";
-import { Button } from "@/components/ui/button";
-import { useExpensesQuery, useParticipantsQuery } from "@/modules/sharing/hooks";
-import { StaggeredMount } from "./staggered-mount";
-import type { Expense } from "@/services/sharing-service";
+import { useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useExpensesQuery, useParticipantsQuery, useSettlementQuery } from "@/modules/sharing/hooks";
 import { useToast } from "@/components/state/toast-provider";
+import type { Expense } from "@/services/sharing-service";
+
+import { SharingPageHeader } from "./sharing-page-header";
+import { SharingMobileTabs, type MobileTab } from "./sharing-mobile-tabs";
+import { SharingBottomBar } from "./sharing-bottom-bar";
+import { SharingMembersCard } from "./sharing-members-card";
+import { SharingExpensesList } from "./sharing-expenses-list";
+import { SharingSettlementCard } from "./sharing-settlement-card";
+import { ActivityLogList } from "./activity-log-list";
+import { AddSharedExpenseDrawer } from "./add-shared-expense-drawer";
+import { ExpenseDetailSheet } from "./expense-detail-sheet";
+import { InviteMemberDialog } from "./invite-member-dialog";
 
 type SharingBudgetViewProps = {
   budgetId: string;
@@ -26,15 +26,37 @@ export function SharingBudgetView({
   budgetId,
   budgetName = "Sharing Budget",
 }: SharingBudgetViewProps) {
+  const t = useTranslations("sharing");
+  const toast = useToast();
+
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [showExpenseDetail, setShowExpenseDetail] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
-  const toast = useToast();
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("members");
 
   const { data: expenses } = useExpensesQuery(budgetId);
   const { data: participants } = useParticipantsQuery(budgetId);
+  const { data: settlement } = useSettlementQuery(budgetId);
 
-  const totalSpent = expenses?.reduce((sum, e) => sum + e.totalAmount, 0) ?? 0;
+  const totalSpent = useMemo(
+    () => expenses?.reduce((sum, e) => sum + e.totalAmount, 0) ?? 0,
+    [expenses],
+  );
+
+  const hasUnsettled = (settlement?.transfers ?? []).length > 0;
+
+  const refs = {
+    members: useRef<HTMLDivElement>(null),
+    expenses: useRef<HTMLDivElement>(null),
+    settle: useRef<HTMLDivElement>(null),
+    activity: useRef<HTMLDivElement>(null),
+  };
+
+  function handleMobileTabChange(tab: MobileTab) {
+    setMobileTab(tab);
+    refs[tab].current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function handleExpenseClick(expense: Expense) {
     setSelectedExpense(expense);
@@ -45,73 +67,79 @@ export function SharingBudgetView({
     setShowAddExpense(true);
   }
 
-  // Build participant users for AvatarStack
-  const participantUsers = (participants ?? []).map((p) => ({
-    id: p.participantId,
-    displayName: p.displayName,
-    avatar: null, // Would come from participant data if available
-  }));
+  function handleMarkSettled() {
+    refs.settle.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setMobileTab("settle");
+  }
 
   return (
-    <>
-      <Shell
+    <div className="animate-fade-in-up min-h-screen bg-background">
+      <SharingPageHeader
         budgetId={budgetId}
         budgetName={budgetName}
-        totalSpent={totalSpent}
         currency="VND"
-        participants={participantUsers}
-        rightRail={
-          <div className="space-y-6">
-            <SharingMembersCard budgetId={budgetId} />
-            <ActivityLogList budgetId={budgetId} />
-          </div>
-        }
-      >
-        <StaggeredMount defaultDelayMs={0} staggerMs={40}>
-          <div className="space-y-6 max-w-2xl">
-            {/* Header strip - visible on mobile inside Shell */}
-            <div className="hidden lg:flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-bold">{budgetName}</h1>
-                <span className="px-2 py-0.5 rounded-full bg-[#0d9488]/10 text-[#0d9488] text-sm font-medium">
-                  VND
-                </span>
-                {participantUsers.length > 0 && (
-                  <AvatarStack users={participantUsers} max={5} size="md" />
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <MoneyAmount value={totalSpent} size="xl" />
-                <Button onClick={handleAddExpense}>
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Add expense
-                </Button>
-              </div>
-            </div>
+        totalSpent={totalSpent}
+        participants={(participants ?? []).map((p) => ({
+          participantId: p.participantId,
+          displayName: p.displayName,
+          kind: p.kind,
+        }))}
+        onInviteClick={() => setInviteOpen(true)}
+        onAddExpenseClick={handleAddExpense}
+      />
 
-            {/* Settlement card */}
-            <section className="rounded-2xl border border-border bg-card p-5">
+      <SharingMobileTabs active={mobileTab} onChange={handleMobileTabChange} />
+
+      <main className="mx-auto max-w-5xl px-4 pb-24 pt-4 sm:px-6 lg:pb-10">
+        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+          {/* Main column */}
+          <div className="space-y-4">
+            <div ref={refs.settle}>
               <SharingSettlementCard budgetId={budgetId} />
-            </section>
-
-            {/* Expenses list */}
-            <section className="rounded-2xl border border-border bg-card p-5">
+            </div>
+            <div ref={refs.expenses}>
               <SharingExpensesList
                 budgetId={budgetId}
                 onExpenseClick={handleExpenseClick}
                 onAddExpense={handleAddExpense}
               />
-            </section>
-
-            {/* Activity log (mobile-friendly inline version) */}
-            <section className="rounded-2xl border border-border bg-card p-5 lg:hidden">
+            </div>
+            <div ref={refs.activity} className="lg:hidden">
               <ActivityLogList budgetId={budgetId} />
-            </section>
+            </div>
           </div>
-        </StaggeredMount>
-      </Shell>
 
-      {/* Expense detail sheet */}
+          {/* Right rail (desktop) */}
+          <aside className="hidden lg:block space-y-4">
+            <div ref={refs.members}>
+              <SharingMembersCard budgetId={budgetId} budgetName={budgetName} />
+            </div>
+            <div ref={refs.activity}>
+              <ActivityLogList budgetId={budgetId} />
+            </div>
+          </aside>
+
+          {/* Mobile-only Members card at the bottom (after expenses) */}
+          <div ref={refs.members} className="lg:hidden">
+            <SharingMembersCard budgetId={budgetId} budgetName={budgetName} />
+          </div>
+        </div>
+      </main>
+
+      <SharingBottomBar
+        onInvite={() => setInviteOpen(true)}
+        onAddExpense={handleAddExpense}
+        onMarkSettled={handleMarkSettled}
+        hasUnsettled={hasUnsettled}
+      />
+
+      <InviteMemberDialog
+        budgetId={budgetId}
+        budgetName={budgetName}
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+      />
+
       <ExpenseDetailSheet
         expense={selectedExpense}
         open={showExpenseDetail}
@@ -120,17 +148,16 @@ export function SharingBudgetView({
           if (!open) setSelectedExpense(null);
         }}
         onDelete={(expenseId) => {
-          toast.success("Expense deleted");
+          toast.success(t("expense.deleteExpenseSuccess"));
           setSelectedExpense(null);
         }}
       />
 
-      {/* Add expense drawer */}
       <AddSharedExpenseDrawer
         budgetId={budgetId}
         open={showAddExpense}
         onOpenChange={setShowAddExpense}
       />
-    </>
+    </div>
   );
 }

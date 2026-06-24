@@ -70,7 +70,6 @@ const comments: ExpenseComment[] = [
   },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const noopMutation = { mutate: vi.fn(), isPending: false } as any;
 
 vi.mock("@/modules/sharing/hooks", () => ({

@@ -42,7 +42,6 @@ const participants: ParticipantInfo[] = [
   { participantId: "u2", budgetId: "b1", kind: "MEMBER", displayName: "Bob", joinedAt: 0, lastSeenAt: 0, revoked: false },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const noopMutation = { mutate: vi.fn(), isPending: false } as any;
 
 vi.mock("@/modules/sharing/hooks", () => ({

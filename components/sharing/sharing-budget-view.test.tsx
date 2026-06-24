@@ -1,40 +1,46 @@
 import React from "react";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { screen, fireEvent } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { SharingBudgetView } from "@/components/sharing/sharing-budget-view";
+import { renderWithIntl } from "@/test/render-with-intl";
 
-afterEach(() => {
-  cleanup();
-});
+// The view composes many shared sub-components. Mock the heavy ones
+// so each test focuses on the orchestrator's contract.
 
 vi.mock("@/components/state/toast-provider", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 
-vi.mock("@/components/sharing/shell", () => ({
-  Shell: ({ children, budgetName, rightRail }: any) => (
-    <div data-testid="shell">
-      <div data-testid="shell-name">{budgetName}</div>
-      <div data-testid="shell-main">{children}</div>
-      <div data-testid="shell-right-rail">{rightRail}</div>
+vi.mock("@/components/sharing/sharing-page-header", () => ({
+  SharingPageHeader: ({ budgetName, onInviteClick, onAddExpenseClick }: any) => (
+    <div data-testid="page-header">
+      <div data-testid="page-header-name">{budgetName}</div>
+      <button data-testid="hdr-invite" onClick={onInviteClick}>invite</button>
+      <button data-testid="hdr-add" onClick={onAddExpenseClick}>Add expense</button>
     </div>
   ),
 }));
 
-vi.mock("@/components/sharing/sharing-settlement-card", () => ({
-  SharingSettlementCard: () => <div data-testid="settlement-card" />,
+// Use unique testids so multi-render instances (desktop + mobile) can be
+// queried with getAllByTestId without ambiguity.
+let membersIdx = 0;
+let settlementIdx = 0;
+let activityIdx = 0;
+
+vi.mock("@/components/sharing/sharing-members-card", () => ({
+  SharingMembersCard: () => {
+    membersIdx += 1;
+    return <div data-testid={`members-card-${membersIdx}`} />;
+  },
 }));
+
 vi.mock("@/components/sharing/sharing-expenses-list", () => ({
   SharingExpensesList: ({ onExpenseClick, onAddExpense }: any) => (
     <div data-testid="expenses-list">
-      <button onClick={onAddExpense}>add</button>
+      <button onClick={onAddExpense}>add-expense</button>
       <button
         onClick={() =>
-          onExpenseClick({
-            id: "e1",
-            totalAmount: 100,
-            description: "x",
-          } as any)
+          onExpenseClick({ id: "e1", totalAmount: 100, description: "x" } as any)
         }
       >
         click-first
@@ -42,116 +48,113 @@ vi.mock("@/components/sharing/sharing-expenses-list", () => ({
     </div>
   ),
 }));
-vi.mock("@/components/sharing/sharing-members-card", () => ({
-  SharingMembersCard: () => <div data-testid="members-card" />,
-}));
-// ActivityLogList is rendered twice (right rail + mobile fallback) — use unique testids.
-let activityLogIdx = 0;
-vi.mock("@/components/sharing/activity-log-list", () => ({
-  ActivityLogList: () => {
-    activityLogIdx += 1;
-    return <div data-testid={`activity-log-${activityLogIdx}`} />;
+
+vi.mock("@/components/sharing/sharing-settlement-card", () => ({
+  SharingSettlementCard: () => {
+    settlementIdx += 1;
+    return <div data-testid={`settlement-card-${settlementIdx}`} />;
   },
 }));
+
+vi.mock("@/components/sharing/activity-log-list", () => ({
+  ActivityLogList: () => {
+    activityIdx += 1;
+    return <div data-testid={`activity-log-${activityIdx}`} />;
+  },
+}));
+
+vi.mock("@/components/sharing/sharing-mobile-tabs", () => ({
+  SharingMobileTabs: () => <div data-testid="mobile-tabs" />,
+}));
+
+vi.mock("@/components/sharing/sharing-bottom-bar", () => ({
+  SharingBottomBar: () => <div data-testid="bottom-bar" />,
+}));
+
 vi.mock("@/components/sharing/expense-detail-sheet", () => ({
   ExpenseDetailSheet: ({ open, expense }: any) =>
     open ? <div data-testid="expense-detail">{expense?.id}</div> : null,
 }));
+
 vi.mock("@/components/sharing/add-shared-expense-drawer", () => ({
   AddSharedExpenseDrawer: ({ open }: any) =>
     open ? <div data-testid="add-drawer" /> : null,
 }));
-vi.mock("@/components/sharing/staggered-mount", () => ({
-  StaggeredMount: ({ children }: any) => <>{children}</>,
-}));
 
-vi.mock("@/components/ui/money-amount", () => ({
-  MoneyAmount: ({ value }: { value: number }) => <span>{value}</span>,
-}));
-vi.mock("@/components/ui/avatar-stack", () => ({
-  AvatarStack: () => <div data-testid="avatar-stack" />,
-}));
-vi.mock("@/components/ui/button", () => ({
-  Button: ({ children, onClick }: any) => (
-    <button onClick={onClick}>{children}</button>
-  ),
+vi.mock("@/components/sharing/invite-member-dialog", () => ({
+  InviteMemberDialog: ({ open, onOpenChange }: any) =>
+    open ? (
+      <div data-testid="invite-dialog">
+        <button onClick={() => onOpenChange(false)}>close</button>
+      </div>
+    ) : null,
 }));
 
 // Mutable mock state — change per test using `setHooks()`.
 let hooksState: {
   expenses: any;
   participants: any;
+  settlement: any;
 } = {
   expenses: { data: undefined, isLoading: false },
   participants: { data: undefined, isLoading: false },
+  settlement: { data: undefined, isLoading: false },
 };
 
 vi.mock("@/modules/sharing/hooks", () => ({
   useExpensesQuery: () => hooksState.expenses,
   useParticipantsQuery: () => hooksState.participants,
+  useSettlementQuery: () => hooksState.settlement,
 }));
 
-function setHooks(expenses: any, participants: any) {
-  hooksState = { expenses, participants };
+function setHooks(expenses: any, participants: any, settlement = { data: undefined }) {
+  hooksState = { expenses, participants, settlement };
 }
 
 beforeEach(() => {
-  activityLogIdx = 0;
+  membersIdx = 0;
+  settlementIdx = 0;
+  activityIdx = 0;
   setHooks(
     { data: undefined, isLoading: false },
-    { data: undefined, isLoading: false }
+    { data: undefined, isLoading: false },
   );
 });
 
 describe("SharingBudgetView", () => {
-  it("renders the shell with the budget name", () => {
-    render(<SharingBudgetView budgetId="b1" budgetName="Trip 2026" />);
-    expect(screen.getByTestId("shell-name")).toHaveTextContent("Trip 2026");
+  it("renders the page header with the budget name", () => {
+    renderWithIntl(<SharingBudgetView budgetId="b1" budgetName="Trip 2026" />);
+    expect(screen.getByTestId("page-header-name")).toHaveTextContent("Trip 2026");
   });
 
-  it("renders the expenses list and members card sections", () => {
-    render(<SharingBudgetView budgetId="b1" />);
-    expect(screen.getByTestId("expenses-list")).toBeInTheDocument();
-    expect(screen.getByTestId("members-card")).toBeInTheDocument();
-    // Activity log renders twice (right rail + mobile fallback).
-    expect(screen.getByTestId("activity-log-1")).toBeInTheDocument();
-    expect(screen.getByTestId("activity-log-2")).toBeInTheDocument();
-  });
-
-  it("renders the avatar stack when participants are present", () => {
-    setHooks(
-      { data: undefined, isLoading: false },
-      {
-        data: [
-          { participantId: "u1", displayName: "Alice", kind: "MEMBER" as const },
-          { participantId: "u2", displayName: "Bob", kind: "MEMBER" as const },
-        ],
-        isLoading: false,
-      }
-    );
-    render(<SharingBudgetView budgetId="b1" />);
-    expect(screen.getByTestId("avatar-stack")).toBeInTheDocument();
+  it("renders the settlement card, expenses list, and members card", () => {
+    renderWithIntl(<SharingBudgetView budgetId="b1" />);
+    expect(screen.getAllByTestId(/^settlement-card-/)[0]).toBeInTheDocument();
+    expect(screen.getAllByTestId("expenses-list").length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId(/^members-card-/)[0]).toBeInTheDocument();
+    // Activity log renders in two slots (right rail + mobile fallback).
+    expect(screen.getAllByTestId(/^activity-log-/).length).toBeGreaterThan(0);
   });
 
   it("clicking an expense opens the detail sheet", () => {
     setHooks(
       { data: [{ id: "e1", totalAmount: 100000 }], isLoading: false },
-      {
-        data: [
-          { participantId: "u1", displayName: "Alice", kind: "MEMBER" as const },
-        ],
-        isLoading: false,
-      }
+      { data: [], isLoading: false },
     );
-    render(<SharingBudgetView budgetId="b1" />);
-    fireEvent.click(screen.getByText("click-first"));
+    renderWithIntl(<SharingBudgetView budgetId="b1" />);
+    fireEvent.click(screen.getAllByText("click-first")[0]);
     expect(screen.getByTestId("expense-detail")).toHaveTextContent("e1");
   });
 
-  it("clicking add expense opens the drawer", () => {
-    render(<SharingBudgetView budgetId="b1" />);
-    // The header has "Add expense"; the expenses-list mock has "add"
-    fireEvent.click(screen.getByText("Add expense"));
+  it("clicking Add expense opens the drawer", () => {
+    renderWithIntl(<SharingBudgetView budgetId="b1" />);
+    fireEvent.click(screen.getAllByText("Add expense")[0]);
     expect(screen.getByTestId("add-drawer")).toBeInTheDocument();
+  });
+
+  it("clicking the header Invite button opens the invite dialog", () => {
+    renderWithIntl(<SharingBudgetView budgetId="b1" />);
+    fireEvent.click(screen.getAllByTestId("hdr-invite")[0]);
+    expect(screen.getByTestId("invite-dialog")).toBeInTheDocument();
   });
 });

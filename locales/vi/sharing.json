@@ -157,6 +157,45 @@
     "required": "Bắt buộc",
     "optional": "Tùy chọn"
   },
+  "header": {
+    "invite": "Mời",
+    "inviteAria": "Mời thành viên",
+    "addExpense": "Thêm chi tiêu",
+    "backToSharing": "Về danh sách chia sẻ"
+  },
+  "tabs": {
+    "members": "Thành viên",
+    "expenses": "Chi tiêu",
+    "settle": "Cân bằng",
+    "activity": "Hoạt động"
+  },
+  "invite": {
+    "title": "Mời vào {budget}",
+    "tabLink": "Liên kết",
+    "tabQr": "Mã QR",
+    "tabShare": "Chia sẻ qua",
+    "copyLink": "Sao chép",
+    "copied": "Đã sao chép!",
+    "regenerate": "Tạo liên kết mới",
+    "regenerateConfirm": "Tạo liên kết mới? Liên kết cũ vẫn dùng được đến khi hết hạn.",
+    "expiresIn": "Hết hạn sau {time}",
+    "expired": "Đã hết hạn",
+    "scanToJoin": "Quét để tham gia — liên kết hết hạn sau {time}",
+    "downloadQr": "Tải mã QR",
+    "share": {
+      "zalo": "Zalo",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "sms": "SMS",
+      "copy": "Sao chép"
+    },
+    "shareMessage": "Tham gia chia sẻ chi tiêu của tôi: {url}"
+  },
+  "bottomBar": {
+    "invite": "Mời",
+    "addExpense": "Thêm",
+    "markSettled": "Cân bằng"
+  },
   "errors": {
     "errorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại.",
     "errorNotFound": "Không tìm thấy",

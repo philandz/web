@@ -1,7 +1,8 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MarkAsSettledDialog } from "@/components/sharing/mark-as-settled-dialog";
+import { renderWithIntl } from "@/test/render-with-intl";
 
 vi.mock("@/components/ui/dialog", () => ({
   Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -13,6 +14,10 @@ vi.mock("@/components/ui/dialog", () => ({
 
 vi.mock("@/components/ui/money-amount", () => ({
   MoneyAmount: ({ value }: { value: number }) => <span>{value}</span>,
+}));
+
+vi.mock("@/components/ui/user-avatar", () => ({
+  UserAvatar: ({ name }: { name: string }) => <div>{name}</div>,
 }));
 
 vi.mock("@/components/ui/button", () => ({
@@ -33,18 +38,18 @@ const mockTransfer = {
   amount: 50000,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const noopMutation = { mutate: vi.fn(), isPending: false } as any;
 
 vi.mock("@/modules/sharing/hooks", () => ({
   useMarkSettledMutation: vi.fn(() => noopMutation),
+  useSettlementsQuery: vi.fn(() => ({ data: [] })),
 }));
 
 describe("MarkAsSettledDialog", () => {
   const onOpenChange = vi.fn();
 
   it("renders transfer info with from/to names and amount", () => {
-    render(
+    renderWithIntl(
       <MarkAsSettledDialog
         transfer={mockTransfer}
         budgetId="b1"
@@ -58,7 +63,7 @@ describe("MarkAsSettledDialog", () => {
   });
 
   it("renders with a note textarea", () => {
-    render(
+    renderWithIntl(
       <MarkAsSettledDialog
         transfer={mockTransfer}
         budgetId="b1"
@@ -66,12 +71,11 @@ describe("MarkAsSettledDialog", () => {
         onOpenChange={onOpenChange}
       />
     );
-    // Use getAllByRole to find textbox and check there's at least one
     expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0);
   });
 
   it("Cancel button calls onOpenChange(false)", () => {
-    render(
+    renderWithIntl(
       <MarkAsSettledDialog
         transfer={mockTransfer}
         budgetId="b1"
