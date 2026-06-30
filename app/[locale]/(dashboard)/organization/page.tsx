@@ -276,7 +276,7 @@ function ChangeRoleDialog({ member, orgId, onClose }: { member: OrgMember; orgId
         <DialogHeader><DialogTitle>{t("changeRoleTitle")}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-            <UserAvatar name={member.displayName} src={member.avatar} size={32} fallbackClassName="text-[11px]" />
+<UserAvatar name={member.displayName} src={member.avatar} size={32} fallbackClassName="text-[11px]" />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{member.displayName}</p>
               <p className="truncate text-xs text-muted-foreground">{member.email}</p>

@@ -53,32 +53,30 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
   const mutation = useAddMemberMutation(budgetId);
   const { data: orgMembers = [], isLoading: loadingMembers } = useOrgMembersQuery(orgId);
   const [search, setSearch] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedEmail, setSelectedEmail] = useState("");
   const [role, setRole] = useState<BudgetRole>("contributor");
 
   const currentUserId = useAuthStore((s) => s.profile?.id);
 
-  // Use userId as the membership key so we correctly exclude already-added members
-  // even when the stored user_id is a UUID (not an email string).
-  const existingUserIds = useMemo(() => new Set(existingMembers.map((m) => m.userId)), [existingMembers]);
+  const existingEmails = useMemo(() => new Set(existingMembers.map((m) => m.email)), [existingMembers]);
 
   const filteredMembers = useMemo(() => {
     return orgMembers.filter((m) => {
       if (m.userId === currentUserId) return false;
-      if (existingUserIds.has(m.userId)) return false;
+      if (existingEmails.has(m.email)) return false;
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return m.displayName.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
     });
-  }, [orgMembers, search, currentUserId, existingUserIds]);
+  }, [orgMembers, search, currentUserId, existingEmails]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedUserId) return;
+    if (!selectedEmail) return;
     mutation.mutate(
-      { userId: selectedUserId, role },
+      { email: selectedEmail, role },
       {
-        onSuccess: () => { toast.success(t("inviteSuccess")); onClose(); setSelectedUserId(""); setSearch(""); setRole("contributor"); },
+        onSuccess: () => { toast.success(t("inviteSuccess")); onClose(); setSelectedEmail(""); setSearch(""); setRole("contributor"); },
         onError: () => toast.error(t("inviteError")),
       }
     );
@@ -99,7 +97,7 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     value={search}
-                    onChange={(e) => { setSearch(e.target.value); setSelectedUserId(""); }}
+                    onChange={(e) => { setSearch(e.target.value); setSelectedEmail(""); }}
                     placeholder={t("searchPlaceholder")}
                     className="pl-9"
                   />
@@ -112,13 +110,13 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                       <button
                         key={m.userId}
                         type="button"
-                        onClick={() => setSelectedUserId(m.userId)}
+                        onClick={() => setSelectedEmail(m.email)}
                         className={cn(
                           "flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-muted/60",
-                          selectedUserId === m.userId && "bg-muted"
+                          selectedEmail === m.email && "bg-muted"
                         )}
                       >
-                        <UserAvatar name={m.displayName} src={m.avatar} size={28} fallbackClassName="text-xs" />
+                        <UserAvatar name={m.displayName} size={28} fallbackClassName="text-xs" />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">{m.displayName}</p>
                           <p className="truncate text-xs text-muted-foreground">{m.email}</p>
@@ -141,7 +139,7 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
           {mutation.isError ? <p className="text-xs text-destructive">{t("inviteError")}</p> : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
-            <Button type="submit" disabled={mutation.isPending || !selectedUserId}>
+            <Button type="submit" disabled={mutation.isPending || !selectedEmail}>
               {mutation.isPending ? t("inviting") : t("invite")}
             </Button>
           </DialogFooter>
@@ -230,12 +228,6 @@ export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
   const canManage = myRole === "owner" || myRole === "manager";
   const isOwner = myRole === "owner";
 
-  // A pending member has not yet registered: the backend fills display_name
-  // and email with the invited email (= user_id) as a fallback, and avatar is empty.
-  function isPending(member: BudgetMember) {
-    return !member.avatar && member.displayName === member.email;
-  }
-
   function handleRemove() {
     if (!removeMember) return;
     removeMutation.mutate(removeMember.userId, {
@@ -267,14 +259,14 @@ export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
           const isMe = member.userId === currentUserId;
           const canChangeRole = isOwner && !isMe && member.role !== "owner";
           const canRemove = canManage && !isMe && member.role !== "owner";
-          const pending = isPending(member);
+          const avatarSrc = member.avatar ?? (isMe ? profile?.avatar : undefined);
 
           return (
             <div key={member.userId} className="flex items-center gap-3 px-5 py-3.5 md:px-6">
               {/* Avatar */}
               <UserAvatar
                 name={member.displayName}
-                src={member.avatar}
+                src={avatarSrc}
                 size={38}
                 fallbackClassName="text-xs font-semibold"
               />
@@ -283,22 +275,15 @@ export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="truncate text-sm font-medium text-foreground leading-snug">
-                    {pending ? member.email : member.displayName}
+                    {member.displayName}
                   </span>
                   {isMe ? (
                     <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                       {t("you")}
                     </span>
                   ) : null}
-                  {pending ? (
-                    <span className="rounded-md border border-amber-200 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:border-amber-800 dark:text-amber-400">
-                      {t("pendingInvite")}
-                    </span>
-                  ) : null}
                 </div>
-                {!pending && (
-                  <p className="truncate text-xs text-muted-foreground">{member.email}</p>
-                )}
+                <p className="truncate text-xs text-muted-foreground">{member.email}</p>
               </div>
 
               {/* Role badge */}

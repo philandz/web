@@ -46,6 +46,7 @@ export interface OrgMember {
   role: AppOrgRole;
   status: "active" | "invited";
   joinedAt: number;
+  avatar?: string;
 }
 
 export interface InvitationResult {

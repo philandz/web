@@ -141,6 +141,7 @@ export const identityService = {
         role: string | number;
         status: string;
         joined_at: number;
+        avatar?: string;
       }>;
     }>(`${BASE_PATH}/organizations/${orgId}/members`);
 
@@ -151,7 +152,8 @@ export const identityService = {
       avatar: m.avatar ?? null,
       role: normalizeOrgRole(m.role),
       status: m.status === "invited" ? "invited" : "active",
-      joinedAt: m.joined_at
+      joinedAt: m.joined_at,
+      avatar: m.avatar,
     }));
   },
 

@@ -31,6 +31,7 @@ export interface BudgetMember {
   email: string;
   avatar: string | null;
   role: BudgetRole;
+  avatar?: string;
 }
 
 export interface EnvelopeLimit {
@@ -71,6 +72,7 @@ interface RawMember {
   email: string;
   avatar: string | null;
   role: number | string;
+  avatar?: string;
 }
 
 interface RawEnvelope {
@@ -163,6 +165,7 @@ function mapMember(raw: RawMember): BudgetMember {
     email: raw.email,
     avatar: raw.avatar ?? null,
     role: toBudgetRole(raw.role),
+    avatar: raw.avatar,
   };
 }
 
