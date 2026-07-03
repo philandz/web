@@ -94,5 +94,66 @@
   "states": {
     "loading": "Đang tải bảng điều khiển...",
     "error": "Đã xảy ra lỗi ở khu vực quản trị."
+  },
+  "settings": {
+    "title": "Cài đặt chung",
+    "subtitle": "Cấu hình các tích hợp toàn nền tảng. Những cài đặt này áp dụng cho mọi không gian làm việc.",
+    "badge": "Cài đặt",
+    "edit": "Chỉnh sửa",
+    "loading": "Đang tải cài đặt…",
+    "yes": "Đang hoạt động",
+    "no": "Chưa cấu hình",
+    "cancel": "Huỷ",
+    "resend": {
+      "title": "Gửi email (Resend)",
+      "subtitle": "Kết nối tài khoản Resend để gửi email giao dịch — đặt lại mật khẩu, lời mời, mã xác minh.",
+      "apiKeyLabel": "Khoá API Resend",
+      "apiKeyPlaceholder": "re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "apiKeyHint": "Tạo tại resend.com → API Keys. Khoá được mã hoá khi lưu và không trả về đầy đủ.",
+      "showKey": "Hiện khoá",
+      "hideKey": "Ẩn khoá",
+      "fromAddressLabel": "Địa chỉ From",
+      "fromAddressPlaceholder": "Philandz <noreply@yourdomain.com>",
+      "fromAddressHint": "Phải dùng domain bạn đã xác minh trong bảng điều khiển Resend.",
+      "replyToLabel": "Reply-To (tuỳ chọn)",
+      "replyToPlaceholder": "support@yourdomain.com",
+      "sourceLabel": "Nguồn đang dùng",
+      "configuredLabel": "Trạng thái",
+      "notConfiguredHint": "Email hiện đang tắt. Lưu khoá Resend và địa chỉ From để bắt đầu gửi.",
+      "save": "Lưu cài đặt",
+      "saving": "Đang lưu...",
+      "saveSuccess": "Đã cập nhật cấu hình Resend.",
+      "saveError": "Không thể lưu cấu hình. Kiểm tra giá trị và thử lại.",
+      "source": {
+        "db": "Lưu trong cơ sở dữ liệu (do admin đặt)",
+        "env": "Từ biến môi trường RESEND_API_KEY",
+        "none": "Chưa cấu hình"
+      },
+      "testTitle": "Gửi email thử",
+      "testSubtitle": "Xác nhận SPF/DKIM bằng cách gửi một email thử đến địa chỉ bạn kiểm soát.",
+      "testRecipientLabel": "Người nhận",
+      "testRecipientPlaceholder": "you@yourdomain.com",
+      "testRecipientHint": "Dùng địa chỉ thật bạn có thể kiểm tra — email đến trong vài giây.",
+      "testSend": "Gửi email thử",
+      "testSending": "Đang gửi...",
+      "testSuccess": "Đã gửi email thử (Resend id: {messageId}).",
+      "testError": "Không thể gửi email thử. Resend đã từ chối yêu cầu.",
+      "testNeedsConfigured": "Lưu khoá API và địa chỉ From ở trên trước.",
+      "validation": {
+        "apiKeyMin": "Khoá API Resend phải có ít nhất 20 ký tự",
+        "apiKeyCharset": "Chỉ chấp nhận chữ cái, số, dấu gạch dưới và gạch ngang",
+        "fromAddress": "Địa chỉ From phải là email hợp lệ",
+        "replyTo": "Reply-To phải là email hợp lệ",
+        "recipientEmail": "Nhập email hợp lệ"
+      }
+    },
+    "diagnostics": {
+      "title": "Môi trường runtime",
+      "subtitle": "Các giá trị env kiểm soát pipeline email. Đặt trên service identity.",
+      "masterKey": "Khoá AES-256-GCM dùng để mã hoá các secrets trong platform_settings khi lưu.",
+      "publicUrl": "Origin công khai dùng để nhúng URL đặt lại/lời mời trong email.",
+      "fromAddress": "Địa chỉ From mặc định khi admin chưa cấu hình trong trang này.",
+      "supportEmail": "Hiển thị ở chân trang mỗi email giao dịch."
+    }
   }
 }

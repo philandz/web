@@ -35,3 +35,8 @@ export const investKeys = {
   portfolio: (budgetId: string) => [...investKeys.all, budgetId, "portfolio"] as const,
   snapshots: (assetId: string) => [...investKeys.all, "snapshots", assetId] as const,
 };
+
+export const settingsKeys = {
+  all: ["settings"] as const,
+  resend: () => [...settingsKeys.all, "resend"] as const,
+};

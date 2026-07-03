@@ -94,5 +94,66 @@
   "states": {
     "loading": "Loading admin console...",
     "error": "Something went wrong in admin area."
+  },
+  "settings": {
+    "title": "Global Settings",
+    "subtitle": "Configure platform-wide integrations. These settings affect every workspace.",
+    "badge": "Settings",
+    "edit": "Edit",
+    "loading": "Loading settings…",
+    "yes": "Active",
+    "no": "Inactive",
+    "cancel": "Cancel",
+    "resend": {
+      "title": "Email delivery (Resend)",
+      "subtitle": "Connect a Resend account to send transactional emails — password resets, invitations, and verification codes.",
+      "apiKeyLabel": "Resend API key",
+      "apiKeyPlaceholder": "re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "apiKeyHint": "Generate at resend.com → API Keys. The key is encrypted at rest and never returned in full.",
+      "showKey": "Show key",
+      "hideKey": "Hide key",
+      "fromAddressLabel": "From address",
+      "fromAddressPlaceholder": "Philandz <noreply@yourdomain.com>",
+      "fromAddressHint": "Must use a domain you've verified in your Resend dashboard.",
+      "replyToLabel": "Reply-To (optional)",
+      "replyToPlaceholder": "support@yourdomain.com",
+      "sourceLabel": "Active source",
+      "configuredLabel": "Status",
+      "notConfiguredHint": "Email is currently disabled. Save a Resend key and From address to start delivering.",
+      "save": "Save settings",
+      "saving": "Saving...",
+      "saveSuccess": "Resend configuration updated.",
+      "saveError": "Could not save the configuration. Check the values and try again.",
+      "source": {
+        "db": "Stored in database (admin override)",
+        "env": "From RESEND_API_KEY env var",
+        "none": "Not configured"
+      },
+      "testTitle": "Send a test email",
+      "testSubtitle": "Confirm SPF/DKIM setup by dispatching a one-off message to an address you control.",
+      "testRecipientLabel": "Recipient",
+      "testRecipientPlaceholder": "you@yourdomain.com",
+      "testRecipientHint": "Use a real address you can check — the message arrives in seconds.",
+      "testSend": "Send test email",
+      "testSending": "Sending...",
+      "testSuccess": "Test message dispatched (Resend id: {messageId}).",
+      "testError": "Could not send the test message. Resend rejected the request.",
+      "testNeedsConfigured": "Save the API key and From address above first.",
+      "validation": {
+        "apiKeyMin": "Resend API key must be at least 20 characters",
+        "apiKeyCharset": "Only alphanumeric, underscore and dash characters are allowed",
+        "fromAddress": "From address must be a valid email",
+        "replyTo": "Reply-To must be a valid email",
+        "recipientEmail": "Enter a valid email"
+      }
+    },
+    "diagnostics": {
+      "title": "Runtime environment",
+      "subtitle": "Env-driven values that gate the mail pipeline. Set these on the identity service.",
+      "masterKey": "AES-256-GCM master key used to encrypt platform_settings secrets at rest.",
+      "publicUrl": "Public origin used to deep-link reset/invite URLs inside emails.",
+      "fromAddress": "Default From address when the admin has not configured one in this page.",
+      "supportEmail": "Shown in the footer of every transactional email."
+    }
   }
 }
