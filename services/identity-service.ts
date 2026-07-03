@@ -271,5 +271,37 @@ export const identityService = {
       current_password: input.currentPassword,
       new_password: input.newPassword,
     });
+  },
+
+  /**
+   * Step 1 of the in-app password change — verify the current password,
+   * email a 6-digit OTP, and return the TTL so the UI can show a countdown.
+   */
+  async requestPasswordChangeOtp(input: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ message: string; ttlSeconds: number }> {
+    const raw = await apiClient.post<{ message?: string; ttl_seconds?: number }>(
+      `${BASE_PATH}/password/request-otp`,
+      {
+        current_password: input.currentPassword,
+        new_password: input.newPassword
+      }
+    );
+    return {
+      message: raw.message ?? "",
+      ttlSeconds: raw.ttl_seconds ?? 600
+    };
+  },
+
+  /**
+   * Step 2 of the in-app password change — submit the OTP and apply the new
+   * password on success.
+   */
+  async confirmPasswordChangeOtp(input: { otp: string; newPassword: string }): Promise<void> {
+    await apiClient.post<{ message?: string }>(`${BASE_PATH}/password/confirm-otp`, {
+      otp: input.otp,
+      new_password: input.newPassword
+    });
   }
 };

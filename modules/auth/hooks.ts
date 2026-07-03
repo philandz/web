@@ -108,6 +108,32 @@ export function useChangePasswordMutation(onUnauthorized: () => void) {
   });
 }
 
+/**
+ * Step 1 of the mandatory-OTP password change. Returns the TTL (seconds) so
+ * the UI can show a countdown; the OTP itself is delivered by email.
+ */
+export function useRequestPasswordChangeOtpMutation(onUnauthorized: () => void) {
+  return useMutation({
+    mutationFn: identityService.requestPasswordChangeOtp,
+    onError: (error: unknown) => {
+      handleAuthError(error, { onUnauthorized });
+    },
+  });
+}
+
+/**
+ * Step 2 of the mandatory-OTP password change. Submits the 6-digit code and,
+ * on success, applies the new password server-side.
+ */
+export function useConfirmPasswordChangeOtpMutation(onUnauthorized: () => void) {
+  return useMutation({
+    mutationFn: identityService.confirmPasswordChangeOtp,
+    onError: (error: unknown) => {
+      handleAuthError(error, { onUnauthorized });
+    },
+  });
+}
+
 export function useOrganizationsQuery() {
   const token = useAuthStore((state) => state.token);
   const organizations = useAuthStore((state) => state.organizations);

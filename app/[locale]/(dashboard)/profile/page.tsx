@@ -20,6 +20,7 @@ import { applyServerValidationErrors } from "@/lib/form-errors";
 import { cn } from "@/lib/utils";
 import { AVATAR_FILE_TYPES, createProfileFormSchema, type ProfileFormValues } from "@/modules/auth/forms";
 import { useProfileQuery, useUpdateProfileMutation } from "@/modules/auth/hooks";
+import { UpdatePasswordCard } from "@/app/[locale]/(dashboard)/profile/update-password-card";
 
 export default function ProfilePage() {
   const t = useTranslations("dashboard.profile");
@@ -302,6 +303,10 @@ export default function ProfilePage() {
           </LoadingButton>
         </div>
       </form>
+
+      {/* Security — separate from the main form because the OTP step is a
+          multi-stage flow and shares no state with profile updates. */}
+      <UpdatePasswordCard onUnauthorized={handleUnauthorized} />
     </div>
   );
 }
