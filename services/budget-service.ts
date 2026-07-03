@@ -62,6 +62,19 @@ export interface BudgetListParams {
   pageSize?: number;
 }
 
+export interface AdminBudgetListParams {
+  orgId?: string;
+  budgetType?: BudgetType;
+  nameSearch?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AdminBudgetListResult {
+  budgets: Budget[];
+  total: number;
+}
+
 // ---------------------------------------------------------------------------
 // Raw response shapes
 
@@ -152,6 +165,10 @@ function mapBudget(raw: RawBudget): Budget {
     type: toBudgetType(raw.budget_type),
     currency: raw.currency,
     myRole: toBudgetRole(raw.my_role),
+    envelopeLimit: raw.envelope_limit ?? 0,
+    currentSpend: raw.current_spend ?? 0,
+    burnRatePct: raw.burn_rate_pct ?? 0,
+    memberCount: raw.member_count ?? 0,
     createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
     updatedAt: raw.updated_at ?? raw.base?.updated_at ?? 0,
   };
@@ -213,6 +230,27 @@ export const budgetService = {
       `${BASE}/budgets${buildQuery(params)}`
     );
     return (raw.budgets ?? []).map(mapBudget);
+  },
+
+  /**
+   * Super-admin: list every budget across every org. Backend enforces
+   * super_admin user_type; non-admin callers receive 403.
+   */
+  async listBudgetsAdmin(params: AdminBudgetListParams = {}): Promise<AdminBudgetListResult> {
+    const search: string[] = [];
+    if (params.orgId) search.push(`org_id=${encodeURIComponent(params.orgId)}`);
+    if (params.budgetType) search.push(`budget_type=${encodeURIComponent(params.budgetType)}`);
+    if (params.nameSearch) search.push(`name_search=${encodeURIComponent(params.nameSearch)}`);
+    if (params.page) search.push(`page=${params.page}`);
+    if (params.pageSize) search.push(`page_size=${params.pageSize}`);
+    const qs = search.length ? `?${search.join("&")}` : "";
+    const raw = await apiClient.get<{ budgets: RawBudget[]; total: number }>(
+      `${BASE}/budgets/admin${qs}`
+    );
+    return {
+      budgets: (raw.budgets ?? []).map(mapBudget),
+      total: raw.total ?? 0
+    };
   },
 
   async getBudget(budgetId: string): Promise<Budget> {

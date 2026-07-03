@@ -95,6 +95,37 @@
     "loading": "Loading admin console...",
     "error": "Something went wrong in admin area."
   },
+  "budgets": {
+    "title": "All Budgets",
+    "subtitle": "Platform-wide view of every budget across every organization. Read-only.",
+    "badge": "Budgets",
+    "loading": "Loading budgets…",
+    "loadError": "Could not load budgets. Check that your account has super-admin access.",
+    "total": "{count, plural, =0 {No budgets} =1 {1 budget} other {# budgets}}",
+    "emptyTitle": "No budgets match your filters",
+    "emptyDescription": "Try clearing the org or type filter, or wait for new budgets to be created.",
+    "filter": {
+      "name": "Search by name",
+      "namePlaceholder": "Type a budget name…",
+      "org": "Organization",
+      "allOrgs": "All organizations",
+      "type": "Type",
+      "allTypes": "All types",
+      "reset": "Reset"
+    },
+    "column": {
+      "name": "Name",
+      "org": "Organization",
+      "type": "Type",
+      "currency": "Currency",
+      "envelope": "Envelope",
+      "members": "Members",
+      "role": "My role"
+    },
+    "pagination": {
+      "summary": "Showing {from}–{to} of {total}"
+    }
+  },
   "settings": {
     "title": "Global Settings",
     "subtitle": "Configure platform-wide integrations. These settings affect every workspace.",

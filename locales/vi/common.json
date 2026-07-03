@@ -20,7 +20,9 @@
   "actions": {
     "retry": "Thử lại",
     "cancel": "Hủy",
-    "signOut": "Đăng xuất"
+    "signOut": "Đăng xuất",
+    "prev": "Trước",
+    "next": "Sau"
   },
   "states": {
     "loading": "Đang tải...",

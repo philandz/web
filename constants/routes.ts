@@ -7,6 +7,8 @@ export const routes = {
   admin: "/admin",
   adminUsers: "/admin/users",
   adminOrgs: "/admin/organizations",
+  adminSettings: "/admin/settings",
+  adminBudgets: "/admin/budgets",
   selectOrganization: "/select-organization",
   organization: "/organization",
   acceptInvitation: "/accept-invitation",

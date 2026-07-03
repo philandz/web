@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminService, type ListParams } from "@/services/admin-service";
 import { adminSettingsService } from "@/services/admin-settings-service";
+import { budgetService, type AdminBudgetListParams } from "@/services/budget-service";
 import { settingsKeys } from "@/lib/query-keys";
 
 // ---------------------------------------------------------------------------
@@ -99,5 +100,23 @@ export function useUpdateResendConfigMutation() {
 export function useTestResendConfigMutation() {
   return useMutation({
     mutationFn: adminSettingsService.testResendConfig
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Platform-wide budget view (super-admin only)
+// ---------------------------------------------------------------------------
+
+export const adminBudgetKeys = {
+  all: ["admin", "budgets"] as const,
+  lists: () => [...adminBudgetKeys.all, "list"] as const,
+  list: (params: AdminBudgetListParams) => [...adminBudgetKeys.lists(), params] as const,
+};
+
+export function useAdminBudgetsQuery(params: AdminBudgetListParams = {}) {
+  return useQuery({
+    queryKey: adminBudgetKeys.list(params),
+    queryFn: () => budgetService.listBudgetsAdmin(params),
+    placeholderData: (prev) => prev
   });
 }

@@ -95,6 +95,37 @@
     "loading": "Đang tải bảng điều khiển...",
     "error": "Đã xảy ra lỗi ở khu vực quản trị."
   },
+  "budgets": {
+    "title": "Tất cả Budget",
+    "subtitle": "Góc nhìn toàn nền tảng về mọi budget trên mọi tổ chức. Chỉ đọc.",
+    "badge": "Budget",
+    "loading": "Đang tải budget…",
+    "loadError": "Không thể tải budget. Kiểm tra tài khoản có quyền super-admin.",
+    "total": "{count, plural, =0 {Không có budget} =1 {1 budget} other {# budget}}",
+    "emptyTitle": "Không có budget nào khớp bộ lọc",
+    "emptyDescription": "Thử xoá bộ lọc tổ chức hoặc loại, hoặc chờ budget mới được tạo.",
+    "filter": {
+      "name": "Tìm theo tên",
+      "namePlaceholder": "Nhập tên budget…",
+      "org": "Tổ chức",
+      "allOrgs": "Mọi tổ chức",
+      "type": "Loại",
+      "allTypes": "Mọi loại",
+      "reset": "Đặt lại"
+    },
+    "column": {
+      "name": "Tên",
+      "org": "Tổ chức",
+      "type": "Loại",
+      "currency": "Tiền tệ",
+      "envelope": "Hạn mức",
+      "members": "Thành viên",
+      "role": "Vai trò của tôi"
+    },
+    "pagination": {
+      "summary": "Hiển thị {from}–{to} trên {total}"
+    }
+  },
   "settings": {
     "title": "Cài đặt chung",
     "subtitle": "Cấu hình các tích hợp toàn nền tảng. Những cài đặt này áp dụng cho mọi không gian làm việc.",
