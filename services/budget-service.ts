@@ -16,10 +16,10 @@ export interface Budget {
   type: BudgetType;
   currency: string;
   myRole: BudgetRole;
-  envelopeLimit?: number;
-  burnRatePct?: number;
-  currentSpend?: number;
-  memberCount?: number;
+  envelopeLimit: number;
+  burnRatePct: number;
+  currentSpend: number;
+  memberCount: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -31,7 +31,6 @@ export interface BudgetMember {
   email: string;
   avatar: string | null;
   role: BudgetRole;
-  avatar?: string;
 }
 
 export interface EnvelopeLimit {
@@ -85,22 +84,6 @@ interface RawMember {
   email: string;
   avatar: string | null;
   role: number | string;
-  avatar?: string;
-}
-
-interface RawEnvelope {
-  budget_id: string;
-  monthly_limit: number;
-  current_spend: number;
-  burn_rate_pct: number;
-  limit_exceeded: boolean;
-}
-
-interface RawTemplate {
-  id: string;
-  name: string;
-  description: string;
-  budget_type: string;
 }
 
 interface RawEnvelope {
@@ -132,6 +115,10 @@ interface RawBudget {
   budget_type: number | string;
   currency: string;
   my_role: number | string;
+  envelope_limit?: number;
+  current_spend?: number;
+  burn_rate_pct?: number;
+  member_count?: number;
   created_at?: number;
   updated_at?: number;
 }
@@ -182,7 +169,6 @@ function mapMember(raw: RawMember): BudgetMember {
     email: raw.email,
     avatar: raw.avatar ?? null,
     role: toBudgetRole(raw.role),
-    avatar: raw.avatar,
   };
 }
 

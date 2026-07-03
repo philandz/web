@@ -15,6 +15,7 @@ import { useToast } from "@/components/state/toast-provider";
 import { useAddMemberMutation, useBudgetMembersQuery, useRemoveMemberMutation, useUpdateMemberRoleMutation } from "@/modules/budget/hooks";
 import { useOrgMembersQuery } from "@/modules/tenant/hooks";
 import { useAuthStore } from "@/lib/auth-store";
+import { safeDisplayName } from "@/lib/safe-display-name";
 import type { BudgetMember, BudgetRole } from "@/services/budget-service";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +54,7 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
   const mutation = useAddMemberMutation(budgetId);
   const { data: orgMembers = [], isLoading: loadingMembers } = useOrgMembersQuery(orgId);
   const [search, setSearch] = useState("");
-  const [selectedEmail, setSelectedEmail] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
   const [role, setRole] = useState<BudgetRole>("contributor");
 
   const currentUserId = useAuthStore((s) => s.profile?.id);
@@ -72,11 +73,11 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedEmail) return;
+    if (!selectedUserId) return;
     mutation.mutate(
-      { email: selectedEmail, role },
+      { userId: selectedUserId, role },
       {
-        onSuccess: () => { toast.success(t("inviteSuccess")); onClose(); setSelectedEmail(""); setSearch(""); setRole("contributor"); },
+        onSuccess: () => { toast.success(t("inviteSuccess")); onClose(); setSelectedUserId(""); setSearch(""); setRole("contributor"); },
         onError: () => toast.error(t("inviteError")),
       }
     );
@@ -97,7 +98,7 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     value={search}
-                    onChange={(e) => { setSearch(e.target.value); setSelectedEmail(""); }}
+                    onChange={(e) => { setSearch(e.target.value); setSelectedUserId(""); }}
                     placeholder={t("searchPlaceholder")}
                     className="pl-9"
                   />
@@ -110,10 +111,10 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                       <button
                         key={m.userId}
                         type="button"
-                        onClick={() => setSelectedEmail(m.email)}
+                        onClick={() => setSelectedUserId(m.userId)}
                         className={cn(
                           "flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-muted/60",
-                          selectedEmail === m.email && "bg-muted"
+                          selectedUserId === m.userId && "bg-muted"
                         )}
                       >
                         <UserAvatar name={m.displayName} size={28} fallbackClassName="text-xs" />
@@ -139,7 +140,7 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
           {mutation.isError ? <p className="text-xs text-destructive">{t("inviteError")}</p> : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
-            <Button type="submit" disabled={mutation.isPending || !selectedEmail}>
+            <Button type="submit" disabled={mutation.isPending || !selectedUserId}>
               {mutation.isPending ? t("inviting") : t("invite")}
             </Button>
           </DialogFooter>
@@ -265,7 +266,7 @@ export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
             <div key={member.userId} className="flex items-center gap-3 px-5 py-3.5 md:px-6">
               {/* Avatar */}
               <UserAvatar
-                name={member.displayName}
+                name={safeDisplayName(member.displayName)}
                 src={avatarSrc}
                 size={38}
                 fallbackClassName="text-xs font-semibold"
@@ -275,7 +276,7 @@ export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="truncate text-sm font-medium text-foreground leading-snug">
-                    {member.displayName}
+                    {safeDisplayName(member.displayName, t("unknownUser"))}
                   </span>
                   {isMe ? (
                     <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -283,7 +284,9 @@ export function MembersTab({ budgetId, orgId, myRole }: MembersTabProps) {
                     </span>
                   ) : null}
                 </div>
-                <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {safeDisplayName(member.email, t("noEmail"))}
+                </p>
               </div>
 
               {/* Role badge */}
