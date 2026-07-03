@@ -103,6 +103,21 @@ export function useTestResendConfigMutation() {
   });
 }
 
+export function useSystemConfigQuery() {
+  return useQuery({
+    queryKey: [...settingsKeys.all, "system"] as const,
+    queryFn: () => adminSettingsService.getSystemConfig()
+  });
+}
+
+export function useUpdateSystemConfigMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: adminSettingsService.updateSystemConfig,
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...settingsKeys.all, "system"] })
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Platform-wide budget view (super-admin only)
 // ---------------------------------------------------------------------------

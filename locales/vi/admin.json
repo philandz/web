@@ -181,10 +181,44 @@
     "diagnostics": {
       "title": "Môi trường runtime",
       "subtitle": "Các giá trị env kiểm soát pipeline email. Đặt trên service identity.",
-      "masterKey": "Khoá AES-256-GCM dùng để mã hoá các secrets trong platform_settings khi lưu.",
+      "masterKey": "Khoá AES-256-GCM dùng để mã hoá các secrets trong platform_settings khi lưu. Bắt buộc — service từ chối khởi động nếu thiếu.",
+      "masterKeyNote": "Đây là biến env duy nhất bắt buộc đặt ngoài UI: xoay khoá sẽ vô hiệu hoá mọi API key đã mã hoá trong DB.",
       "publicUrl": "Origin công khai dùng để nhúng URL đặt lại/lời mời trong email.",
       "fromAddress": "Địa chỉ From mặc định khi admin chưa cấu hình trong trang này.",
       "supportEmail": "Hiển thị ở chân trang mỗi email giao dịch."
+    },
+    "system": {
+      "title": "Môi trường hệ thống",
+      "subtitle": "URL công khai, email hỗ trợ, locale mặc định, địa chỉ From. Các giá trị này ghi đè env tương ứng trên service identity — không cần restart.",
+      "loading": "Đang tải cấu hình hệ thống…",
+      "save": "Lưu thay đổi",
+      "saving": "Đang lưu…",
+      "saveSuccess": "Đã cập nhật cấu hình hệ thống. Email tiếp theo sẽ dùng giá trị mới.",
+      "saveError": "Không thể lưu cấu hình hệ thống. Kiểm tra giá trị và thử lại.",
+      "fields": {
+        "appPublicBaseUrl": "URL công khai của ứng dụng",
+        "supportEmail": "Email hỗ trợ",
+        "defaultLocale": "Locale mặc định",
+        "mailFromAddress": "Địa chỉ From mặc định"
+      },
+      "hints": {
+        "appPublicBaseUrl": "Dùng để nhúng link đặt lại/lời mời trong email (vd https://app.philandz.com).",
+        "supportEmail": "Hiển thị ở chân trang mỗi email giao dịch.",
+        "defaultLocale": "Tiền tố locale cho link đặt lại/lời mời (vd en, vi, en-US).",
+        "mailFromAddress": "Người gửi khi mail provider chưa cấu hình From riêng (vd Philandz <noreply@yourdomain.com>)."
+      },
+      "source": {
+        "db": "Lưu trong DB",
+        "env": "Từ env (hoặc default động)",
+        "default": "Mặc định có sẵn"
+      },
+      "sourceHint": "Nguồn — URL: {url}, Hỗ trợ: {support}, Locale: {locale}, From: {from}.",
+      "validation": {
+        "urlInvalid": "URL không hợp lệ",
+        "urlProtocol": "URL phải bắt đầu bằng http:// hoặc https://",
+        "email": "Phải là email hợp lệ",
+        "localeFormat": "Dùng 1-10 ký tự thường (chữ, số hoặc gạch ngang)"
+      }
     }
   }
 }

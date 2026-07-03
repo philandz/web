@@ -16,8 +16,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/components/state/toast-provider";
 import {
   useResendConfigQuery,
+  useSystemConfigQuery,
   useTestResendConfigMutation,
-  useUpdateResendConfigMutation
+  useUpdateResendConfigMutation,
+  useUpdateSystemConfigMutation
 } from "@/modules/admin/hooks";
 import { cn } from "@/lib/utils";
 import { applyServerValidationErrors, getFormErrorMessage } from "@/lib/form-errors";
@@ -332,6 +334,10 @@ export default function AdminSettingsPage() {
       </StaggerItem>
 
       <StaggerItem delay={120}>
+        <SystemConfigCard />
+      </StaggerItem>
+
+      <StaggerItem delay={160}>
         <Card className="surface-panel">
           <CardHeader>
             <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
@@ -345,17 +351,8 @@ export default function AdminSettingsPage() {
               <span className="font-mono text-xs">PLATFORM_MASTER_KEY</span>
               <span>{t("diagnostics.masterKey")}</span>
             </p>
-            <p className="flex items-start gap-2">
-              <span className="font-mono text-xs">APP_PUBLIC_BASE_URL</span>
-              <span>{t("diagnostics.publicUrl")}</span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="font-mono text-xs">MAIL_FROM_ADDRESS</span>
-              <span>{t("diagnostics.fromAddress")}</span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="font-mono text-xs">SUPPORT_EMAIL</span>
-              <span>{t("diagnostics.supportEmail")}</span>
+            <p className="text-xs italic text-muted-foreground/80">
+              {t("diagnostics.masterKeyNote")}
             </p>
           </CardContent>
         </Card>
@@ -388,5 +385,219 @@ function Row({
         )}
       </dd>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// System environment card — URLs, locale, support email, From address.
+// These override env values live (no service restart needed).
+// ---------------------------------------------------------------------------
+
+const createSystemConfigSchema = (t: (k: string) => string) =>
+  z.object({
+    appPublicBaseUrl: z
+      .string()
+      .min(8, t("system.validation.urlInvalid"))
+      .regex(/^https?:\/\//, t("system.validation.urlProtocol")),
+    supportEmail: z.string().email(t("system.validation.email")),
+    defaultLocale: z
+      .string()
+      .min(1)
+      .max(10)
+      .regex(/^[a-z0-9-]+$/, t("system.validation.localeFormat")),
+    mailFromAddress: z.string().email(t("system.validation.email"))
+  });
+
+type SystemFormValues = z.infer<ReturnType<typeof createSystemConfigSchema>>;
+
+function SystemConfigCard() {
+  const t = useTranslations("admin.settings.system");
+  const tValidation = useTranslations("admin.settings");
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const query = useSystemConfigQuery();
+  const update = useUpdateSystemConfigMutation();
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors, isDirty }
+  } = useForm<SystemFormValues>({
+    resolver: zodResolver(createSystemConfigSchema(t)),
+    defaultValues: {
+      appPublicBaseUrl: "",
+      supportEmail: "",
+      defaultLocale: "",
+      mailFromAddress: ""
+    }
+  });
+
+  // Seed the form once we have the saved values.
+  useEffect(() => {
+    if (query.data && !editing && !isDirty) {
+      reset({
+        appPublicBaseUrl: query.data.appPublicBaseUrl,
+        supportEmail: query.data.supportEmail,
+        defaultLocale: query.data.defaultLocale,
+        mailFromAddress: query.data.mailFromAddress
+      });
+    }
+  }, [query.data, editing, isDirty, reset]);
+
+  function onSubmit(values: SystemFormValues) {
+    setFormError(null);
+    update.mutate(
+      {
+        appPublicBaseUrl: values.appPublicBaseUrl,
+        supportEmail: values.supportEmail,
+        defaultLocale: values.defaultLocale,
+        mailFromAddress: values.mailFromAddress
+      },
+      {
+        onSuccess: (cfg) => {
+          setEditing(false);
+          reset({
+            appPublicBaseUrl: cfg.appPublicBaseUrl,
+            supportEmail: cfg.supportEmail,
+            defaultLocale: cfg.defaultLocale,
+            mailFromAddress: cfg.mailFromAddress
+          });
+          toast.success(t("saveSuccess"));
+        },
+        onError: (error) => {
+          const applied = applyServerValidationErrors(setError, error, {
+            app_public_base_url: "appPublicBaseUrl",
+            support_email: "supportEmail",
+            default_locale: "defaultLocale",
+            mail_from_address: "mailFromAddress"
+          });
+          if (!applied) {
+            setFormError(getFormErrorMessage(error, t("saveError")));
+          }
+        }
+      }
+    );
+  }
+
+  const cfg = query.data;
+  const isLoading = query.isLoading;
+
+  return (
+    <Card className="surface-panel">
+      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+        <div>
+          <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+            <Server className="h-4 w-4" />
+            {t("title")}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
+        </div>
+        {!editing ? (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground transition hover:bg-muted"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            {tValidation("edit")}
+          </button>
+        ) : null}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading || !cfg ? (
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
+        ) : editing ? (
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4"
+            data-testid="system-edit-form"
+          >
+            <FormInput
+              id="app-public-base-url"
+              type="url"
+              label={t("fields.appPublicBaseUrl")}
+              placeholder="https://app.example.com"
+              hint={t("hints.appPublicBaseUrl")}
+              error={errors.appPublicBaseUrl?.message}
+              {...register("appPublicBaseUrl")}
+            />
+            <FormInput
+              id="support-email"
+              type="email"
+              label={t("fields.supportEmail")}
+              placeholder="support@example.com"
+              hint={t("hints.supportEmail")}
+              error={errors.supportEmail?.message}
+              {...register("supportEmail")}
+            />
+            <FormInput
+              id="default-locale"
+              label={t("fields.defaultLocale")}
+              placeholder="en"
+              hint={t("hints.defaultLocale")}
+              error={errors.defaultLocale?.message}
+              {...register("defaultLocale")}
+            />
+            <FormInput
+              id="mail-from-address"
+              type="email"
+              label={t("fields.mailFromAddress")}
+              placeholder="Philandz <noreply@example.com>"
+              hint={t("hints.mailFromAddress")}
+              error={errors.mailFromAddress?.message}
+              {...register("mailFromAddress")}
+            />
+
+            {formError ? <InlineAlert tone="error">{formError}</InlineAlert> : null}
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  reset();
+                  setEditing(false);
+                  setFormError(null);
+                }}
+                className="h-10 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground transition hover:bg-muted"
+              >
+                {tValidation("cancel")}
+              </button>
+              <LoadingButton
+                type="submit"
+                loading={update.isPending}
+                loadingLabel={t("saving")}
+                className="h-10 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {t("save")}
+              </LoadingButton>
+            </div>
+          </form>
+        ) : (
+          <dl className="grid gap-3 text-sm">
+            <Row
+              label={t("fields.appPublicBaseUrl")}
+              value={cfg.appPublicBaseUrl || "-"}
+              mono
+              badge
+            />
+            <Row label={t("fields.supportEmail")} value={cfg.supportEmail || "-"} />
+            <Row label={t("fields.defaultLocale")} value={cfg.defaultLocale || "-"} />
+            <Row label={t("fields.mailFromAddress")} value={cfg.mailFromAddress || "-"} />
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("sourceHint", {
+                url: t(`source.${cfg.sourceAppPublicBaseUrl}`),
+                support: t(`source.${cfg.sourceSupportEmail}`),
+                locale: t(`source.${cfg.sourceDefaultLocale}`),
+                from: t(`source.${cfg.sourceMailFromAddress}`)
+              })}
+            </p>
+          </dl>
+        )}
+      </CardContent>
+    </Card>
   );
 }

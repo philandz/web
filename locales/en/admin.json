@@ -181,10 +181,44 @@
     "diagnostics": {
       "title": "Runtime environment",
       "subtitle": "Env-driven values that gate the mail pipeline. Set these on the identity service.",
-      "masterKey": "AES-256-GCM master key used to encrypt platform_settings secrets at rest.",
+      "masterKey": "AES-256-GCM master key used to encrypt platform_settings secrets at rest. Required — service refuses to start without it.",
+      "masterKeyNote": "This is the only env var that must stay out of the UI: rotating the master key would invalidate every encrypted API key in the DB.",
       "publicUrl": "Public origin used to deep-link reset/invite URLs inside emails.",
       "fromAddress": "Default From address when the admin has not configured one in this page.",
       "supportEmail": "Shown in the footer of every transactional email."
+    },
+    "system": {
+      "title": "System environment",
+      "subtitle": "Public URLs, support contact, default locale, and default From address. These values override the same env vars on the identity service — no restart needed.",
+      "loading": "Loading system configuration…",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saveSuccess": "System configuration updated. The next email will use the new values.",
+      "saveError": "Could not save system configuration. Check the values and try again.",
+      "fields": {
+        "appPublicBaseUrl": "App public URL",
+        "supportEmail": "Support email",
+        "defaultLocale": "Default locale",
+        "mailFromAddress": "Default From address"
+      },
+      "hints": {
+        "appPublicBaseUrl": "Used to deep-link reset and invite URLs inside emails (e.g. https://app.philandz.com).",
+        "supportEmail": "Shown in the footer of every transactional email.",
+        "defaultLocale": "Locale prefix for the reset/invite deep links (e.g. en, vi, en-US).",
+        "mailFromAddress": "Sender when the mail provider has no per-mailbox From configured (e.g. Philandz <noreply@yourdomain.com>)."
+      },
+      "source": {
+        "db": "Stored in DB",
+        "env": "From env (or live default)",
+        "default": "Built-in default"
+      },
+      "sourceHint": "Sources — URL: {url}, Support: {support}, Locale: {locale}, From: {from}.",
+      "validation": {
+        "urlInvalid": "URL is invalid",
+        "urlProtocol": "URL must start with http:// or https://",
+        "email": "Must be a valid email",
+        "localeFormat": "Use 1-10 lowercase letters, digits or dashes"
+      }
     }
   }
 }
