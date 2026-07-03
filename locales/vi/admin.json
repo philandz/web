@@ -144,7 +144,7 @@
       "showKey": "Hiện khoá",
       "hideKey": "Ẩn khoá",
       "fromAddressLabel": "Địa chỉ From",
-      "fromAddressPlaceholder": "Philandz <noreply@yourdomain.com>",
+      "fromAddressPlaceholder": "Philandz ‹noreply@yourdomain.com›",
       "fromAddressHint": "Phải dùng domain bạn đã xác minh trong bảng điều khiển Resend.",
       "replyToLabel": "Reply-To (tuỳ chọn)",
       "replyToPlaceholder": "support@yourdomain.com",
@@ -205,7 +205,7 @@
         "appPublicBaseUrl": "Dùng để nhúng link đặt lại/lời mời trong email (vd https://app.philandz.com).",
         "supportEmail": "Hiển thị ở chân trang mỗi email giao dịch.",
         "defaultLocale": "Tiền tố locale cho link đặt lại/lời mời (vd en, vi, en-US).",
-        "mailFromAddress": "Người gửi khi mail provider chưa cấu hình From riêng (vd Philandz <noreply@yourdomain.com>)."
+        "mailFromAddress": "Người gửi khi mail provider chưa cấu hình From riêng (vd Philandz ‹noreply@yourdomain.com›)."
       },
       "source": {
         "db": "Lưu trong DB",

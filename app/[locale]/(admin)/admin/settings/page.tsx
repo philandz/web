@@ -48,7 +48,6 @@ type TestFormValues = z.infer<ReturnType<typeof createTestSchema>>;
 export default function AdminSettingsPage() {
   const t = useTranslations("admin.settings");
   const tValidation = useTranslations("admin.settings.resend");
-  const tValidationCommon = useTranslations("auth");
   const toast = useToast();
 
   const query = useResendConfigQuery();
@@ -250,7 +249,7 @@ export default function AdminSettingsPage() {
                     }}
                     className="h-10 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground transition hover:bg-muted"
                   >
-                    {tValidationCommon("cancel", { defaultValue: "Cancel" })}
+                    {tValidation("cancel")}
                   </button>
                   <LoadingButton
                     type="submit"

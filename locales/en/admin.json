@@ -144,7 +144,7 @@
       "showKey": "Show key",
       "hideKey": "Hide key",
       "fromAddressLabel": "From address",
-      "fromAddressPlaceholder": "Philandz <noreply@yourdomain.com>",
+      "fromAddressPlaceholder": "Philandz ‹noreply@yourdomain.com›",
       "fromAddressHint": "Must use a domain you've verified in your Resend dashboard.",
       "replyToLabel": "Reply-To (optional)",
       "replyToPlaceholder": "support@yourdomain.com",
@@ -205,7 +205,7 @@
         "appPublicBaseUrl": "Used to deep-link reset and invite URLs inside emails (e.g. https://app.philandz.com).",
         "supportEmail": "Shown in the footer of every transactional email.",
         "defaultLocale": "Locale prefix for the reset/invite deep links (e.g. en, vi, en-US).",
-        "mailFromAddress": "Sender when the mail provider has no per-mailbox From configured (e.g. Philandz <noreply@yourdomain.com>)."
+        "mailFromAddress": "Sender when the mail provider has no per-mailbox From configured (e.g. Philandz ‹noreply@yourdomain.com›)."
       },
       "source": {
         "db": "Stored in DB",
