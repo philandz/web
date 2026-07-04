@@ -20,7 +20,8 @@
     "roleViewer": "Xem",
     "emptyTitle": "Chưa có ngân sách",
     "emptySubtitle": "Tạo ngân sách đầu tiên để bắt đầu theo dõi tài chính",
-    "noOrg": "Chọn tổ chức để xem ngân sách"
+    "noOrg": "Chọn tổ chức để xem ngân sách",
+    "count": "{count, plural, =0 {Không có ngân sách} other {# ngân sách}}"
   },
   "card": {
     "balance": "Số dư",
@@ -246,6 +247,8 @@
   "members": {
     "title": "Thành viên ngân sách",
     "members": "thành viên",
+    "unknownUser": "Người dùng không xác định",
+    "noEmail": "Chưa có email",
     "invite": "Mời",
     "inviteTitle": "Thêm thành viên",
     "userId": "ID người dùng",
@@ -458,5 +461,14 @@
     "emptyFile": "File có vẻ trống",
     "doneTitle": "Nhập hoàn tất",
     "doneDesc": "{imported} đã nhập, {errors} lỗi"
-  }
+  },
+  "typeStandard": "Tiêu chuẩn",
+  "typeSaving": "Tiết kiệm",
+  "typeDebt": "Nợ",
+  "typeInvest": "Đầu tư",
+  "typeSharing": "Chia sẻ",
+  "roleOwner": "Chủ sở hữu",
+  "roleManager": "Quản lý",
+  "roleContributor": "Cộng tác viên",
+  "roleViewer": "Người xem"
 }

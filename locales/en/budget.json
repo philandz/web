@@ -20,7 +20,8 @@
     "roleViewer": "Viewer",
     "emptyTitle": "No budgets yet",
     "emptySubtitle": "Create your first budget to start tracking finances",
-    "noOrg": "Select an organization to view budgets"
+    "noOrg": "Select an organization to view budgets",
+    "count": "{count, plural, =0 {No budgets} one {1 budget} other {# budgets}}"
   },
   "card": {
     "balance": "Balance",
@@ -246,6 +247,8 @@
   "members": {
     "title": "Budget Members",
     "members": "members",
+    "unknownUser": "Unknown user",
+    "noEmail": "No email",
     "invite": "Invite",
     "inviteTitle": "Add Member",
     "userId": "User ID",
@@ -458,5 +461,14 @@
     "emptyFile": "File appears to be empty",
     "doneTitle": "Import complete",
     "doneDesc": "{imported} imported, {errors} errors"
-  }
+  },
+  "typeStandard": "Standard",
+  "typeSaving": "Saving",
+  "typeDebt": "Debt",
+  "typeInvest": "Invest",
+  "typeSharing": "Sharing",
+  "roleOwner": "Owner",
+  "roleManager": "Manager",
+  "roleContributor": "Contributor",
+  "roleViewer": "Viewer"
 }
