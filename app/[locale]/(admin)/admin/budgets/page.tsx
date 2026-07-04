@@ -16,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SelectNative } from "@/components/ui/select";
+import { Link, useRouter } from "@/i18n/navigation";
+import { routes } from "@/constants/routes";
 import { useAdminBudgetsQuery } from "@/modules/admin/hooks";
 import { useAdminOrgsQuery } from "@/modules/admin/hooks";
 import type { BudgetType } from "@/services/budget-service";
@@ -40,6 +42,7 @@ export default function AdminBudgetsPage() {
   const t = useTranslations("admin.budgets");
   const tCommon = useTranslations("common");
   const tBudget = useTranslations("budget");
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
@@ -176,8 +179,29 @@ export default function AdminBudgetsPage() {
                 </thead>
                 <tbody>
                   {query.data!.budgets.map((b) => (
-                    <tr key={b.id} className="border-b border-border/60 last:border-b-0 hover:bg-muted/30">
-                      <td className="px-4 py-3 font-medium text-foreground">{b.name}</td>
+                    <tr
+                      key={b.id}
+                      role="button"
+                      tabIndex={0}
+                      data-testid={`admin-budget-row-${b.id}`}
+                      onClick={() => router.push(routes.adminBudgetDetail(b.id))}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          router.push(routes.adminBudgetDetail(b.id));
+                        }
+                      }}
+                      className="cursor-pointer border-b border-border/60 last:border-b-0 transition hover:bg-muted/40 focus:bg-muted/40 focus:outline-none"
+                    >
+                      <td className="px-4 py-3 font-medium text-foreground">
+                        <Link
+                          href={routes.adminBudgetDetail(b.id)}
+                          className="text-primary hover:underline focus:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {b.name}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {orgNameById.get(b.orgId) ?? <span className="font-mono text-xs">{b.orgId.slice(0, 8)}</span>}
                       </td>
