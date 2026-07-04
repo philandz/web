@@ -396,15 +396,15 @@ const createSystemConfigSchema = (t: (k: string) => string) =>
   z.object({
     appPublicBaseUrl: z
       .string()
-      .min(8, t("system.validation.urlInvalid"))
-      .regex(/^https?:\/\//, t("system.validation.urlProtocol")),
-    supportEmail: z.string().email(t("system.validation.email")),
+      .min(8, t("validation.urlInvalid"))
+      .regex(/^https?:\/\//, t("validation.urlProtocol")),
+    supportEmail: z.string().email(t("validation.email")),
     defaultLocale: z
       .string()
       .min(1)
       .max(10)
-      .regex(/^[a-z0-9-]+$/, t("system.validation.localeFormat")),
-    mailFromAddress: z.string().email(t("system.validation.email"))
+      .regex(/^[a-z0-9-]+$/, t("validation.localeFormat")),
+    mailFromAddress: z.string().email(t("validation.email"))
   });
 
 type SystemFormValues = z.infer<ReturnType<typeof createSystemConfigSchema>>;
