@@ -114,3 +114,34 @@ export async function skipOrgSelection(page: Page) {
     await page.waitForLoadState('networkidle');
   }
 }
+
+/**
+ * Asserts the page eventually redirects to one of the auth entry points
+ * (login, signup, or select-organization). Replaces the racy synchronous
+ * `expect(page.url()).toMatch(...)` pattern that fails because the
+ * (dashboard) layout's `useEffect` redirect only fires after client
+ * hydration of the Zustand auth store.
+ *
+ * The first `await page.waitForURL(...)` polls the URL until the predicate
+ * matches or `timeoutMs` fires. The subsequent `expect(...)` is a
+ * defensive final assertion for the case where the URL changes twice
+ * (e.g., the redirect happens, then something else navigates again).
+ */
+export async function expectRedirectToLogin(
+  page: Page,
+  options: {
+    /** The protected path the test attempted to visit. Used for log clarity. */
+    fromPath: string;
+    /** Maximum time to wait for the redirect, in ms. Default 5000. */
+    timeoutMs?: number;
+  } = { fromPath: '' }
+) {
+  await page.waitForURL(
+    (url) => /\/(login|signup|select-organization)(\/|$)/.test(url.pathname),
+    { timeout: options.timeoutMs ?? 5_000 }
+  );
+  const finalPath = new URL(page.url()).pathname;
+  expect(finalPath).toMatch(
+    /\/(login|signup|select-organization)(\/|$)/
+  );
+}
