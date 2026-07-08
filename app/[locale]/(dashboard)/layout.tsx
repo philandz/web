@@ -7,9 +7,11 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageLoadingState } from "@/components/state/page-loading-state";
 import { routes } from "@/constants/routes";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAuthHydration } from "@/hooks/use-auth-hydration";
 import { useAuthStore } from "@/lib/auth-store";
 import { getDashboardRedirect } from "@/modules/auth/route-guards";
+import { sanitizeReturnTo } from "@/modules/auth/return-to";
 
 // Sharing-budget pages are reachable by guests (no JWT, only a
 // `sharing_session_<budgetId>` in localStorage). They render their
@@ -27,6 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const tShell = useTranslations("dashboard.shell");
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const hydrated = useAuthHydration();
   const token = useAuthStore((state) => state.token);
   const userType = useAuthStore((state) => state.userType);
@@ -43,6 +46,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace(redirectTo);
     }
   }, [authReady, pathname, router, selectedOrgId, token, userType]);
+
+  useEffect(() => {
+    if (isSharingRoute(pathname)) return;
+    if (!authReady) return;
+    if (token && userType) return;
+
+    const returnTo = sanitizeReturnTo(searchParams?.get("return_to") ?? null);
+    const loginUrl = `${routes.login}${returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : ""}`;
+    router.replace(loginUrl);
+  }, [authReady, token, userType, pathname, searchParams, router]);
 
   // Sharing routes are open to guests — skip auth + AppShell. The
   // page itself wraps content in SharingBudgetView which has its
