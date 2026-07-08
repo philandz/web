@@ -45,6 +45,11 @@ export async function registerNewUser(
   }
   await page.locator('button[type="submit"]').click();
 
+  // Wait for the post-submit page transition.  Submission is async
+  // (network round-trip to identity, then auto-redirect). Without
+  // this wait, callers may see the URL still on /signup.
+  await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+
   return { email, password, displayName };
 }
 
