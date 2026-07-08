@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerAndLogin, skipOrgSelection, logout } from './helpers';
+import { registerAndLogin, skipOrgSelection, logout, expectRedirectToLogin } from './helpers';
 
 /**
  * Budgets feature tests.
@@ -77,6 +77,6 @@ test.describe('Budgets', () => {
     await page.context().clearCookies();
     await page.evaluate(() => { try { localStorage.clear(); } catch {} });
     await page.goto('/budgets');
-    expect(page.url()).toMatch(/\/login|\/signup|\/select-organization/);
+    await expectRedirectToLogin(page, { fromPath: '/budgets' });
   });
 });

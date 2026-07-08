@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerAndLogin, logout } from './helpers';
+import { registerAndLogin, logout, expectRedirectToLogin } from './helpers';
 
 /**
  * Profile feature tests.
@@ -49,6 +49,6 @@ test.describe('Profile', () => {
     await page.evaluate(() => { try { localStorage.clear(); } catch {} });
     await page.goto('/profile');
     // App should bounce to /login or /select-organization
-    expect(page.url()).toMatch(/\/login|\/signup/);
+    await expectRedirectToLogin(page, { fromPath: '/profile' });
   });
 });

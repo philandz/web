@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerAndLogin, logout, skipOrgSelection } from './helpers';
+import { registerAndLogin, logout, skipOrgSelection, expectRedirectToLogin } from './helpers';
 
 /**
  * Organization feature tests.
@@ -52,6 +52,6 @@ test.describe('Organizations', () => {
     await page.context().clearCookies();
     await page.evaluate(() => { try { localStorage.clear(); } catch {} });
     await page.goto('/organization');
-    expect(page.url()).toMatch(/\/login|\/signup|\/select-organization/);
+    await expectRedirectToLogin(page, { fromPath: '/organization' });
   });
 });

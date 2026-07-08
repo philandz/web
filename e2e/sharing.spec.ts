@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerAndLogin, skipOrgSelection } from './helpers';
+import { registerAndLogin, skipOrgSelection, expectRedirectToLogin } from './helpers';
 
 /**
  * Sharing feature tests.
@@ -23,7 +23,7 @@ test.describe('Sharing', () => {
     await page.context().clearCookies();
     await page.evaluate(() => { try { localStorage.clear(); } catch {} });
     await page.goto('/sharing');
-    expect(page.url()).toMatch(/\/login|\/signup|\/select-organization/);
+    await expectRedirectToLogin(page, { fromPath: '/sharing' });
   });
 
   test('authenticated user can see an empty sharing list (no Sharing budgets yet)', async ({ page }) => {
