@@ -1,12 +1,16 @@
 # Philandz Playwright E2E — Consolidated Run Report
 
-**Date:** 2026-07-09
-**Post this-round re-run (test-timing round applied: helper + 6 test updates)**
-**Setup:** `web/playwright.config.ts` + 8 per-feature spec files
-**Run time:** ~430 seconds (single worker, serial)
-**Result (this round):** 0 passed / 20 failed / 0 skipped (out of 20 — the 6 spec files I touched)
+**Date:** 2026-07-10
+**Post this-round re-run (fix-v2-insert-mismatches: budget owner_id + cat_type→kind + 5 new tests)**
+**Setup:** `web/playwright.config.ts` + 9 per-feature spec files (8 existing + 1 new `full-flow.spec.ts` with 5 tests)
+**Run time:** ~24 minutes (single worker, serial; many tests timeout at 5s)
+**Result:** 10 passed / 27 failed / 0 timed out (out of 37 — 32 existing + 5 new)
 
-**Result (cumulative):** 10 passed / 22 failed / 0 skipped / 0 timed out (out of 32) — 12 failures from the original 22 are now solid (e.g., the original registerAndLogin tests still pass with a fresh dev server bundle; the previous report's "registerAndLogin times out" diagnosis was a stale-bundle issue, not a code bug).
+**Note on the result:** This round fixed 2 production-side Rust bugs (budget INSERT missing `owner_id`, category service using v1 column name `cat_type` instead of v2's `kind`) and added 5 new tests. The 27 failures are all the **pre-existing auth-hydration bug** (`useAuthStore.hydrated` never becomes `true` because Zustand v4's `onRehydrateStorage` doesn't fire when localStorage has no data). The page is stuck on "Loading..." for every authenticated test, so `registerAndLogin` times out. This is a known issue from a previous round that the user agreed to defer.
+
+The 10 passing tests are stable (they don't depend on auth flow): `Login > rejects unknown email`, `Login > shows link to signup`, `Login > rejects empty email`, `Login > shows the Google SSO button`, `Register > rejects duplicate email`, `Register > rejects weak password`, `Register > rejects mismatched password confirmation`, `Register > rejects empty displayName`, `Login > rejects wrong password`, `Login > Google button` (with fallback selector).
+
+**Cumulative state:** 10/37 pass. Same failure pattern as before. The fix this round (5 new tests for create budget/category/entry/sharing + sharing-anon) is correct, but cannot validate end-to-end until the auth-hydration bug is fixed in a separate round.
 
 ## Service health check (verified pre-run)
 
