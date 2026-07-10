@@ -7,8 +7,8 @@ const API_BASE = 'http://127.0.0.1:9100';
 /**
  * Account A: creates budget + category + entry + sharing budget + join link
  *
- * Uses page.evaluate(fetch) for API calls — routes through browser context
- * to the gateway at port 9100, bypassing Next.js which has no API handlers.
+ * Pure UI tests — no API calls needed. Each test logs in independently
+ * using the shared accountAEmail/accountAPassword credentials set in A1.
  */
 test.describe('Account A: Full Budget Creation Flow', () => {
   let accountAEmail: string;
@@ -16,7 +16,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
   let accountAOrgId: string;
   let token: string;
 
-  test('A1: register and capture org_id', async ({ page }) => {
+  test('A1: register account A', async ({ page }) => {
     accountAEmail = uniqueEmail('account-a');
     accountAPassword = TEST_PASSWORD;
 
@@ -29,7 +29,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     await page.locator('button[type="submit"]').click();
     await page.waitForURL((url) => !url.pathname.includes('/signup'), { timeout: 15_000 });
 
-    // After signup, login to get token
+    // After signup, login to get session
     await page.goto('/login');
     await page.waitForLoadState('load');
     await page.locator('#email').fill(accountAEmail);
@@ -38,52 +38,6 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 10_000 });
 
     await skipOrgSelection(page);
-
-    // Get token and org_id via fetch in browser context
-    const result = await page.evaluate(async (apiBase) => {
-      const tokenResp = await fetch(`${apiBase}/api/identity/me`, {
-        credentials: 'include',
-        headers: { 'Accept': 'application/json' }
-      });
-      if (!tokenResp.ok) return { token: null, orgId: null };
-      const token = tokenResp.headers.get('x-session-token') || '';
-      // Try organizations endpoint
-      const orgResp = await fetch(`${apiBase}/api/identity/organizations`, {
-        credentials: 'include',
-        headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
-      });
-      let orgId = null;
-      if (orgResp.ok) {
-        const data = await orgResp.json();
-        orgId = data.organizations?.[0]?.id || null;
-      }
-      return { token, orgId };
-    }, API_BASE);
-
-    token = result.token || '';
-    accountAOrgId = result.orgId || '';
-
-    // If org fetch didn't work, try to get org via a different path
-    if (!accountAOrgId) {
-      const budgetsResp = await page.evaluate(async (apiBase) => {
-        const resp = await fetch(`${apiBase}/api/budget/budgets`, {
-          credentials: 'include',
-          headers: { 'Accept': 'application/json' }
-        });
-        return { ok: resp.ok, status: resp.status };
-      }, API_BASE);
-      // Fallback: use me endpoint to get user info
-      const meData = await page.evaluate(async (apiBase) => {
-        const resp = await fetch(`${apiBase}/api/identity/me`, { credentials: 'include' });
-        if (resp.ok) return resp.json();
-        return null;
-      }, API_BASE);
-    }
-
-    // Log what we captured
-    console.log('Account A credentials:', accountAEmail);
-    console.log('Token:', token ? 'present' : 'missing');
-    console.log('Org ID:', accountAOrgId || 'not found via API');
   });
 
   test('A2: create standard budget via UI', async ({ page }) => {
