@@ -38,8 +38,8 @@ export async function registerNewUser(
   await page.locator('#displayName').fill(displayName);
   await page.locator('#email').fill(email);
   await page.locator('#password').fill(password);
-  // The signup form has a confirm-password field too — use the same value.
-  const confirm = page.locator('input[placeholder*="confirm" i]');
+  // The signup form has a confirm-password field — use the same value.
+  const confirm = page.locator('#confirmPassword');
   if (await confirm.count() > 0) {
     await confirm.first().fill(password);
   }

@@ -193,7 +193,7 @@ async function registerNewUser(
   await page.locator('#displayName').fill(displayName);
   await page.locator('#email').fill(email);
   await page.locator('#password').fill(password);
-  const confirm = page.locator('input[placeholder*="confirm" i]');
+  const confirm = page.locator('#confirmPassword');
   if (await confirm.count() > 0) {
     await confirm.first().fill(password);
   }
