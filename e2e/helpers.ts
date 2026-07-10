@@ -48,7 +48,7 @@ export async function registerNewUser(
   // Wait for the post-submit page transition.  Submission is async
   // (network round-trip to identity, then auto-redirect). Without
   // this wait, callers may see the URL still on /signup.
-  await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+  await page.waitForLoadState('load', { timeout: 15_000 }).catch(() => {});
 
   return { email, password, displayName };
 }
@@ -64,7 +64,7 @@ export async function registerAndLogin(
   const creds = await registerNewUser(page, opts);
   // Registration typically leaves the user logged in; verify by checking
   // the URL doesn't bounce back to /login or /signup.
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
   // Force a clean login flow so subsequent tests don't depend on
   // session state being carried over.
   await login(page, creds.email, creds.password);
@@ -111,7 +111,7 @@ export async function skipOrgSelection(page: Page) {
   const orgBtn = page.getByRole('button', { name: /select|continue|enter|open/i }).first();
   if (await orgBtn.count() > 0 && await orgBtn.isVisible({ timeout: 1_500 }).catch(() => false)) {
     await orgBtn.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
   }
 }
 
