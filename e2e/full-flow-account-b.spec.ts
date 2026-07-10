@@ -35,7 +35,7 @@ test.describe('Account B: Guest Sharing Flow', () => {
     accountBPassword = TEST_PASSWORD;
 
     await page.goto('/signup');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#displayName').fill('Guest User B');
     await page.locator('#email').fill(accountBEmail);
     await page.locator('#password').fill(accountBPassword);
@@ -44,7 +44,7 @@ test.describe('Account B: Guest Sharing Flow', () => {
     await page.waitForURL((url) => !url.pathname.includes('/signup'), { timeout: 15_000 });
 
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#email').fill(accountBEmail);
     await page.locator('#password').fill(accountBPassword);
     await page.locator('button[type="submit"]').click();
@@ -69,7 +69,7 @@ test.describe('Account B: Guest Sharing Flow', () => {
     });
 
     await guestPage.goto(joinData.joinLink);
-    await guestPage.waitForLoadState('networkidle');
+    await guestPage.waitForLoadState('load');
 
     // Fill guest name form if visible
     const nameInput = guestPage.locator('input[name="displayName"], input[placeholder*="name" i]').first();
@@ -77,7 +77,7 @@ test.describe('Account B: Guest Sharing Flow', () => {
       await nameInput.fill('Guest User B');
       const submitBtn = guestPage.getByRole('button', { name: /join|accept|continue/i }).first();
       await submitBtn.click();
-      await guestPage.waitForLoadState('networkidle');
+      await guestPage.waitForLoadState('load');
     }
 
     await guestPage.waitForURL(/sharing/, { timeout: 15000 });
@@ -106,14 +106,14 @@ test.describe('Account B: Guest Sharing Flow', () => {
     });
 
     await guestPage.goto(joinData.joinLink);
-    await guestPage.waitForLoadState('networkidle');
+    await guestPage.waitForLoadState('load');
 
     const nameInput = guestPage.locator('input[name="displayName"], input[placeholder*="name" i]').first();
     if (await nameInput.isVisible({ timeout: 5000 }).catch(() => false)) {
       await nameInput.fill('Guest User B');
       const submitBtn = guestPage.getByRole('button', { name: /join|accept|continue/i }).first();
       await submitBtn.click();
-      await guestPage.waitForLoadState('networkidle');
+      await guestPage.waitForLoadState('load');
     }
 
     await guestPage.waitForURL(/sharing/, { timeout: 15000 });
@@ -137,7 +137,7 @@ test.describe('Account B: Guest Sharing Flow', () => {
 
     const submitBtn = dialog.getByRole('button', { name: /create|save|submit/i }).first();
     await submitBtn.click();
-    await guestPage.waitForLoadState('networkidle');
+    await guestPage.waitForLoadState('load');
 
     const expenseText = guestPage.getByText(/taxi|50,?000|50.000/i).first();
     await expect(expenseText).toBeVisible({ timeout: 8000 });
@@ -160,14 +160,14 @@ test.describe('Account B: Guest Sharing Flow', () => {
     });
 
     await guestPage.goto(joinData.joinLink);
-    await guestPage.waitForLoadState('networkidle');
+    await guestPage.waitForLoadState('load');
 
     const nameInput = guestPage.locator('input[name="displayName"], input[placeholder*="name" i]').first();
     if (await nameInput.isVisible({ timeout: 5000 }).catch(() => false)) {
       await nameInput.fill('Guest User B');
       const submitBtn = guestPage.getByRole('button', { name: /join|accept|continue/i }).first();
       await submitBtn.click();
-      await guestPage.waitForLoadState('networkidle');
+      await guestPage.waitForLoadState('load');
     }
 
     await guestPage.waitForURL(/sharing/, { timeout: 15000 });

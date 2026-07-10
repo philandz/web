@@ -21,7 +21,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     accountAPassword = TEST_PASSWORD;
 
     await page.goto('/signup');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#displayName').fill('Budget Owner');
     await page.locator('#email').fill(accountAEmail);
     await page.locator('#password').fill(accountAPassword);
@@ -31,7 +31,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
     // After signup, login to get token
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#email').fill(accountAEmail);
     await page.locator('#password').fill(accountAPassword);
     await page.locator('button[type="submit"]').click();
@@ -88,7 +88,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
   test('A2: create standard budget via UI', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#email').fill(accountAEmail);
     await page.locator('#password').fill(accountAPassword);
     await page.locator('button[type="submit"]').click();
@@ -96,7 +96,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     await skipOrgSelection(page);
 
     await page.goto('/budgets');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Click create budget button
     const createBtn = page.getByRole('button', { name: /create|new|add/i }).first();
@@ -114,7 +114,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
     const submitBtn = dialog.getByRole('button', { name: /create|save|submit/i }).first();
     await submitBtn.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const budgetText = page.getByText('Food Budget').first();
     await expect(budgetText).toBeVisible({ timeout: 8000 });
@@ -122,7 +122,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
   test('A3: create category via UI', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#email').fill(accountAEmail);
     await page.locator('#password').fill(accountAPassword);
     await page.locator('button[type="submit"]').click();
@@ -130,12 +130,12 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     await skipOrgSelection(page);
 
     await page.goto('/budgets');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const budgetLink = page.getByRole('link', { name: /food budget/i }).or(page.getByText('Food Budget'));
     if (await budgetLink.count() > 0) {
       await budgetLink.first().click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
     }
 
     const addCatBtn = page.getByRole('button', { name: /add category|new category|category/i }).first();
@@ -153,7 +153,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
     const submitBtn = dialog.getByRole('button', { name: /create|save|submit/i }).first();
     await submitBtn.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const catText = page.getByText('Groceries').first();
     await expect(catText).toBeVisible({ timeout: 8000 });
@@ -161,7 +161,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
   test('A4: create entry via UI', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#email').fill(accountAEmail);
     await page.locator('#password').fill(accountAPassword);
     await page.locator('button[type="submit"]').click();
@@ -169,18 +169,18 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     await skipOrgSelection(page);
 
     await page.goto('/budgets');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const budgetLink = page.getByRole('link', { name: /food budget/i }).or(page.getByText('Food Budget'));
     if (await budgetLink.count() > 0) {
       await budgetLink.first().click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
     }
 
     const catLink = page.getByRole('link', { name: /groceries/i }).or(page.getByText('Groceries'));
     if (await catLink.count() > 0) {
       await catLink.first().click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
     }
 
     const addEntryBtn = page.getByRole('button', { name: /add transaction|add entry|new transaction|entry/i }).first();
@@ -201,7 +201,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
     const submitBtn = dialog.getByRole('button', { name: /create|save|submit/i }).first();
     await submitBtn.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const entryText = page.getByText(/weekly groceries|50,?000|50.000/i).first();
     await expect(entryText).toBeVisible({ timeout: 8000 });
@@ -209,7 +209,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
   test('A5: create sharing budget and generate join link', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#email').fill(accountAEmail);
     await page.locator('#password').fill(accountAPassword);
     await page.locator('button[type="submit"]').click();
@@ -217,7 +217,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     await skipOrgSelection(page);
 
     await page.goto('/sharing');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const createBtn = page.getByRole('button', { name: /create|new|add/i }).first();
     if (!(await createBtn.count() > 0)) {
@@ -234,7 +234,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
     const submitBtn = dialog.getByRole('button', { name: /create|save|submit/i }).first();
     await submitBtn.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const budgetText = page.getByText('Weekend Trip').first();
     await expect(budgetText).toBeVisible({ timeout: 8000 });
@@ -243,7 +243,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     const budgetLink = page.getByRole('link', { name: /weekend trip/i }).first();
     if (await budgetLink.count() > 0) {
       await budgetLink.first().click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
     }
 
     // Generate join link — try various UI patterns
@@ -284,7 +284,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
   test('A6: add expense to sharing budget', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await page.locator('#email').fill(accountAEmail);
     await page.locator('#password').fill(accountAPassword);
     await page.locator('button[type="submit"]').click();
@@ -292,12 +292,12 @@ test.describe('Account A: Full Budget Creation Flow', () => {
     await skipOrgSelection(page);
 
     await page.goto('/sharing');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const budgetLink = page.getByRole('link', { name: /weekend trip/i }).or(page.getByText('Weekend Trip'));
     if (await budgetLink.count() > 0) {
       await budgetLink.first().click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
     }
 
     const addExpenseBtn = page.getByRole('button', { name: /add expense|new expense|expense/i }).first();
@@ -318,7 +318,7 @@ test.describe('Account A: Full Budget Creation Flow', () => {
 
     const submitBtn = dialog.getByRole('button', { name: /create|save|submit/i }).first();
     await submitBtn.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const expenseText = page.getByText(/dinner|200,?000|200.000/i).first();
     await expect(expenseText).toBeVisible({ timeout: 8000 });
