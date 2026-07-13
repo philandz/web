@@ -88,6 +88,7 @@
     "searchPlaceholder": "Tìm giao dịch...",
     "allTypes": "Tất cả loại",
     "allCategories": "Tất cả danh mục",
+    "allMembers": "Tất cả thành viên",
     "income": "Thu nhập",
     "expense": "Chi tiêu",
     "dateFrom": "Từ ngày",
@@ -104,7 +105,21 @@
     "colCategory": "Danh mục",
     "colAmount": "Số tiền",
     "colTags": "Thẻ",
-    "empty": "Không có giao dịch",
+    "empty": {
+      "title": "Không tìm thấy giao dịch nào.",
+      "body": "Thử điều chỉnh tìm kiếm hoặc bộ lọc.",
+      "clear": "Xóa bộ lọc"
+    },
+    "filters": "Bộ lọc",
+    "datePresets": {
+      "today": "Hôm nay",
+      "last7Days": "7 ngày qua",
+      "thisMonth": "Tháng này",
+      "custom": "Tùy chỉnh"
+    },
+    "maxRangeError": "Phạm vi chọn tối đa là 30 ngày.",
+    "refresh": "Làm mới",
+    "search": "Tìm kiếm",
     "importCsv": "Nhập CSV",
     "quickAdd": "Thêm nhanh",
     "addTransaction": "Thêm giao dịch",

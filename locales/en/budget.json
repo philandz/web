@@ -88,6 +88,7 @@
     "searchPlaceholder": "Search transactions...",
     "allTypes": "All types",
     "allCategories": "All categories",
+    "allMembers": "All members",
     "income": "Income",
     "expense": "Expense",
     "dateFrom": "From date",
@@ -104,7 +105,21 @@
     "colCategory": "Category",
     "colAmount": "Amount",
     "colTags": "Tags",
-    "empty": "No transactions found",
+    "empty": {
+      "title": "No transactions found.",
+      "body": "Try adjusting your search or filters.",
+      "clear": "Clear filters"
+    },
+    "filters": "Filters",
+    "datePresets": {
+      "today": "Today",
+      "last7Days": "Last 7 days",
+      "thisMonth": "This month",
+      "custom": "Custom range"
+    },
+    "maxRangeError": "Maximum selectable range is 30 days.",
+    "refresh": "Refresh",
+    "search": "Search",
     "importCsv": "Import CSV",
     "quickAdd": "Quick Add",
     "addTransaction": "Add Transaction",
