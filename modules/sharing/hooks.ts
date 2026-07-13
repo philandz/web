@@ -2,6 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sharingService } from "@/services/sharing-service";
+import { budgetService } from "@/services/budget-service";
+import { apiClient } from "@/lib/http/client";
 import type {
   AddExpenseItemInput,
   ExpenseComment,
@@ -20,6 +22,8 @@ export const sharingKeys = {
   participants: (budgetId: string) => [...sharingKeys.all, "participants", budgetId] as const,
   activity: (budgetId: string) => [...sharingKeys.all, "activity", budgetId] as const,
   comments: (expenseId: string) => [...sharingKeys.all, "comments", expenseId] as const,
+  budget: (budgetId: string) => [...sharingKeys.all, "budget", budgetId] as const,
+  orgMembers: (orgId: string) => [...sharingKeys.all, "orgMembers", orgId] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -30,6 +34,7 @@ export function useExpensesQuery(budgetId: string) {
   return useQuery({
     queryKey: sharingKeys.expenses(budgetId),
     queryFn: () => sharingService.listExpenses(budgetId),
+    enabled: Boolean(budgetId),
   });
 }
 
@@ -62,6 +67,7 @@ export function useSettlementQuery(budgetId: string) {
   return useQuery({
     queryKey: sharingKeys.settlement(budgetId),
     queryFn: () => sharingService.calculateSettlement(budgetId),
+    enabled: Boolean(budgetId),
   });
 }
 
@@ -69,6 +75,7 @@ export function useSettlementsQuery(budgetId: string) {
   return useQuery<SettlementConfirmation[]>({
     queryKey: sharingKeys.settlements(budgetId),
     queryFn: () => sharingService.listSettlements(budgetId),
+    enabled: Boolean(budgetId),
   });
 }
 
@@ -109,6 +116,7 @@ export function useParticipantsQuery(budgetId: string) {
   return useQuery<ParticipantInfo[]>({
     queryKey: sharingKeys.participants(budgetId),
     queryFn: () => sharingService.listParticipants(budgetId),
+    enabled: Boolean(budgetId),
   });
 }
 
@@ -124,6 +132,74 @@ export function useRevokeParticipantMutation() {
 }
 
 // ---------------------------------------------------------------------------
+// Budget + org lookup (for batch identity resolution)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lightweight `GET /budgets/{id}` wrapper used to grab the
+ * `org_id` of a sharing budget. The sharing service doesn't expose
+ * the orgId on its own responses, so we read it from the budget
+ * service. One call per page-load, cached by `useQuery`.
+ */
+export function useBudgetOrgId(budgetId: string | null | undefined): string | undefined {
+  return useQuery({
+    queryKey: budgetId ? sharingKeys.budget(budgetId) : ["sharing", "budget", "_"],
+    queryFn: () => budgetService.getBudget(budgetId!),
+    enabled: Boolean(budgetId),
+    select: (b) => b.orgId,
+    staleTime: 5 * 60_000,
+  }).data;
+}
+
+/**
+ * Batch-fetch every member of `orgId` from the identity service and
+ * return a `userId → displayName` map. Used as the last-resort
+ * fallback when `useParticipantNameLookup` cannot resolve a
+ * `user_id` (e.g. a leg whose author never went through
+ * `assert_member` and therefore has no `sharing_participants` row).
+ */
+export function useBatchIdentityNames(
+  orgId: string | null | undefined,
+): Map<string, string> {
+  const q = useQuery({
+    queryKey: orgId ? sharingKeys.orgMembers(orgId) : ["sharing", "orgMembers", "_"],
+    queryFn: async () => {
+      // Catch "expected" failures (401/403/404) and return an empty
+      // map so React Query doesn't log them as errors. The caller
+      // already has the participants list as the primary source; this
+      // hook is a best-effort enrichment, and if the caller isn't an
+      // org member (e.g. they were added to a budget directly, or
+      // they're a super-admin without an org), the lookup is silently
+      // empty and the UI falls back to the participants / "—"
+      // labels.
+      try {
+        const res = await apiClient.get<{
+          members: { user_id: string; display_name: string; email: string }[];
+        }>(`/api/identity/organizations/${orgId}/members`);
+        const map = new Map<string, string>();
+        for (const m of res.members ?? []) {
+          if (m.user_id && m.display_name) {
+            map.set(m.user_id, m.display_name);
+          }
+        }
+        return map;
+      } catch (err) {
+        const e = err as { status?: number };
+        if (typeof e?.status === "number" && e.status >= 400 && e.status < 500) {
+          return EMPTY_MAP;
+        }
+        throw err;
+      }
+    },
+    enabled: Boolean(orgId),
+    staleTime: 5 * 60_000,
+  });
+  return q.data ?? EMPTY_MAP;
+}
+
+const EMPTY_MAP: Map<string, string> = new Map();
+
+// ---------------------------------------------------------------------------
 // Activity
 // ---------------------------------------------------------------------------
 
@@ -131,6 +207,7 @@ export function useActivityQuery(input: { budgetId: string; since?: number; limi
   return useQuery<ActivityLogEntry[]>({
     queryKey: sharingKeys.activity(input.budgetId),
     queryFn: () => sharingService.listActivity(input),
+    enabled: Boolean(input.budgetId),
   });
 }
 
