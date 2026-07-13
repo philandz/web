@@ -141,11 +141,16 @@ export function useRevokeParticipantMutation() {
  * the orgId on its own responses, so we read it from the budget
  * service. One call per page-load, cached by `useQuery`.
  */
-export function useBudgetOrgId(budgetId: string | null | undefined): string | undefined {
+export function useBudgetOrgId(
+  budgetId: string | null | undefined,
+  hasAuthToken: boolean = true,
+): string | undefined {
   return useQuery({
     queryKey: budgetId ? sharingKeys.budget(budgetId) : ["sharing", "budget", "_"],
     queryFn: () => budgetService.getBudget(budgetId!),
-    enabled: Boolean(budgetId),
+    // Guests have no JWT — the budget service would 401. Skip the
+    // call so we don't spam error logs on every guest page render.
+    enabled: Boolean(budgetId) && hasAuthToken,
     select: (b) => b.orgId,
     staleTime: 5 * 60_000,
   }).data;
