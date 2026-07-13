@@ -128,11 +128,18 @@ class ApiClient {
     });
 
     this.useError((error, context) => {
-      if (isUnauthorizedError(error)) {
+      const isSharingRoute = context.path.startsWith("/api/sharing/");
+
+      // Don't trigger JWT expire flow for sharing routes — they use
+      // SharingSession token. Falling through to expireSession() here
+      // would wipe state for a guest who never had a JWT in the first
+      // place, and stray 401s on sharing routes (e.g. with empty
+      // budget_id) were the source of false 'expired' notices.
+      if (isUnauthorizedError(error) && !isSharingRoute) {
         this.authHandlers.onUnauthorized?.(error);
       }
 
-      if (isForbiddenError(error)) {
+      if (isForbiddenError(error) && !isSharingRoute) {
         this.authHandlers.onForbidden?.(error);
       }
 
