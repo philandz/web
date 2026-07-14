@@ -378,22 +378,22 @@ export function TransactionsTab({
         />
 
         {/* Member popover */}
-        <MemberPopover
-          value={draft.memberIds}
-          onChange={(ids) => setDraft({ memberIds: ids })}
-          members={members}
-        >
-          <></>
-        </MemberPopover>
+        {members.length > 0 && (
+          <MemberPopover
+            value={draft.memberIds}
+            onChange={(ids) => setDraft({ memberIds: ids })}
+            members={members}
+          />
+        )}
 
         {/* Category popover */}
-        <CategoryPopover
-          value={draft.categoryIds}
-          onChange={(ids) => setDraft({ categoryIds: ids })}
-          categories={categories}
-        >
-          <></>
-        </CategoryPopover>
+        {categories.length > 0 && (
+          <CategoryPopover
+            value={draft.categoryIds}
+            onChange={(ids) => setDraft({ categoryIds: ids })}
+            categories={categories}
+          />
+        )}
 
         {/* Date dropdown */}
         <DateDropdown

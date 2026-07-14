@@ -383,12 +383,10 @@ export function MemberPopover({
   value,
   onChange,
   members,
-  children,
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   members: { userId: string; displayName: string; avatar?: string | null }[];
-  children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -459,12 +457,10 @@ export function CategoryPopover({
   value,
   onChange,
   categories,
-  children,
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   categories: { id: string; name: string }[];
-  children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
