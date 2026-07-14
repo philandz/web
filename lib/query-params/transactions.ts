@@ -79,12 +79,8 @@ export function validateDraft(draft: TransactionDraft): {
       errors.dateFrom = "Invalid date format";
     } else if (to < from) {
       errors.dateTo = "End date must be after start date";
-    } else {
-      const diffMs = to.getTime() - from.getTime();
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      if (diffDays > 30) {
-        errors.dateTo = "Maximum selectable range is 30 days.";
-      }
+    } else if (isDateRangeTooWide(draft.dateFrom, draft.dateTo)) {
+      errors.dateTo = "Maximum selectable range is 30 days.";
     }
   } else if (draft.dateFrom) {
     const from = new Date(draft.dateFrom);
@@ -113,6 +109,48 @@ export function validateDraft(draft: TransactionDraft): {
  * Count how many applied filters differ from their defaults.
  * Used for the "Filters (n)" badge.
  */
+export function isDateRangeTooWide(from: string, to: string, maxDays = 30): boolean {
+  if (!from || !to) return false;
+  const msPerDay = 1000 * 60 * 60 * 24;
+  return Math.floor((new Date(to).getTime() - new Date(from).getTime()) / msPerDay) > maxDays;
+}
+
+/**
+ * Returns { from, to } for the current calendar month (first day → today).
+ */
+export function getCurrentMonthRange(): { from: string; to: string } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const fmtYmd = (d: Date) => d.toISOString().split("T")[0];
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  return { from: fmtYmd(firstOfMonth), to: fmtYmd(today) };
+}
+
+/**
+ * Returns { from, to } for a preset, or null for "custom".
+ */
+export function getPresetRange(
+  preset: "today" | "last7Days" | "thisMonth" | "custom",
+): { from: string; to: string } | null {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const fmtYmd = (d: Date) => d.toISOString().split("T")[0];
+
+  switch (preset) {
+    case "today":
+      return { from: fmtYmd(today), to: fmtYmd(today) };
+    case "last7Days": {
+      const from = new Date(today);
+      from.setDate(from.getDate() - 6);
+      return { from: fmtYmd(from), to: fmtYmd(today) };
+    }
+    case "thisMonth":
+      return getCurrentMonthRange();
+    case "custom":
+      return null;
+  }
+}
+
 export function countActiveFilters(applied: TransactionDraft): number {
   let count = 0;
   if (applied.q) count++;
