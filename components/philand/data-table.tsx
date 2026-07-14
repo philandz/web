@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { CalendarDays, ChevronDown, ChevronUp, ChevronRight, ChevronsUpDown, ChevronLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Popover } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { SortDir } from "@/hooks/use-table-state";
 
@@ -244,5 +246,108 @@ export function FilterBadge({ label, onClear }: { label: string; onClear: () => 
         <X className="h-3 w-3" />
       </button>
     </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Date dropdown with presets
+// ---------------------------------------------------------------------------
+
+type DatePreset = "today" | "last7Days" | "thisMonth" | "custom";
+
+const DATE_PRESET_LABELS: Record<DatePreset, string> = {
+  today: "Today",
+  last7Days: "Last 7 days",
+  thisMonth: "This Month",
+  custom: "Custom range",
+};
+
+export function DateDropdown({
+  from,
+  to,
+  onSelect,
+  onCustomChange,
+  validationError,
+}: {
+  from: string;
+  to: string;
+  onSelect: (preset: DatePreset) => void;
+  onCustomChange: (from: string, to: string) => void;
+  validationError?: string;
+}) {
+  const currentPreset = (() => {
+    if (!from && !to) return null;
+    if (from && to) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const fmtYmd = (d: Date) => d.toISOString().split("T")[0];
+      const t = fmtYmd(today);
+      if (from === t && to === t) return "today" as DatePreset;
+      const fromD = new Date(from); const toD = new Date(to);
+      const diffMs = toD.getTime() - fromD.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays === 6) {
+        const from7 = new Date(today); from7.setDate(from7.getDate() - 6);
+        if (fmtYmd(from7) === from) return "last7Days" as DatePreset;
+      }
+      const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      if (from === fmtYmd(firstOfMonth) && to === t) return "thisMonth" as DatePreset;
+    }
+    return "custom" as DatePreset;
+  })();
+
+  const [open, setOpen] = useState(false);
+  const [showCustom, setShowCustom] = useState(currentPreset === "custom");
+
+  function handlePreset(p: DatePreset) {
+    if (p === "custom") {
+      setShowCustom(true);
+      onSelect("custom");
+    } else {
+      setShowCustom(false);
+      setOpen(false);
+      onSelect(p);
+    }
+  }
+
+  const triggerLabel = currentPreset && currentPreset !== "custom"
+    ? DATE_PRESET_LABELS[currentPreset]
+    : showCustom
+    ? "Custom range"
+    : DATE_PRESET_LABELS.thisMonth;
+
+  const trigger = (
+    <button
+      type="button"
+      className={cn(
+        "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
+        open && "ring-1 ring-ring"
+      )}
+    >
+      <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+      <span>{triggerLabel}</span>
+      <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+    </button>
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen} trigger={trigger}>
+      <div className="flex flex-col gap-0.5">
+        {(Object.keys(DATE_PRESET_LABELS) as DatePreset[]).map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            onClick={() => handlePreset(preset)}
+            className={cn(
+              "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+              "hover:bg-muted",
+              currentPreset === preset && "bg-primary/5 text-primary font-medium"
+            )}
+          >
+            {DATE_PRESET_LABELS[preset]}
+          </button>
+        ))}
+      </div>
+    </Popover>
   );
 }
