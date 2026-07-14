@@ -398,6 +398,8 @@ export function MemberPopover({
     }
   }
 
+  const safeMembers = members ?? [];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -418,23 +420,27 @@ export function MemberPopover({
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" sideOffset={4} className="w-56 p-2">
-        <div className="flex flex-col gap-0.5">
-          {members.map((m) => (
-            <label
-              key={m.userId}
-              className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
-            >
-              <input
-                type="checkbox"
-                checked={value.includes(m.userId)}
-                onChange={() => toggle(m.userId)}
-                className="accent-primary"
-              />
-              <UserAvatar name={m.displayName} src={m.avatar} size={20} />
-              <span className="flex-1 truncate text-foreground">{m.displayName}</span>
-            </label>
-          ))}
-        </div>
+        {safeMembers.length === 0 ? (
+          <p className="py-2 text-center text-xs text-muted-foreground">No members</p>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {safeMembers.map((m) => (
+              <label
+                key={m.userId}
+                className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(m.userId)}
+                  onChange={() => toggle(m.userId)}
+                  className="accent-primary"
+                />
+                <UserAvatar name={m.displayName} src={m.avatar} size={20} />
+                <span className="flex-1 truncate text-foreground">{m.displayName}</span>
+              </label>
+            ))}
+          </div>
+        )}
         {value.length > 0 && (
           <button
             type="button"
@@ -472,6 +478,8 @@ export function CategoryPopover({
     }
   }
 
+  const safeCategories = categories ?? [];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -492,22 +500,26 @@ export function CategoryPopover({
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" sideOffset={4} className="w-48 max-h-64 overflow-y-auto p-2">
-        <div className="flex flex-col gap-0.5">
-          {categories.map((c) => (
-            <label
-              key={c.id}
-              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
-            >
-              <input
-                type="checkbox"
-                checked={value.includes(c.id)}
-                onChange={() => toggle(c.id)}
-                className="accent-primary"
-              />
-              <span className="flex-1 truncate text-foreground">{c.name}</span>
-            </label>
-          ))}
-        </div>
+        {safeCategories.length === 0 ? (
+          <p className="py-2 text-center text-xs text-muted-foreground">No categories</p>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {safeCategories.map((c) => (
+              <label
+                key={c.id}
+                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(c.id)}
+                  onChange={() => toggle(c.id)}
+                  className="accent-primary"
+                />
+                <span className="flex-1 truncate text-foreground">{c.name}</span>
+              </label>
+            ))}
+          </div>
+        )}
         {value.length > 0 && (
           <button
             type="button"
