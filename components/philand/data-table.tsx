@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CalendarDays, ChevronDown, ChevronUp, ChevronRight, ChevronsUpDown, ChevronLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import type { SortDir } from "@/hooks/use-table-state";
 
@@ -371,5 +372,206 @@ export function DateDropdown({
         )}
       </PopoverContent>
     </Popover>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Member popover with checkbox list
+// ---------------------------------------------------------------------------
+
+export function MemberPopover({
+  value,
+  onChange,
+  members,
+  children,
+}: {
+  value: string[];
+  onChange: (ids: string[]) => void;
+  members: { userId: string; displayName: string; avatar?: string | null }[];
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+
+  function toggle(id: string) {
+    if (value.includes(id)) {
+      onChange(value.filter((v) => v !== id));
+    } else {
+      onChange([...value, id]);
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
+            open && "ring-1 ring-ring"
+          )}
+        >
+          <span>Members</span>
+          {value.length > 0 && (
+            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+              {value.length}
+            </span>
+          )}
+          <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={4} className="w-56 p-2">
+        <div className="flex flex-col gap-0.5">
+          {members.map((m) => (
+            <label
+              key={m.userId}
+              className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+            >
+              <input
+                type="checkbox"
+                checked={value.includes(m.userId)}
+                onChange={() => toggle(m.userId)}
+                className="accent-primary"
+              />
+              <UserAvatar name={m.displayName} src={m.avatar} size={20} />
+              <span className="flex-1 truncate text-foreground">{m.displayName}</span>
+            </label>
+          ))}
+        </div>
+        {value.length > 0 && (
+          <button
+            type="button"
+            onClick={() => { onChange([]); }}
+            className="mt-1.5 w-full rounded-md border border-border px-2 py-1.5 text-center text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Clear
+          </button>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Category popover with checkbox list
+// ---------------------------------------------------------------------------
+
+export function CategoryPopover({
+  value,
+  onChange,
+  categories,
+  children,
+}: {
+  value: string[];
+  onChange: (ids: string[]) => void;
+  categories: { id: string; name: string }[];
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+
+  function toggle(id: string) {
+    if (value.includes(id)) {
+      onChange(value.filter((v) => v !== id));
+    } else {
+      onChange([...value, id]);
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
+            open && "ring-1 ring-ring"
+          )}
+        >
+          <span>Category</span>
+          {value.length > 0 && (
+            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+              {value.length}
+            </span>
+          )}
+          <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={4} className="w-48 max-h-64 overflow-y-auto p-2">
+        <div className="flex flex-col gap-0.5">
+          {categories.map((c) => (
+            <label
+              key={c.id}
+              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+            >
+              <input
+                type="checkbox"
+                checked={value.includes(c.id)}
+                onChange={() => toggle(c.id)}
+                className="accent-primary"
+              />
+              <span className="flex-1 truncate text-foreground">{c.name}</span>
+            </label>
+          ))}
+        </div>
+        {value.length > 0 && (
+          <button
+            type="button"
+            onClick={() => { onChange([]); }}
+            className="mt-1.5 w-full rounded-md border border-border px-2 py-1.5 text-center text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Clear
+          </button>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Collapsible filter panel
+// ---------------------------------------------------------------------------
+
+export function FilterPanel({
+  open,
+  onToggle,
+  activeFilterCount,
+  children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  activeFilterCount: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      {/* Collapsed row: Filter button + pills hint */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className={cn(
+            "flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors",
+            open
+              ? "border-primary/40 bg-primary/5 text-primary"
+              : "border-input bg-background text-foreground hover:bg-muted"
+          )}
+        >
+          <span>Filter</span>
+          {activeFilterCount > 0 && (
+            <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
+              {activeFilterCount}
+            </span>
+          )}
+          <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+        </button>
+      </div>
+
+      {/* Expanded controls */}
+      {open && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/30 p-3">
+          {children}
+        </div>
+      )}
+    </div>
   );
 }
