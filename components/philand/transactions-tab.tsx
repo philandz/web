@@ -17,14 +17,15 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { DateRangeFilter, EnumFilter, FilterBadge, Pagination, StatusChip } from "@/components/philand/data-table";
+import { DateDropdown, EnumFilter, FilterBadge, FilterPanel, Pagination, StatusChip } from "@/components/philand/data-table";
+import { CategoryPopover, MemberPopover } from "@/components/philand/data-table";
 import { TransactionDetailDrawer } from "@/components/philand/transaction-detail-drawer";
 import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
 import { QuickAddDrawer } from "@/components/philand/quick-add-drawer";
 import { SectionLoadingState } from "@/components/state/section-loading-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SelectNative } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
 import {
@@ -43,6 +44,8 @@ import { useQueryForm } from "@/hooks/use-query-form";
 import {
   countActiveFilters,
   defaultDraft,
+  getCurrentMonthRange,
+  isDateRangeTooWide,
   parseUrlParams,
   serializeToUrl,
   validateDraft,
@@ -95,84 +98,6 @@ function getPresetRange(preset: DatePreset): { from: string; to: string } | null
 }
 
 // ---------------------------------------------------------------------------
-// Member multi-select (wraps SelectNative with multi)
-// ---------------------------------------------------------------------------
-
-function MemberMultiSelect({
-  value,
-  onChange,
-  members,
-}: {
-  value: string[];
-  onChange: (ids: string[]) => void;
-  members: { userId: string; displayName: string; avatar?: string | null }[];
-}) {
-  const t = useTranslations("budget.transactions");
-
-  return (
-    <SelectNative
-      value={value[0] ?? ""}
-      onValueChange={(v) => {
-        if (!v) {
-          onChange([]);
-        } else if (value.includes(v)) {
-          onChange(value.filter((id) => id !== v));
-        } else {
-          onChange([...value, v]);
-        }
-      }}
-      className="w-full sm:w-44"
-    >
-      <option value="">{t("allMembers")}</option>
-      {members.map((m) => (
-        <option key={m.userId} value={m.userId}>
-          {m.displayName}
-        </option>
-      ))}
-    </SelectNative>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Category multi-select
-// ---------------------------------------------------------------------------
-
-function CategoryMultiSelect({
-  value,
-  onChange,
-  categories,
-}: {
-  value: string[];
-  onChange: (ids: string[]) => void;
-  categories: { id: string; name: string }[];
-}) {
-  const t = useTranslations("budget.transactions");
-
-  return (
-    <SelectNative
-      value={value[0] ?? ""}
-      onValueChange={(v) => {
-        if (!v) {
-          onChange([]);
-        } else if (value.includes(v)) {
-          onChange(value.filter((id) => id !== v));
-        } else {
-          onChange([...value, v]);
-        }
-      }}
-      className="w-full sm:w-44"
-    >
-      <option value="">{t("allCategories")}</option>
-      {categories.map((c) => (
-        <option key={c.id} value={c.id}>
-          {c.name}
-        </option>
-      ))}
-    </SelectNative>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -212,9 +137,15 @@ export function TransactionsTab({
   // Hydrate from URL on first render and on browser back/forward
   useEffect(() => {
     hydrateFromUrl();
-    // Only on searchParams change (back/forward navigation)
+    // Apply "This Month" if no date params in URL
+    const sp = new URLSearchParams(window.location.search);
+    if (!sp.get("from") && !sp.get("to")) {
+      const range = getCurrentMonthRange();
+      setDraft({ dateFrom: range.from, dateTo: range.to });
+      applySearchWithDraft({ ...draft, dateFrom: range.from, dateTo: range.to });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, []);
 
   // ── React Query ─────────────────────────────────────────────────────────
   const queryParams: TransactionListParams = useMemo(
@@ -269,6 +200,10 @@ export function TransactionsTab({
     [transactions],
   );
 
+  // Validation
+  const validationErrors = useMemo(() => validateDraft(draft).errors, [draft]);
+  const isDateRangeValid = !isDateRangeTooWide(draft.dateFrom, draft.dateTo);
+
   // ── Local UI state ──────────────────────────────────────────────────────
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [detailTx, setDetailTx] = useState<Transaction | null>(null);
@@ -300,6 +235,22 @@ export function TransactionsTab({
         scroll: false,
       });
     });
+  }
+
+  // ── applySearchWithDraft ────────────────────────────────────────────────
+  function applySearchWithDraft(d: TransactionDraft) {
+    const v = validateDraft(d);
+    if (!v.ok) {
+      toast.error(Object.values(v.errors)[0]);
+      return false;
+    }
+    setDraft(d);
+    const sp = new URLSearchParams(window.location.search);
+    serializeToUrl(d, sp);
+    startTransition(() => {
+      router.replace(sp.toString() ? `${pathname}?${sp.toString()}` : pathname, { scroll: false });
+    });
+    return true;
   }
 
   function handlePageChange(p: number) {
@@ -373,12 +324,6 @@ export function TransactionsTab({
     );
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  }
-
   // Build a summary of filters that differ between draft and applied (for "Edited" pills)
   const editedFields = useMemo(() => {
     const edited: string[] = [];
@@ -394,221 +339,134 @@ export function TransactionsTab({
   return (
     <div className="space-y-4">
       {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-      <div className="space-y-2">
-        {/* Row 1: search + action buttons */}
-        <div className="flex items-center gap-2">
-          {/* Search input */}
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={draft.q}
-              onChange={(e) => setDraft({ q: e.target.value })}
-              onKeyDown={handleKeyDown}
-              className="pl-9"
-              placeholder={t("searchPlaceholder")}
-            />
-          </div>
 
-          {/* Filters toggle (mobile) */}
-          <Button
-            size="sm"
-            variant={filtersOpen || activeFilterCount > 0 ? "secondary" : "outline"}
-            className="h-10 w-10 shrink-0 p-0 sm:hidden"
-            onClick={() => setFiltersOpen((p) => !p)}
-            aria-label="Toggle filters"
-          >
-            <span className="sr-only">Filters</span>
-            <span className="flex h-4 w-4 items-center justify-center text-xs font-semibold">
-              {activeFilterCount > 0 ? activeFilterCount : "="}
-            </span>
+      {/* Row 1: Search + Add */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            value={draft.q}
+            onChange={(e) => setDraft({ q: e.target.value })}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+            className="pl-9"
+            placeholder={t("searchPlaceholder")}
+          />
+        </div>
+        {budgetId && (
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">{t("addTransaction")}</span>
           </Button>
-
-          {/* Add transaction — split button */}
-          {budgetId ? (
-            <DropdownMenu>
-              <div className="flex shrink-0 items-stretch">
-                <Button
-                  size="sm"
-                  className="rounded-r-none border-r border-r-white/20 pr-3"
-                  onClick={() => setCreateOpen(true)}
-                >
-                  <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
-                  <span className="hidden sm:inline">{t("addTransaction")}</span>
-                </Button>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" className="rounded-l-none px-2">
-                    <span className="text-xs">▾</span>
-                  </Button>
-                </DropdownMenuTrigger>
-              </div>
-              <DropdownMenuContent align="end" className="min-w-[210px]">
-                <DropdownMenuItem onClick={() => setCreateOpen(true)}>
-                  <ReceiptText className="mr-2 h-4 w-4" />
-                  <div>
-                    <div className="font-semibold">{t("addTransaction")}</div>
-                    <div className="text-xs text-muted-foreground">Full form — date, amount, category</div>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setQuickAddOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  <div>
-                    <div className="font-semibold">{t("quickAdd")}</div>
-                    <div className="text-xs text-muted-foreground">Spreadsheet — paste or CSV</div>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-        </div>
-
-        {/* Row 2: filter controls — collapsible on mobile */}
-        <div
-          className={cn(
-            "flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center",
-            filtersOpen ? "flex" : "hidden sm:flex",
-          )}
-        >
-          {/* Type: segmented control */}
-          <EnumFilter<"all" | "expense" | "income">
-            value={draft.type}
-            options={[
-              { value: "all", label: t("allTypes") },
-              { value: "expense", label: t("expense") },
-              { value: "income", label: t("income") },
-            ]}
-            onChange={(v) => setDraft({ type: v ?? "all" })}
-            className="w-full sm:w-auto"
-          />
-
-          {/* Category multi-select */}
-          <CategoryMultiSelect
-            value={draft.categoryIds}
-            onChange={(ids) => setDraft({ categoryIds: ids })}
-            categories={categories}
-          />
-
-          {/* Member multi-select */}
-          <MemberMultiSelect
-            value={draft.memberIds}
-            onChange={(ids) => setDraft({ memberIds: ids })}
-            members={members}
-          />
-
-          {/* Date range */}
-          <DateRangeFilter
-            from={draft.dateFrom}
-            to={draft.dateTo}
-            onFrom={(v) => setDraft({ dateFrom: v ?? "" })}
-            onTo={(v) => setDraft({ dateTo: v ?? "" })}
-            onClear={() => setDraft({ dateFrom: "", dateTo: "" })}
-            className="w-full sm:w-auto sm:min-w-[260px]"
-          />
-
-          {/* Clear filters link */}
-          {activeFilterCount > 0 && (
-            <button
-              type="button"
-              onClick={handleClearFilters}
-              className="shrink-0 text-xs text-muted-foreground underline hover:text-foreground"
-            >
-              {t("clearFilters")}
-            </button>
-          )}
-        </div>
-
-        {/* Row 3: Filter counter + action buttons */}
-        <div className="flex items-center justify-between gap-2">
-          {/* Filters (n) counter */}
-          {activeFilterCount > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {t("filters")} ({activeFilterCount})
-            </span>
-          )}
-          {activeFilterCount === 0 && <span />}
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-2">
-            {/* Refresh — re-applies current URL without draft mutation */}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              <RefreshCw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
-              <span className="ml-1.5 hidden sm:inline">{tBudget("refresh")}</span>
-            </Button>
-
-            {/* Search — applies draft to URL */}
-            <Button size="sm" onClick={handleSearch} disabled={isLoading}>
-              <Search className="h-3.5 w-3.5" />
-              <span className="ml-1.5 hidden sm:inline">{tBudget("search")}</span>
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* ── Active filter chips + summary ────────────────────────────────── */}
-      {transactions.length > 0 && (
-        <div className="space-y-1.5">
-          {/* Summary pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            {filteredIncome > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:text-emerald-400">
-                ↑ {fmt(filteredIncome, currency)}
-              </span>
-            )}
-            {filteredExpense > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-600 dark:border-red-800 dark:text-red-400">
-                ↓ {fmt(filteredExpense, currency)}
-              </span>
-            )}
-            <span className="text-xs text-muted-foreground">{meta.totalRows} results</span>
-          </div>
+      {/* Row 2: FilterPanel + Refresh + Search */}
+      <FilterPanel
+        open={filtersOpen}
+        onToggle={() => setFiltersOpen((p) => !p)}
+        activeFilterCount={activeFilterCount}
+      >
+        {/* Type segmented */}
+        <EnumFilter<"all" | "expense" | "income">
+          value={draft.type}
+          options={[
+            { value: "all", label: t("allTypes") },
+            { value: "expense", label: t("expense") },
+            { value: "income", label: t("income") },
+          ]}
+          onChange={(v) => setDraft({ type: v ?? "all" })}
+        />
 
-          {/* Filter chips */}
-          <div className="flex flex-wrap gap-1.5">
+        {/* Member popover */}
+        <MemberPopover
+          value={draft.memberIds}
+          onChange={(ids) => setDraft({ memberIds: ids })}
+          members={members}
+        >
+          <></>
+        </MemberPopover>
+
+        {/* Category popover */}
+        <CategoryPopover
+          value={draft.categoryIds}
+          onChange={(ids) => setDraft({ categoryIds: ids })}
+          categories={categories}
+        >
+          <></>
+        </CategoryPopover>
+
+        {/* Date dropdown */}
+        <DateDropdown
+          from={draft.dateFrom}
+          to={draft.dateTo}
+          onSelect={(preset) => {
+            const range = getPresetRange(preset);
+            if (range) {
+              setDraft({ dateFrom: range.from, dateTo: range.to });
+            }
+          }}
+          onCustomChange={(from, to) => setDraft({ dateFrom: from, dateTo: to })}
+          validationError={validationErrors.dateTo}
+        />
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Refresh + Search — right side */}
+        <Button size="sm" variant="outline" onClick={handleRefresh} disabled={isLoading}>
+          <RefreshCw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
+          <span className="hidden sm:inline ml-1.5">{t("refresh")}</span>
+        </Button>
+        <Button size="sm" onClick={handleSearch} disabled={isLoading || !isDateRangeValid}>
+          <Search className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline ml-1.5">{t("search")}</span>
+        </Button>
+
+        {/* Filter chips — inside expanded panel */}
+        {filtersOpen && (
+          <div className="flex flex-wrap gap-1.5 w-full">
             {applied.type && applied.type !== "all" && (
-              <FilterBadge
-                label={applied.type}
-                onClear={() => setDraft({ type: "all" })}
-              />
+              <FilterBadge label={applied.type} onClear={() => setDraft({ type: "all" })} />
             )}
             {applied.categoryIds.map((id) => (
-              <FilterBadge
-                key={id}
-                label={categoryMap.get(id)?.name ?? id}
-                onClear={() =>
-                  setDraft({ categoryIds: applied.categoryIds.filter((c) => c !== id) })
-                }
-              />
+              <FilterBadge key={id} label={categoryMap.get(id)?.name ?? id}
+                onClear={() => setDraft({ categoryIds: applied.categoryIds.filter((c) => c !== id) })} />
             ))}
             {applied.memberIds.map((id) => {
               const member = memberMap.get(id);
               return (
-                <FilterBadge
-                  key={id}
-                  label={member?.displayName ?? id}
-                  onClear={() =>
-                    setDraft({ memberIds: applied.memberIds.filter((m) => m !== id) })
-                  }
-                />
+                <FilterBadge key={id} label={member?.displayName ?? id}
+                  onClear={() => setDraft({ memberIds: applied.memberIds.filter((m) => m !== id) })} />
               );
             })}
             {applied.dateFrom && (
-              <FilterBadge
-                label={`From ${applied.dateFrom}`}
-                onClear={() => setDraft({ dateFrom: "" })}
-              />
+              <FilterBadge label={`From ${applied.dateFrom}`}
+                onClear={() => setDraft({ dateFrom: "" })} />
             )}
             {applied.dateTo && (
-              <FilterBadge
-                label={`To ${applied.dateTo}`}
-                onClear={() => setDraft({ dateTo: "" })}
-              />
+              <FilterBadge label={`To ${applied.dateTo}`}
+                onClear={() => setDraft({ dateTo: "" })} />
             )}
           </div>
+        )}
+      </FilterPanel>
+
+      {/* Sticky SummaryStrip — above table */}
+      {transactions.length > 0 && (
+        <div className="sticky top-0 z-10 flex items-center gap-3 rounded-xl border border-border bg-muted/60 backdrop-blur-sm px-4 py-2.5 text-sm">
+          {filteredIncome > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              ↑ {fmt(filteredIncome, currency)}
+            </span>
+          )}
+          {filteredExpense > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+              ↓ {fmt(filteredExpense, currency)}
+            </span>
+          )}
+          <span className="ml-auto text-xs text-muted-foreground">
+            {meta.totalRows} result{meta.totalRows !== 1 ? "s" : ""}
+          </span>
         </div>
       )}
 
