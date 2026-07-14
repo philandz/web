@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CalendarDays, ChevronDown, ChevronUp, ChevronRight, ChevronsUpDown, ChevronLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Popover } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { SortDir } from "@/hooks/use-table-state";
 
@@ -316,38 +316,60 @@ export function DateDropdown({
     ? "Custom range"
     : DATE_PRESET_LABELS.thisMonth;
 
-  const trigger = (
-    <button
-      type="button"
-      className={cn(
-        "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
-        open && "ring-1 ring-ring"
-      )}
-    >
-      <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-      <span>{triggerLabel}</span>
-      <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
-    </button>
-  );
-
   return (
-    <Popover open={open} onOpenChange={setOpen} trigger={trigger}>
-      <div className="flex flex-col gap-0.5">
-        {(Object.keys(DATE_PRESET_LABELS) as DatePreset[]).map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            onClick={() => handlePreset(preset)}
-            className={cn(
-              "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-              "hover:bg-muted",
-              currentPreset === preset && "bg-primary/5 text-primary font-medium"
-            )}
-          >
-            {DATE_PRESET_LABELS[preset]}
-          </button>
-        ))}
-      </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
+            open && "ring-1 ring-ring"
+          )}
+        >
+          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+          <span>{triggerLabel}</span>
+          <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={4} className="w-48 p-1">
+        <div className="flex flex-col gap-0.5">
+          {(Object.keys(DATE_PRESET_LABELS) as DatePreset[]).map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => handlePreset(preset)}
+              className={cn(
+                "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+                "hover:bg-muted",
+                currentPreset === preset && "bg-primary/5 text-primary font-medium"
+              )}
+            >
+              {DATE_PRESET_LABELS[preset]}
+            </button>
+          ))}
+        </div>
+        {showCustom && (
+          <div className="mt-1 border-t border-border pt-2">
+            <div className="flex flex-col gap-1.5 px-1">
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => onCustomChange(e.target.value, to)}
+                className="h-8 w-full rounded-lg border border-input bg-background px-2 text-xs"
+              />
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => onCustomChange(from, e.target.value)}
+                className="h-8 w-full rounded-lg border border-input bg-background px-2 text-xs"
+              />
+              {validationError && (
+                <p className="text-xs text-red-500">{validationError}</p>
+              )}
+            </div>
+          </div>
+        )}
+      </PopoverContent>
     </Popover>
   );
 }

@@ -13,7 +13,7 @@ export function Popover({
   className,
 }: {
   children: React.ReactNode;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   align?: "start" | "center" | "end";
@@ -22,7 +22,7 @@ export function Popover({
 }) {
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <PopoverPrimitive.Trigger asChild>{trigger}</PopoverPrimitive.Trigger>
+      {trigger && <PopoverPrimitive.Trigger asChild>{trigger}</PopoverPrimitive.Trigger>}
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content
           align={align}
@@ -39,3 +39,8 @@ export function Popover({
     </PopoverPrimitive.Root>
   );
 }
+
+export const PopoverTrigger = PopoverPrimitive.Trigger;
+export const PopoverContent = PopoverPrimitive.Content;
+export const PopoverPortal = PopoverPrimitive.Portal;
+export const PopoverRoot = PopoverPrimitive.Root;
