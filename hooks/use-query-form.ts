@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
 
@@ -56,6 +56,20 @@ export function useQueryForm<T>(
 
   // Draft = in-progress user edits
   const [draft, setDraftState] = useState<T>(() => parseUrl(searchParams));
+
+  // Sync `applied` from URL whenever the URL changes externally (e.g.
+  // handleSort / handlePageChange / handlePageSizeChange / handleClear
+  // all push the new state into the URL via router.replace, but without
+  // this effect the in-memory `applied` stays stale and the React Query
+  // key never recomputes). Only sync applied, leave draft alone so the
+  // user can keep editing unsaved draft fields.
+  useEffect(() => {
+    const fromUrl = parseUrl(searchParams);
+    setApplied((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(fromUrl)) return prev;
+      return fromUrl;
+    });
+  }, [parseUrl, searchParams]);
 
   /** Merge partial changes into the draft (no URL mutation) */
   const setDraft = useCallback((partial: Partial<T>) => {
