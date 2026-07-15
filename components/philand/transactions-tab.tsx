@@ -375,21 +375,21 @@ export function TransactionsTab({
             { value: "expense" as const, label: t("expense") },
             { value: "income" as const, label: t("income") },
           ]}
-          onChange={(v) => setDraft({ type: v })}
+          onChange={(v) => applySearchWithDraft({ ...draft, type: v })}
           labels={{ title: t("filterTypeTitle") ?? "Filter by type", all: t("allTypes") }}
         />
 
         {/* Member popover */}
         <MemberPopover
           value={draft.memberIds}
-          onChange={(ids) => setDraft({ memberIds: ids })}
+          onChange={(ids) => applySearchWithDraft({ ...draft, memberIds: ids })}
           members={members}
         />
 
         {/* Category popover */}
         <CategoryPopover
           value={draft.categoryIds}
-          onChange={(ids) => setDraft({ categoryIds: ids })}
+          onChange={(ids) => applySearchWithDraft({ ...draft, categoryIds: ids })}
           categories={categories}
         />
 
@@ -400,10 +400,12 @@ export function TransactionsTab({
           onSelect={(preset) => {
             const range = getPresetRange(preset);
             if (range) {
-              setDraft({ dateFrom: range.from, dateTo: range.to });
+              applySearchWithDraft({ ...draft, dateFrom: range.from, dateTo: range.to });
             }
           }}
-          onCustomChange={(from, to) => setDraft({ dateFrom: from, dateTo: to })}
+          onCustomChange={(from, to) =>
+            applySearchWithDraft({ ...draft, dateFrom: from, dateTo: to })
+          }
           validationError={validationErrors.dateTo}
         />
 
@@ -424,26 +426,55 @@ export function TransactionsTab({
         {filtersOpen && (
           <div className="flex flex-wrap gap-1.5 w-full">
             {applied.type && applied.type !== "all" && (
-              <FilterBadge label={applied.type} onClear={() => setDraft({ type: "all" })} />
+              <FilterBadge
+                label={applied.type}
+                onClear={() =>
+                  applySearchWithDraft({ ...draft, type: "all" })
+                }
+              />
             )}
             {applied.categoryIds.map((id) => (
-              <FilterBadge key={id} label={categoryMap.get(id)?.name ?? id}
-                onClear={() => setDraft({ categoryIds: applied.categoryIds.filter((c) => c !== id) })} />
+              <FilterBadge
+                key={id}
+                label={categoryMap.get(id)?.name ?? id}
+                onClear={() =>
+                  applySearchWithDraft({
+                    ...draft,
+                    categoryIds: applied.categoryIds.filter((c) => c !== id),
+                  })
+                }
+              />
             ))}
             {applied.memberIds.map((id) => {
               const member = memberMap.get(id);
               return (
-                <FilterBadge key={id} label={member?.displayName ?? id}
-                  onClear={() => setDraft({ memberIds: applied.memberIds.filter((m) => m !== id) })} />
+                <FilterBadge
+                  key={id}
+                  label={member?.displayName ?? id}
+                  onClear={() =>
+                    applySearchWithDraft({
+                      ...draft,
+                      memberIds: applied.memberIds.filter((m) => m !== id),
+                    })
+                  }
+                />
               );
             })}
             {applied.dateFrom && (
-              <FilterBadge label={`From ${applied.dateFrom}`}
-                onClear={() => setDraft({ dateFrom: "" })} />
+              <FilterBadge
+                label={`From ${applied.dateFrom}`}
+                onClear={() =>
+                  applySearchWithDraft({ ...draft, dateFrom: "" })
+                }
+              />
             )}
             {applied.dateTo && (
-              <FilterBadge label={`To ${applied.dateTo}`}
-                onClear={() => setDraft({ dateTo: "" })} />
+              <FilterBadge
+                label={`To ${applied.dateTo}`}
+                onClear={() =>
+                  applySearchWithDraft({ ...draft, dateTo: "" })
+                }
+              />
             )}
           </div>
         )}
