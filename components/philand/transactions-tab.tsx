@@ -17,7 +17,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { DateDropdown, EnumFilter, FilterBadge, FilterPanel, Pagination, StatusChip } from "@/components/philand/data-table";
+import { DateDropdown, FilterBadge, FilterPanel, Pagination, StatusChip, TypePopover } from "@/components/philand/data-table";
 import { CategoryPopover, MemberPopover } from "@/components/philand/data-table";
 import { TransactionDetailDrawer } from "@/components/philand/transaction-detail-drawer";
 import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
@@ -142,7 +142,8 @@ export function TransactionsTab({
     if (!sp.get("from") && !sp.get("to")) {
       const range = getCurrentMonthRange();
       setDraft({ dateFrom: range.from, dateTo: range.to });
-      applySearchWithDraft({ ...draft, dateFrom: range.from, dateTo: range.to });
+      const d = { ...defaultDraft(), dateFrom: range.from, dateTo: range.to };
+      applySearchWithDraft(d);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -366,34 +367,31 @@ export function TransactionsTab({
         onToggle={() => setFiltersOpen((p) => !p)}
         activeFilterCount={activeFilterCount}
       >
-        {/* Type segmented */}
-        <EnumFilter<"all" | "expense" | "income">
-          value={draft.type}
+        {/* Type popover (single-select radio, matches Member/Category pill style) */}
+        <TypePopover<"all" | "expense" | "income">
+          value={draft.type === "all" ? "all" : (draft.type as "expense" | "income")}
           options={[
-            { value: "all", label: t("allTypes") },
-            { value: "expense", label: t("expense") },
-            { value: "income", label: t("income") },
+            { value: "all" as const, label: t("allTypes") },
+            { value: "expense" as const, label: t("expense") },
+            { value: "income" as const, label: t("income") },
           ]}
-          onChange={(v) => setDraft({ type: v ?? "all" })}
+          onChange={(v) => setDraft({ type: v })}
+          labels={{ title: t("filterTypeTitle") ?? "Filter by type", all: t("allTypes") }}
         />
 
         {/* Member popover */}
-        {members.length > 0 && (
-          <MemberPopover
-            value={draft.memberIds}
-            onChange={(ids) => setDraft({ memberIds: ids })}
-            members={members}
-          />
-        )}
+        <MemberPopover
+          value={draft.memberIds}
+          onChange={(ids) => setDraft({ memberIds: ids })}
+          members={members}
+        />
 
         {/* Category popover */}
-        {categories.length > 0 && (
-          <CategoryPopover
-            value={draft.categoryIds}
-            onChange={(ids) => setDraft({ categoryIds: ids })}
-            categories={categories}
-          />
-        )}
+        <CategoryPopover
+          value={draft.categoryIds}
+          onChange={(ids) => setDraft({ categoryIds: ids })}
+          categories={categories}
+        />
 
         {/* Date dropdown */}
         <DateDropdown

@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   Tag as TagIcon,
   Users as UsersIcon,
+  Wallet,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -189,6 +190,123 @@ export function EnumFilter<T extends string>({
         </button>
       ))}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TypePopover — single-select chip with a popover radio list
+// (Replaces the segmented EnumFilter for type so the toolbar reads
+// consistently: every filter is a chip that opens a popover.)
+// ---------------------------------------------------------------------------
+
+type TypePopoverValue<T extends string> = T;
+
+export function TypePopover<T extends string>({
+  value,
+  options,
+  onChange,
+  labels,
+}: {
+  value: TypePopoverValue<T>;
+  options: { value: T; label: string }[];
+  onChange: (v: TypePopoverValue<T>) => void;
+  labels: { title: string; all: string };
+}) {
+  const [open, setOpen] = useState(false);
+  const active = options.find((o) => o.value === value);
+  const isAll = value === ("all" as unknown as T);
+
+  function pick(v: T) {
+    onChange(v);
+    setOpen(false);
+  }
+
+  function pickAll() {
+    onChange("all" as unknown as T);
+    setOpen(false);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
+            open && "ring-1 ring-ring bg-muted/60",
+            !isAll && "border-primary/30 bg-primary/5 text-primary"
+          )}
+        >
+          <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+          <span>{active?.label ?? labels.all}</span>
+          <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={6} className="w-56 p-0">
+        <div className="border-b border-border bg-muted/40 px-3 py-2">
+          <p className="text-xs font-semibold text-foreground">{labels.title}</p>
+          {!isAll && (
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              Filtering by: <span className="font-medium text-foreground">{active?.label}</span>
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col p-1">
+          <button
+            type="button"
+            onClick={pickAll}
+            className={cn(
+              "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-muted",
+              isAll && "bg-primary/10 text-primary font-medium"
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
+                isAll
+                  ? "border-primary bg-primary"
+                  : "border-input bg-background group-hover:border-muted-foreground/50"
+              )}
+              aria-hidden="true"
+            >
+              {isAll && <span className="block h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+            </span>
+            <span className="flex-1 text-left">{labels.all}</span>
+          </button>
+          {options
+            .filter((opt) => opt.value !== ("all" as unknown as T))
+            .map((opt) => {
+              const selected = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => pick(opt.value)}
+                  className={cn(
+                    "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-muted",
+                    selected && "bg-primary/10 text-primary font-medium"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
+                      selected
+                        ? "border-primary bg-primary"
+                        : "border-input bg-background group-hover:border-muted-foreground/50"
+                    )}
+                    aria-hidden="true"
+                  >
+                    {selected && (
+                      <span className="block h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+                    )}
+                  </span>
+                  <span className="flex-1 text-left">{opt.label}</span>
+                </button>
+              );
+            })}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -485,7 +603,9 @@ export function MemberPopover({
             )}
           </div>
           {value.length > 0 && (
-            <p className="mt-0.5 text-[10px] text-muted-foreground">{value.length} selected</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              {value.length} selected
+            </p>
           )}
         </div>
         {safeMembers.length === 0 ? (

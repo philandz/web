@@ -111,6 +111,12 @@
       "clear": "Xóa bộ lọc"
     },
     "filters": "Bộ lọc",
+    "filterTypeTitle": "Lọc theo loại",
+    "filterMemberTitle": "Lọc theo thành viên",
+    "filterCategoryTitle": "Lọc theo danh mục",
+    "filterDateTitle": "Khoảng thời gian",
+    "clearFilter": "Xóa",
+    "filterActive": "Đang áp dụng",
     "datePresets": {
       "today": "Hôm nay",
       "last7Days": "7 ngày qua",

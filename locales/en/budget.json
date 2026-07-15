@@ -111,6 +111,12 @@
       "clear": "Clear filters"
     },
     "filters": "Filters",
+    "filterTypeTitle": "Filter by type",
+    "filterMemberTitle": "Filter by member",
+    "filterCategoryTitle": "Filter by category",
+    "filterDateTitle": "Date range",
+    "clearFilter": "Clear",
+    "filterActive": "Active",
     "datePresets": {
       "today": "Today",
       "last7Days": "Last 7 days",
