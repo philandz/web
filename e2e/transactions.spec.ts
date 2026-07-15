@@ -1,5 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
-import { registerAndLogin, skipOrgSelection, logout, expectRedirectToLogin } from './helpers';
+import { test, expect, Page, APIRequestContext, request } from '@playwright/test';
+import { registerAndLogin, skipOrgSelection, logout, expectRedirectToLogin, TEST_PASSWORD, uniqueEmail } from './helpers';
 
 /**
  * Transactions / Entries feature tests.
@@ -11,19 +11,75 @@ import { registerAndLogin, skipOrgSelection, logout, expectRedirectToLogin } fro
  *
  * Run: npm run test:e2e:transactions
  */
+/**
+ * Creates a real user + org + budget via the API and signs the browser into
+ * the same account. Bypasses the UI login flake so filter-panel tests can
+ * reach the page deterministically.
+ */
+async function signInAsFreshUserWithBudget(page: Page): Promise<string> {
+  const apiUrl = process.env.PW_API_URL || 'http://127.0.0.1:9100';
+  const email = uniqueEmail('pw');
+  const password = TEST_PASSWORD;
+  const api: APIRequestContext = await request.newContext({ baseURL: apiUrl });
+  const reg = await api.post('/api/identity/register', {
+    data: { display_name: 'Playwright E2E', email, password },
+  });
+  expect(reg.status(), `register failed: ${await reg.text()}`).toBe(201);
+  const login = await api.post('/api/identity/login', { data: { email, password } });
+  expect(login.status(), `login failed: ${await login.text()}`).toBe(200);
+  const body = await login.json();
+  const token: string = body.access_token;
+  const orgId: string = body.organizations?.[0]?.base?.id;
+  expect(token, 'no access_token').toBeTruthy();
+  expect(orgId, 'no org_id').toBeTruthy();
+  const budget = await api.post('/api/budget/budgets', {
+    data: { org_id: orgId, name: 'E2E Filter Budget', budget_type: 'monthly', currency: 'USD' },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  expect(budget.status(), `budget failed: ${await budget.text()}`).toBe(201);
+  const budgetBody = await budget.json();
+  const budgetId: string = budgetBody.base?.id || budgetBody.id;
+  expect(budgetId, 'no budget_id').toBeTruthy();
+
+  // Persist a fully-shaped Zustand auth state so the (dashboard) layout
+  // does not redirect to /select-organization or /login. The auth store
+  // is keyed 'philandz-web-auth' (see lib/auth-store.ts).
+  const persisted = {
+    state: {
+      hydrated: true,
+      sessionNotice: null,
+      token,
+      userType: 'normal',
+      profile: { id: 'e2e', displayName: 'Playwright E2E', email },
+      organizations: [body.organizations?.[0]],
+      selectedOrgId: orgId,
+    },
+    version: 0,
+  };
+  await page.goto('/');
+  await page.evaluate(
+    (s) => localStorage.setItem('philandz-web-auth', s),
+    JSON.stringify(persisted),
+  );
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  return budgetId;
+}
+
 test.describe('Transactions', () => {
   // -------------------------------------------------------------------------
   // Task 7: Filter panel + DateDropdown tests
   // -------------------------------------------------------------------------
 
   test('filter button expands and collapses filter panel', async ({ page }) => {
-    await registerAndLogin(page);
-    await skipOrgSelection(page);
-    await page.goto('/budgets/test-budget-id');
-    await page.getByRole('tab', { name: /transactions/i }).click();
+    const budgetId = await signInAsFreshUserWithBudget(page);
+    await page.goto(`/budgets/${budgetId}?tab=transactions`);
+    // Wait for the transactions tab content to render.
+    await page.locator('[aria-expanded]').first().waitFor({ state: 'attached', timeout: 15_000 });
+    await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
 
     // Filter panel should be collapsed by default
-    const filterPanel = page.locator('[aria-expanded]');
+    const filterPanel = page.locator('[aria-expanded]').first();
     await expect(filterPanel).toHaveAttribute('aria-expanded', 'false');
 
     // Click Filter button
@@ -32,10 +88,25 @@ test.describe('Transactions', () => {
     // Panel should be expanded
     await expect(filterPanel).toHaveAttribute('aria-expanded', 'true');
 
-    // Type segmented, Member popover, Category popover, DateDropdown should be visible
+    // Type segmented should be visible
     await expect(page.getByText('All types')).toBeVisible();
-    await expect(page.getByText('Members')).toBeVisible();
-    await expect(page.getByText('Category')).toBeVisible();
+    // The three core filter controls must render in the expanded panel.
+    // This is the user-reported bug: Members / Category / DateDropdown triggers
+    // must appear inside the panel. The toolbar's filter panel is the
+    // [class*="space-y-2"] container, scoped here so we don't match the
+    // budget-detail sidebar tabs of the same name.
+    const filterPanelArea = page.locator('[class*="space-y-2"]');
+    await expect(
+      filterPanelArea.getByRole('button', { name: /^members$/i }),
+    ).toBeVisible();
+    await expect(
+      filterPanelArea.getByRole('button', { name: /^category$/i }),
+    ).toBeVisible();
+    await expect(
+      filterPanelArea.getByRole('button', {
+        name: /this month|today|last 7 days|custom range/i,
+      }),
+    ).toBeVisible();
 
     // Collapse
     await page.getByRole('button', { name: /filter/i }).click();
@@ -43,29 +114,38 @@ test.describe('Transactions', () => {
   });
 
   test('date preset applies This Month filter on first load', async ({ page }) => {
-    await registerAndLogin(page);
-    await skipOrgSelection(page);
-    await page.goto('/budgets/test-budget-id?tab=transactions');
-    // Wait for data to load
-    await page.waitForLoadState('networkidle');
-    // URL should contain from/to for this month
+    const budgetId = await signInAsFreshUserWithBudget(page);
+    await page.goto(`/budgets/${budgetId}?tab=transactions`);
+    await page.locator('[aria-expanded]').first().waitFor({ state: 'attached', timeout: 15_000 });
+    await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
     const url = page.url();
-    const from = new URL(url).searchParams.get('from');
-    const to = new URL(url).searchParams.get('to');
-    expect(from).not.toBeNull();
-    expect(to).not.toBeNull();
-    expect(from!.split('-').length).toBe(3);
+    const params = new URL(url).searchParams;
+    expect(params.get('from')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(params.get('to')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   test('custom date range over 30 days shows error and blocks search', async ({ page }) => {
-    await registerAndLogin(page);
-    await skipOrgSelection(page);
-    await page.goto('/budgets/test-budget-id?tab=transactions');
-    await page.getByRole('button', { name: /filter/i }).click();
+    const budgetId = await signInAsFreshUserWithBudget(page);
+    await page.goto(`/budgets/${budgetId}?tab=transactions`);
+    await page.locator('[aria-expanded]').first().waitFor({ state: 'attached', timeout: 15_000 });
+    await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
 
-    // Open date dropdown and select Custom Range
-    await page.getByText('This Month').click();
-    await page.getByText('Custom range').click();
+    // Open filter panel and assert that the date dropdown is present
+    // (same bug as Members/Category — DateDropdown trigger is currently
+    // missing from the rendered DOM).
+    await page.getByRole('button', { name: /filter/i }).click();
+    const filterPanelArea = page.locator('[class*="space-y-2"]');
+    await expect(
+      filterPanelArea.getByRole('button', {
+        name: /this month|today|last 7 days|custom range/i,
+      }),
+    ).toBeVisible();
+
+    await filterPanelArea
+      .getByRole('button', { name: /this month|today|last 7 days/i })
+      .first()
+      .click();
+    await page.getByText(/custom range/i).click();
 
     // Set 60-day range
     await page.locator('input[type="date"]').first().fill('2026-06-01');
@@ -73,9 +153,6 @@ test.describe('Transactions', () => {
 
     // Error message shown
     await expect(page.getByText('Maximum selectable range is 30 days.')).toBeVisible();
-
-    // Search button should be visually indicated as having an error (disabled or styled)
-    // The apply is blocked by validateDraft
   });
 
   // -------------------------------------------------------------------------
@@ -83,12 +160,11 @@ test.describe('Transactions', () => {
   // -------------------------------------------------------------------------
 
   test('transactions page renders (empty list)', async ({ page }) => {
-    await registerAndLogin(page);
-    await skipOrgSelection(page);
+    const budgetId = await signInAsFreshUserWithBudget(page);
     // Some apps route /transactions/:budgetId, others show a chooser.
-    // Just visit /transactions and assert the page loaded.
-    await page.goto('/transactions');
-    await expect(page.locator('main, h1, h2, [role="main"]').first()).toBeVisible();
+    await page.goto(`/budgets/${budgetId}?tab=transactions`);
+    await page.locator('[aria-expanded]').first().waitFor({ state: 'attached', timeout: 15_000 });
+    await expect(page.locator('[aria-expanded]').first()).toBeVisible();
   });
 
   test('unauthenticated /transactions is denied', async ({ page }) => {
@@ -100,76 +176,56 @@ test.describe('Transactions', () => {
   });
 
   test('filter by type and search', async ({ page }) => {
-    await registerAndLogin(page);
-    await skipOrgSelection(page);
-    await page.goto('/transactions');
+    const budgetId = await signInAsFreshUserWithBudget(page);
+    await page.goto(`/budgets/${budgetId}?tab=transactions`);
+    await page.locator('[aria-expanded]').first().waitFor({ state: 'attached', timeout: 15_000 });
 
-    // Apply type=expense filter
-    const typeFilter = page.getByRole('button', { name: /type|all|expense|income/i });
-    if (await typeFilter.count() > 0) {
-      await typeFilter.first().click();
-      // Select expense option
-      const expenseOption = page.getByRole('option', { name: /expense/i });
-      if (await expenseOption.count() > 0) {
-        await expenseOption.click();
-      }
+    // Apply type=expense filter via the type segmented control
+    const expenseBtn = page.locator('[class*="space-y-2"]').getByRole('button', { name: /^expense$/i });
+    if (await expenseBtn.count() > 0) {
+      await expenseBtn.first().click();
     }
 
-    // Press Search (or press Enter in search input)
-    const searchBtn = page.getByRole('button', { name: /search|apply/i });
+    // Press the toolbar's Search button
+    const searchBtn = page.locator('[class*="space-y-2"]').getByRole('button', { name: /^search$/i });
     if (await searchBtn.count() > 0) {
       await searchBtn.click();
     } else {
-      // Fall back to pressing Enter in the search input
       await page.keyboard.press('Enter');
     }
 
-    // Verify URL contains type=expense
-    await page.waitForURL((url) => url.search.includes('type=expense'), { timeout: 5000 }).catch(() => {});
+    await page.waitForURL((url) => url.searchParams.get('type') === 'expense', { timeout: 5_000 }).catch(() => {});
     const url = new URL(page.url());
     expect(url.searchParams.get('type')).toBe('expense');
   });
 
   test('URL preserved on refresh', async ({ page }) => {
-    await registerAndLogin(page);
-    await skipOrgSelection(page);
-
+    const budgetId = await signInAsFreshUserWithBudget(page);
     // Navigate with filters in URL
-    await page.goto('/transactions?type=expense&q=lunch&page=2');
-
-    // Wait for page to hydrate
+    await page.goto(`/budgets/${budgetId}?tab=transactions&type=expense&q=lunch&page=2`);
     await page.waitForLoadState('load');
 
-    // Capture visible row count
     const rowCountBefore = await page.locator('tbody tr, [data-testid="entry-row"], [data-testid="transaction-row"]').count();
 
     // Reload page
     await page.reload();
     await page.waitForLoadState('load');
 
-    // URL should be preserved
     const url = new URL(page.url());
     expect(url.searchParams.get('type')).toBe('expense');
     expect(url.searchParams.get('q')).toBe('lunch');
     expect(url.searchParams.get('page')).toBe('2');
 
-    // Results should still be present (row count should match or be 0 if empty)
     const rowCountAfter = await page.locator('tbody tr, [data-testid="entry-row"], [data-testid="transaction-row"]').count();
-    expect(rowCountAfter).toBeLessThanOrEqual(rowCountBefore + 1); // Allow for loading state diff
+    expect(rowCountAfter).toBeLessThanOrEqual(rowCountBefore + 1);
   });
 
   test('empty state shown when no results', async ({ page }) => {
-    await registerAndLogin(page);
-    await skipOrgSelection(page);
-
-    // Apply impossible filter: description that will never match
-    await page.goto('/transactions?q=__THIS_TEXT_DOES_NOT_EXIST_ANYWHERE__');
-
+    const budgetId = await signInAsFreshUserWithBudget(page);
+    await page.goto(`/budgets/${budgetId}?tab=transactions&q=__THIS_TEXT_DOES_NOT_EXIST_ANYWHERE__`);
     await page.waitForLoadState('load');
 
-    // Look for empty state text (copy key: budget.transactions.empty.title = "No transactions found.")
     const emptyState = page.getByText(/no transactions? found/i).first();
-    // If the table renders but with 0 rows, check for empty table state
     const emptyBody = page.getByText(/try adjusting your search|clear filters/i).first();
 
     const hasEmptyState = (await emptyState.count()) > 0 || (await emptyBody.count()) > 0;
@@ -177,18 +233,13 @@ test.describe('Transactions', () => {
   });
 
   test('pagination page size change', async ({ page }) => {
-    await registerAndLogin(page);
-    await skipOrgSelection(page);
-    await page.goto('/transactions');
-
+    const budgetId = await signInAsFreshUserWithBudget(page);
+    await page.goto(`/budgets/${budgetId}?tab=transactions`);
     await page.waitForLoadState('load');
 
-    // Find the rows-per-page selector
     const pageSizeSelector = page.getByRole('combobox', { name: /rows per page|page size/i });
     if (await pageSizeSelector.count() > 0) {
       await pageSizeSelector.selectOption('10');
-
-      // Verify URL updated
       await page.waitForURL((url) => url.searchParams.get('page_size') === '10', { timeout: 5000 }).catch(() => {});
       const url = new URL(page.url());
       expect(url.searchParams.get('page_size')).toBe('10');
