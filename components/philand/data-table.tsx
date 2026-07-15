@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, ChevronDown, ChevronUp, ChevronRight, ChevronsUpDown, ChevronLeft, X } from "lucide-react";
+import {
+  CalendarDays,
+  Check as CheckIcon,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight,
+  ChevronsUpDown,
+  ChevronLeft,
+  Tag as TagIcon,
+  Users as UsersIcon,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -317,6 +328,9 @@ export function DateDropdown({
     ? "Custom range"
     : DATE_PRESET_LABELS.thisMonth;
 
+  const isCustomActive = !!from && !!to && currentPreset === "custom";
+  const isActive = currentPreset !== null && currentPreset !== "custom";
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -324,7 +338,8 @@ export function DateDropdown({
           type="button"
           className={cn(
             "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
-            open && "ring-1 ring-ring"
+            open && "ring-1 ring-ring bg-muted/60",
+            (isActive || isCustomActive) && "border-primary/30 bg-primary/5 text-primary"
           )}
         >
           <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
@@ -332,40 +347,74 @@ export function DateDropdown({
           <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={4} className="w-48 p-1">
-        <div className="flex flex-col gap-0.5">
-          {(Object.keys(DATE_PRESET_LABELS) as DatePreset[]).map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              onClick={() => handlePreset(preset)}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                "hover:bg-muted",
-                currentPreset === preset && "bg-primary/5 text-primary font-medium"
-              )}
-            >
-              {DATE_PRESET_LABELS[preset]}
-            </button>
-          ))}
+      <PopoverContent align="start" sideOffset={6} className="w-60 p-0">
+        <div className="border-b border-border bg-muted/40 px-3 py-2">
+          <p className="text-xs font-semibold text-foreground">Date range</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">
+            {isActive || isCustomActive
+              ? `Active: ${triggerLabel}`
+              : "Pick a window up to 30 days"}
+          </p>
+        </div>
+        <div className="flex flex-col p-1">
+          {(Object.keys(DATE_PRESET_LABELS) as DatePreset[]).map((preset) => {
+            const isSelected = currentPreset === preset && preset !== "custom";
+            return (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => handlePreset(preset)}
+                className={cn(
+                  "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors",
+                  "hover:bg-muted",
+                  isSelected && "bg-primary/10 text-primary font-medium"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
+                    isSelected
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-input bg-background group-hover:border-muted-foreground/50"
+                  )}
+                  aria-hidden="true"
+                >
+                  {isSelected && <span className="block h-1.5 w-1.5 rounded-full bg-current" />}
+                </span>
+                <span className="flex-1 text-left">{DATE_PRESET_LABELS[preset]}</span>
+              </button>
+            );
+          })}
         </div>
         {showCustom && (
-          <div className="mt-1 border-t border-border pt-2">
-            <div className="flex flex-col gap-1.5 px-1">
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => onCustomChange(e.target.value, to)}
-                className="h-8 w-full rounded-lg border border-input bg-background px-2 text-xs"
-              />
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => onCustomChange(from, e.target.value)}
-                className="h-8 w-full rounded-lg border border-input bg-background px-2 text-xs"
-              />
+          <div className="border-t border-border bg-muted/30 px-3 py-2.5">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Custom window
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-2">
+                <span className="w-10 text-[11px] font-medium text-muted-foreground">From</span>
+                <input
+                  type="date"
+                  value={from}
+                  onChange={(e) => onCustomChange(e.target.value, to)}
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </label>
+              <label className="flex items-center gap-2">
+                <span className="w-10 text-[11px] font-medium text-muted-foreground">To</span>
+                <input
+                  type="date"
+                  value={to}
+                  onChange={(e) => onCustomChange(from, e.target.value)}
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </label>
               {validationError && (
-                <p className="text-xs text-red-500">{validationError}</p>
+                <p className="flex items-center gap-1 text-[11px] font-medium text-destructive">
+                  <X className="h-3 w-3" />
+                  {validationError}
+                </p>
               )}
             </div>
           </div>
@@ -407,48 +456,83 @@ export function MemberPopover({
           type="button"
           className={cn(
             "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
-            open && "ring-1 ring-ring"
+            open && "ring-1 ring-ring bg-muted/60",
+            value.length > 0 && "border-primary/30 bg-primary/5 text-primary"
           )}
         >
+          <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />
           <span>Members</span>
           {value.length > 0 && (
-            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
               {value.length}
             </span>
           )}
           <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={4} className="w-56 p-2">
-        {safeMembers.length === 0 ? (
-          <p className="py-2 text-center text-xs text-muted-foreground">No members</p>
-        ) : (
-          <div className="flex flex-col gap-0.5">
-            {safeMembers.map((m) => (
-              <label
-                key={m.userId}
-                className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+      <PopoverContent align="start" sideOffset={6} className="w-64 p-0">
+        <div className="border-b border-border bg-muted/40 px-3 py-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-foreground">Filter by member</p>
+            {value.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-primary"
               >
-                <input
-                  type="checkbox"
-                  checked={value.includes(m.userId)}
-                  onChange={() => toggle(m.userId)}
-                  className="accent-primary"
-                />
-                <UserAvatar name={m.displayName} src={m.avatar} size={20} />
-                <span className="flex-1 truncate text-foreground">{m.displayName}</span>
-              </label>
-            ))}
+                Clear
+              </button>
+            )}
           </div>
-        )}
-        {value.length > 0 && (
-          <button
-            type="button"
-            onClick={() => { onChange([]); }}
-            className="mt-1.5 w-full rounded-md border border-border px-2 py-1.5 text-center text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Clear
-          </button>
+          {value.length > 0 && (
+            <p className="mt-0.5 text-[10px] text-muted-foreground">{value.length} selected</p>
+          )}
+        </div>
+        {safeMembers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 px-3 py-6 text-center">
+            <UsersIcon className="h-5 w-5 text-muted-foreground/60" />
+            <p className="text-xs font-medium text-foreground">No members yet</p>
+            <p className="text-[11px] text-muted-foreground">Invite teammates to filter by them.</p>
+          </div>
+        ) : (
+          <div className="max-h-64 overflow-y-auto p-1">
+            {safeMembers.map((m) => {
+              const checked = value.includes(m.userId);
+              return (
+                <label
+                  key={m.userId}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",
+                    checked ? "bg-primary/8 text-foreground" : "hover:bg-muted"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
+                      checked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background group-hover:border-muted-foreground/50"
+                    )}
+                    aria-hidden="true"
+                  >
+                    {checked && <CheckIcon className="h-3 w-3" />}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(m.userId)}
+                    className="sr-only"
+                    aria-label={`Filter by ${m.displayName}`}
+                  />
+                  <UserAvatar name={m.displayName} src={m.avatar} size={22} />
+                  <span className="flex-1 truncate text-foreground">{m.displayName}</span>
+                  {checked && (
+                    <span className="ml-auto text-[10px] font-semibold uppercase text-primary">on</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
         )}
       </PopoverContent>
     </Popover>
@@ -487,47 +571,82 @@ export function CategoryPopover({
           type="button"
           className={cn(
             "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
-            open && "ring-1 ring-ring"
+            open && "ring-1 ring-ring bg-muted/60",
+            value.length > 0 && "border-primary/30 bg-primary/5 text-primary"
           )}
         >
+          <TagIcon className="h-3.5 w-3.5 text-muted-foreground" />
           <span>Category</span>
           {value.length > 0 && (
-            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
               {value.length}
             </span>
           )}
           <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={4} className="w-48 max-h-64 overflow-y-auto p-2">
-        {safeCategories.length === 0 ? (
-          <p className="py-2 text-center text-xs text-muted-foreground">No categories</p>
-        ) : (
-          <div className="flex flex-col gap-0.5">
-            {safeCategories.map((c) => (
-              <label
-                key={c.id}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+      <PopoverContent align="start" sideOffset={6} className="w-60 p-0">
+        <div className="border-b border-border bg-muted/40 px-3 py-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-foreground">Filter by category</p>
+            {value.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-primary"
               >
-                <input
-                  type="checkbox"
-                  checked={value.includes(c.id)}
-                  onChange={() => toggle(c.id)}
-                  className="accent-primary"
-                />
-                <span className="flex-1 truncate text-foreground">{c.name}</span>
-              </label>
-            ))}
+                Clear
+              </button>
+            )}
           </div>
-        )}
-        {value.length > 0 && (
-          <button
-            type="button"
-            onClick={() => { onChange([]); }}
-            className="mt-1.5 w-full rounded-md border border-border px-2 py-1.5 text-center text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Clear
-          </button>
+          {value.length > 0 && (
+            <p className="mt-0.5 text-[10px] text-muted-foreground">{value.length} selected</p>
+          )}
+        </div>
+        {safeCategories.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 px-3 py-6 text-center">
+            <TagIcon className="h-5 w-5 text-muted-foreground/60" />
+            <p className="text-xs font-medium text-foreground">No categories yet</p>
+            <p className="text-[11px] text-muted-foreground">Create a category to filter by it.</p>
+          </div>
+        ) : (
+          <div className="max-h-64 overflow-y-auto p-1">
+            {safeCategories.map((c) => {
+              const checked = value.includes(c.id);
+              return (
+                <label
+                  key={c.id}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                    checked ? "bg-primary/8 text-foreground" : "hover:bg-muted"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
+                      checked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background group-hover:border-muted-foreground/50"
+                    )}
+                    aria-hidden="true"
+                  >
+                    {checked && <CheckIcon className="h-3 w-3" />}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(c.id)}
+                    className="sr-only"
+                    aria-label={`Filter by ${c.name}`}
+                  />
+                  <span className="flex-1 truncate text-foreground">{c.name}</span>
+                  {checked && (
+                    <span className="ml-auto text-[10px] font-semibold uppercase text-primary">on</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
         )}
       </PopoverContent>
     </Popover>
