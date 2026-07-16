@@ -66,7 +66,11 @@
     "settledUp": "Đã cân bằng",
     "addFirst": "Thêm khoản chi đầu tiên",
     "details": "Chi tiết khoản chi",
-    "splitBreakdown": "Phân chia"
+    "splitBreakdown": "Phân chia",
+    "shared": "Đã chia",
+    "personal": "Cá nhân",
+    "settledNoTransfer": "Không cần chuyển khoản — đã cân bằng.",
+    "settledWithTransfer": "Đã tạo {count} khoản cần chuyển."
   },
   "splitMethod": {
     "splitEqual": "Chia đều",
@@ -138,6 +142,7 @@
     "settledNotePlaceholder": "VD: Đã chuyển khoản ngân hàng",
     "settledNoteLabel": "Ghi chú",
     "settlementSettled": "Đã cân bằng",
+    "allSettled": "Tất cả đã cân bằng",
     "transferFrom": "{from} trả cho {to}",
     "transferAmount": "{amount}",
     "settlements": "Các khoản cân bằng",
@@ -224,6 +229,16 @@
     "errorValidation": "Vui lòng kiểm tra thông tin nhập vào",
     "errorBudgetFull": "Ngân sách này không còn chấp nhận thành viên mới"
   },
+  "filterAll": "Tất cả",
+  "filterShared": "Đã chia",
+  "filterPersonal": "Cá nhân",
+  "filterDateRange": "Khoảng ngày",
+  "filterDateFrom": "Từ",
+  "filterDateTo": "Đến",
+  "filterClear": "Xóa",
+  "filterScope": "Lọc theo phạm vi",
+  "filterMember": "Lọc theo thành viên",
+  "filterCategory": "Lọc theo danh mục",
   "time": {
     "justNow": "Vừa xong",
     "minutesAgo": "{count} phút trước",

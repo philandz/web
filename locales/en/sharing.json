@@ -66,7 +66,11 @@
     "settledUp": "Settled up",
     "addFirst": "Add your first expense",
     "details": "Expense Details",
-    "splitBreakdown": "Split breakdown"
+    "splitBreakdown": "Split breakdown",
+    "shared": "Shared",
+    "personal": "Personal",
+    "settledNoTransfer": "All settled — no transfer needed.",
+    "settledWithTransfer": "{count} new transfer(s) created."
   },
   "splitMethod": {
     "splitEqual": "Equal",
@@ -138,6 +142,7 @@
     "settledNotePlaceholder": "e.g. Paid via bank transfer",
     "settledNoteLabel": "Note",
     "settlementSettled": "Settled",
+    "allSettled": "All settled",
     "transferFrom": "{from} pays {to}",
     "transferAmount": "{amount}",
     "settlements": "Settlements",
@@ -224,6 +229,16 @@
     "errorValidation": "Please check your input",
     "errorBudgetFull": "This budget is no longer accepting members"
   },
+  "filterAll": "All",
+  "filterShared": "Shared",
+  "filterPersonal": "Personal",
+  "filterDateRange": "Date range",
+  "filterDateFrom": "From",
+  "filterDateTo": "To",
+  "filterClear": "Clear",
+  "filterScope": "Filter by scope",
+  "filterMember": "Filter by member",
+  "filterCategory": "Filter by category",
   "time": {
     "justNow": "Just now",
     "minutesAgo": "{count} minutes ago",
