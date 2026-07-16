@@ -14,6 +14,7 @@ import {
   useMarkSettledMutation,
 } from "@/modules/sharing/hooks";
 import { useParticipantNameLookup } from "@/modules/sharing/participant-name-lookup";
+import { safeDisplayName } from "@/lib/safe-display-name";
 import { MarkAsSettledDialog } from "./mark-as-settled-dialog";
 
 type SharingSettlementCardProps = {
@@ -103,10 +104,23 @@ export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) 
               {unsettled.map((tr: any, idx: number) => {
                 const fromId = tr.fromUserId ?? tr.from_user_id ?? "";
                 const toId = tr.toUserId ?? tr.to_user_id ?? "";
-                const fromName =
-                  tr.fromName ?? participantNameById.get(fromId) ?? fromId;
-                const toName =
-                  tr.toName ?? participantNameById.get(toId) ?? toId;
+                // Prefer the participants-list display name (works for
+                // guests too — `g_<uuid>` keys map to the typed-in
+                // guest name). Fall back to the API's enriched
+                // `tr.fromName`/`tr.toName` (which is the user_id for
+                // guests, so the safeDisplayName layer turns it into
+                // "—" rather than leaking the raw UUID). Last resort
+                // is the raw user_id (also sanitised by safeDisplayName).
+                const fromName = safeDisplayName(
+                  participantNameById.get(fromId) ??
+                    tr.fromName ??
+                    fromId
+                );
+                const toName = safeDisplayName(
+                  participantNameById.get(toId) ??
+                    tr.toName ??
+                    toId
+                );
                 const amount = Number(tr.amount ?? 0);
                 return (
                   <div
@@ -151,12 +165,14 @@ export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) 
                 {t("settlement.settlementSettled")} · {settledConfirmed.length}
               </p>
               {settledConfirmed.map((c) => {
-                const fromName =
+                const fromName = safeDisplayName(
                   participantNameById.get(c.fromParticipantId) ??
-                  resolveName(c.fromParticipantId);
-                const toName =
+                    resolveName(c.fromParticipantId)
+                );
+                const toName = safeDisplayName(
                   participantNameById.get(c.toParticipantId) ??
-                  resolveName(c.toParticipantId);
+                    resolveName(c.toParticipantId)
+                );
                 return (
                   <div
                     key={c.id}

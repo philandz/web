@@ -55,13 +55,20 @@ export function MarkAsSettledDialog({
   );
 
   function handleConfirm() {
+    // The backend column `settled_at` is a MySQL `DATE` (not a
+    // timestamp). Sending a full ISO-8601 string with time and
+    // timezone produces "Incorrect date value" 500s — so we send
+    // just the YYYY-MM-DD portion. The "settled at" semantics stay
+    // precise to the day, which is what the transfer record is for
+    // anyway.
+    const today = new Date().toISOString().slice(0, 10);
     markSettled.mutate(
       {
         budgetId,
         fromParticipantId: transfer.fromParticipantId,
         toParticipantId: transfer.toParticipantId,
         amount: transfer.amount,
-        settledAt: new Date().toISOString(),
+        settledAt: today,
         note: note.trim() || undefined,
       },
       {

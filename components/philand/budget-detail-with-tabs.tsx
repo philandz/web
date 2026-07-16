@@ -16,6 +16,7 @@ import { TransactionDetailDrawer } from "@/components/philand/transaction-detail
 import { CategoriesTab } from "@/components/philand/categories-tab";
 import { MembersTab } from "@/components/philand/members-tab";
 import { SettingsTab } from "@/components/philand/settings-tab";
+import { TransactionsTab } from "@/components/philand/transactions-tab";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -912,7 +913,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
 
       <div className="mt-4">
         {activeTab === "overview" ? <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} /> : null}
-        {activeTab === "transactions" ? <BudgetTransactionsMock budget={budget} /> : null}
+        {activeTab === "transactions" ? <TransactionsTab budgetId={budget.id} currency={budget.currency} /> : null}
         {activeTab === "categories" ? <CategoriesTab budgetId={budget.id} currency={budget.currency} myRole={budget.myRole} /> : null}
 {activeTab === "members" ? <MembersTab budgetId={budget.id} orgId={budget.orgId} myRole={budget.myRole} /> : null}
         {activeTab === "settings" ? <SettingsTab budget={budget} myRole={budget.myRole} /> : null}
@@ -920,3 +921,6 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
     </div>
   );
 }
+
+// Re-export alias so page.tsx can import by the interface name.
+export { BudgetDetailMockup as BudgetDetailWithTabs };

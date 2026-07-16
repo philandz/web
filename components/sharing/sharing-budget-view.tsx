@@ -74,6 +74,7 @@ export function SharingBudgetView({
   }
 
   return (
+    <>
     <div className="animate-fade-in-up min-h-screen bg-background">
       <SharingPageHeader
         budgetId={budgetId}
@@ -91,7 +92,7 @@ export function SharingBudgetView({
 
       <SharingMobileTabs active={mobileTab} onChange={handleMobileTabChange} />
 
-      <main className="mx-auto max-w-5xl px-4 pb-24 pt-4 sm:px-6 lg:pb-10">
+      <main className="mx-auto max-w-5xl min-h-[calc(100vh-12rem)] px-4 pb-32 pt-4 [padding-bottom:calc(8rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-24 lg:pb-10 lg:[padding-bottom:2.5rem]">
         <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
           {/* Main column */}
           <div className="space-y-4">
@@ -127,12 +128,7 @@ export function SharingBudgetView({
         </div>
       </main>
 
-      <SharingBottomBar
-        onInvite={() => setInviteOpen(true)}
-        onAddExpense={handleAddExpense}
-        onMarkSettled={handleMarkSettled}
-        hasUnsettled={hasUnsettled}
-      />
+      {/* SharingBottomBar moved outside the animate-fade-in-up wrapper below */}
 
       <InviteMemberDialog
         budgetId={budgetId}
@@ -165,5 +161,13 @@ export function SharingBudgetView({
         onOpenChange={setShowAddExpense}
       />
     </div>
+      {/* Bottom bar is mounted outside the animated wrapper so its fixed position anchors to the viewport, not the transformed parent. */}
+      <SharingBottomBar
+        onInvite={() => setInviteOpen(true)}
+        onAddExpense={handleAddExpense}
+        onMarkSettled={handleMarkSettled}
+        hasUnsettled={hasUnsettled}
+      />
+    </>
   );
 }

@@ -16,6 +16,7 @@ import {
   useSettlementQuery,
 } from "@/modules/sharing/hooks";
 import { formatCurrency, useFormatLocale } from "@/lib/format";
+import { safeDisplayName } from "@/lib/safe-display-name";
 import { InviteMemberDialog } from "./invite-member-dialog";
 
 type SharingMembersCardProps = {
@@ -150,11 +151,11 @@ export function SharingMembersCard({
                 key={p.participantId}
                 className="flex items-center gap-3 py-2.5"
               >
-                <UserAvatar name={p.displayName} size={36} className="shrink-0" />
+                <UserAvatar name={safeDisplayName(p.displayName)} size={36} className="shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-sm font-medium text-foreground">
-                      {p.displayName}
+                      {safeDisplayName(p.displayName)}
                     </span>
                     {isGuest && (
                       <Badge

@@ -14,6 +14,7 @@ import { useToast } from "@/components/state/toast-provider";
 import { Loader2, Trash2, Edit, MessageCircle } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useTranslations } from "next-intl";
+import { safeDisplayName } from "@/lib/safe-display-name";
 
 type ExpenseDetailSheetProps = {
   expense: Expense | null;
@@ -131,7 +132,7 @@ export function ExpenseDetailSheet({
                 )}
               </div>
               <p className="text-sm text-muted-foreground">
-                {t("expense.paidBy", { name: resolveName(expense.paidBy) })}
+                {t("expense.paidBy", { name: safeDisplayName(resolveName(expense.paidBy)) })}
               </p>
             </div>
 
@@ -145,8 +146,8 @@ export function ExpenseDetailSheet({
                     className="flex items-center justify-between p-3 rounded-xl bg-muted/50"
                   >
                     <div className="flex items-center gap-2">
-                      <UserAvatar name={resolveName(leg.userId)} size={28} />
-                      <span className="text-sm font-medium">{resolveName(leg.userId)}</span>
+                      <UserAvatar name={safeDisplayName(resolveName(leg.userId))} size={28} />
+                      <span className="text-sm font-medium">{safeDisplayName(resolveName(leg.userId))}</span>
                     </div>
                     <MoneyAmount value={leg.amount} size="sm" sign="neutral" />
                   </div>

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { AmountInput } from "@/components/ui/amount-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Button } from "@/components/ui/button";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { MoneyAmount } from "@/components/ui/money-amount";
-import { useAddExpenseMutation, useParticipantsQuery } from "@/modules/sharing/hooks";
+import { useAddExpenseMutation, useParticipantsQuery, useSettlementQuery } from "@/modules/sharing/hooks";
 import { useToast } from "@/components/state/toast-provider";
 import { useAuthStore } from "@/lib/auth-store";
 import { Loader2, Plus, X } from "lucide-react";
@@ -70,6 +71,8 @@ export function AddSharedExpenseDrawer({
   const currentUserId = useAuthStore((state) => state.profile?.id);
   const { data: participants } = useParticipantsQuery(budgetId);
   const addExpense = useAddExpenseMutation();
+  const settlementQuery = useSettlementQuery(budgetId);
+  const queryClient = useQueryClient();
 
   const numericAmount = parseInt(amount.replace(/\D/g, "")) || 0;
 
@@ -99,14 +102,27 @@ export function AddSharedExpenseDrawer({
   // and the user hasn't already chosen anyone. (Was previously implemented
   // with `useState(() => …)` which only runs once at mount — too early for
   // the async participants query — so `selectedParticipantIds` stayed [].)
+  //
+  // IMPORTANT: we use `p.userId` (the identity `users.id`), NOT
+  // `p.participantId` (the local `sharing_participants.id` row id).
+  // The expense-legs `user_id` column is meant to be the identity
+  // user_id so the rest of the system (Phân chia, settlement, identity
+  // enrichment) can resolve it. Sending local row ids makes the leg
+  // unresolvable and the Phân chia falls back to "—".
   useEffect(() => {
     if (participants && selectedParticipantIds.length === 0) {
-      setSelectedParticipantIds(participants.map((p) => p.participantId));
+      setSelectedParticipantIds(
+        participants
+          .map((p) => p.userId)
+          .filter((id): id is string => Boolean(id)),
+      );
     }
   }, [participants]);
 
   function buildLegs() {
-    const ids = selectedParticipantIds.length > 0 ? selectedParticipantIds : participants?.map((p) => p.participantId) ?? [];
+    const ids = selectedParticipantIds.length > 0
+      ? selectedParticipantIds
+      : (participants?.map((p) => p.userId).filter((id): id is string => Boolean(id)) ?? []);
 
     switch (tab) {
       case "equal": {
@@ -185,6 +201,24 @@ export function AddSharedExpenseDrawer({
       {
         onSuccess: () => {
           toast.success(t("comment.commentAdded"));
+          // Briefly wait for the gateway to recompute settlement, then
+          // tell the user whether the new entry creates a transfer.
+          setTimeout(() => {
+            const transfers =
+              queryClient.getQueryData<{ transfers?: { amount: number }[] }>(
+                ["sharing", "settlement", budgetId],
+              )?.transfers ?? [];
+            if (transfers.length === 0) {
+              toast.info(t("expense.settledNoTransfer") ?? "All settled — no transfer needed.");
+            } else {
+              toast.info(
+                t("expense.settledWithTransfer", { count: transfers.length }) ??
+                  `${transfers.length} new transfer(s) created.`,
+              );
+            }
+          }, 600);
+          // Force a refetch in case the cached value is stale.
+          void settlementQuery.refetch();
           handleClose();
         },
         onError: () => toast.error(t("errors.errorGeneric")),
@@ -282,17 +316,17 @@ export function AddSharedExpenseDrawer({
               <div className="flex flex-wrap gap-2">
                 {participants?.map((p) => (
                   <button
-                    key={p.participantId}
-                    onClick={() => toggleParticipant(p.participantId)}
+                    key={p.userId ?? p.participantId}
+                    onClick={() => toggleParticipant(p.userId ?? p.participantId)}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all",
-                      selectedParticipantIds.includes(p.participantId)
+                      selectedParticipantIds.includes(p.userId ?? p.participantId)
                         ? "bg-accent text-accent-foreground"
                         : "bg-muted text-muted-foreground hover:bg-muted/80"
                     )}
                   >
                     {p.displayName}
-                    {selectedParticipantIds.includes(p.participantId) && (
+                    {selectedParticipantIds.includes(p.userId ?? p.participantId) && (
                       <X className="h-3 w-3" />
                     )}
                   </button>
@@ -306,7 +340,7 @@ export function AddSharedExpenseDrawer({
               <p className="text-sm font-medium text-foreground">{t("splitMethod.customLabel")}</p>
               <div className="space-y-2">
                 {selectedParticipantIds.map((id) => {
-                  const participant = participants?.find((p) => p.participantId === id);
+                  const participant = participants?.find((p) => p.userId === id);
                   return (
                     <div key={id} className="flex items-center gap-3">
                       <span className="text-sm w-24 truncate">{participant?.displayName ?? id}</span>
@@ -347,7 +381,7 @@ export function AddSharedExpenseDrawer({
               <p className="text-sm font-medium text-foreground">{t("splitMethod.weightedHeading")}</p>
               <div className="space-y-2">
                 {selectedParticipantIds.map((id) => {
-                  const participant = participants?.find((p) => p.participantId === id);
+                  const participant = participants?.find((p) => p.userId === id);
                   return (
                     <div key={id} className="flex items-center gap-3">
                       <span className="text-sm w-24 truncate">{participant?.displayName ?? id}</span>
@@ -384,7 +418,7 @@ export function AddSharedExpenseDrawer({
               </div>
               <div className="space-y-2">
                 {selectedParticipantIds.map((id) => {
-                  const participant = participants?.find((p) => p.participantId === id);
+                  const participant = participants?.find((p) => p.userId === id);
                   return (
                     <div key={id} className="flex items-center gap-3">
                       <span className="text-sm w-24 truncate">{participant?.displayName ?? id}</span>
@@ -451,7 +485,7 @@ export function AddSharedExpenseDrawer({
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {selectedParticipantIds.map((id) => {
-                        const participant = participants?.find((p) => p.participantId === id);
+                        const participant = participants?.find((p) => p.userId === id);
                         return (
                           <button
                             key={id}

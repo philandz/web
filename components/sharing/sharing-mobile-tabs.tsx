@@ -21,7 +21,7 @@ const TABS: { value: MobileTab; icon: typeof Wallet; key: string }[] = [
 export function SharingMobileTabs({ active, onChange }: SharingMobileTabsProps) {
   const t = useTranslations("sharing");
   return (
-    <div className="lg:hidden sticky top-[57px] sm:top-[65px] z-20 -mx-4 mb-4 border-b border-border/60 bg-background/90 backdrop-blur-md px-4">
+    <div className="lg:hidden sticky top-[57px] sm:top-[65px] z-20 mb-4 border-b border-border/60 bg-background/90 backdrop-blur-md">
       <div role="tablist" className="no-scrollbar flex gap-1 overflow-x-auto py-1">
         {TABS.map(({ value, icon: Icon, key }) => {
           const isActive = active === value;
