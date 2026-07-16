@@ -184,8 +184,8 @@ function buildQuery(params: TransactionListParams): string {
   if (params.q)         p.set("q", params.q);
   if (params.type)      p.set("kind", params.type);
   if (params.categoryId) p.set("category_id", params.categoryId);
-  if (params.categoryIds?.length) p.set("categories", params.categoryIds.join(","));
-  if (params.memberIds?.length)   p.set("members", params.memberIds.join(","));
+  if (params.categoryIds?.length) p.set("category_ids", params.categoryIds.join(","));
+  if (params.memberIds?.length)   p.set("member_ids", params.memberIds.join(","));
   if (params.dateFrom)  p.set("date_from", params.dateFrom);
   if (params.dateTo)    p.set("date_to", params.dateTo);
   if (params.amountMin != null) p.set("amount_min", String(params.amountMin));

@@ -25,8 +25,8 @@ export function parseUrlParams(sp: URLSearchParams): TransactionDraft {
   return {
     q: sp.get("q") ?? "",
     type: (sp.get("type") as TransactionDraft["type"]) ?? "all",
-    categoryIds: sp.get("categories") ? sp.get("categories")!.split(",").filter(Boolean) : [],
-    memberIds: sp.get("members") ? sp.get("members")!.split(",").filter(Boolean) : [],
+    categoryIds: sp.get("category_ids") ? sp.get("category_ids")!.split(",").filter(Boolean) : [],
+    memberIds: sp.get("member_ids") ? sp.get("member_ids")!.split(",").filter(Boolean) : [],
     dateFrom: sp.get("from") ?? "",
     dateTo: sp.get("to") ?? "",
     sortBy: (sp.get("sort") as TransactionDraft["sortBy"]) ?? "date",
@@ -51,8 +51,8 @@ export function serializeToUrl(applied: TransactionDraft, sp: URLSearchParams): 
 
   set("q", applied.q || null);
   set("type", applied.type === "all" ? null : applied.type);
-  set("categories", applied.categoryIds.join(",") || null);
-  set("members", applied.memberIds.join(",") || null);
+  set("category_ids", applied.categoryIds.join(",") || null);
+  set("member_ids", applied.memberIds.join(",") || null);
   set("from", applied.dateFrom || null);
   set("to", applied.dateTo || null);
   set("sort", applied.sortBy === "date" ? null : applied.sortBy);
