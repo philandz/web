@@ -51,6 +51,7 @@ const noopMutation = { mutate: vi.fn(), isPending: false } as any;
 vi.mock("@/modules/sharing/hooks", () => ({
   useParticipantsQuery: vi.fn(() => ({ data: participants })),
   useAddExpenseMutation: vi.fn(() => noopMutation),
+  useSettlementQuery: vi.fn(() => ({ data: [] })),
 }));
 
 describe("AddSharedExpenseDrawer", () => {
