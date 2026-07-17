@@ -1,6 +1,11 @@
 import { createApiError, createNetworkError, isForbiddenError, isUnauthorizedError, type ApiError } from "@/lib/http/errors";
 import type { RequestMetadata } from "@/lib/http/types";
 import { reportObservabilityEvent } from "@/lib/observability/client";
+import {
+  clearSharingSession,
+  extractBudgetIdFromPath,
+  readSharingSession
+} from "@/lib/sharing/session";
 
 type RequestContext = {
   path: string;
@@ -86,10 +91,28 @@ class ApiClient {
   constructor(private readonly baseUrl: string) {
     this.useRequest(async (context) => {
       const headers = withDefaultHeaders(context.init.headers);
-      const token = this.authHandlers.getToken?.();
+      const path = context.path;
 
-      if (token && !headers.has("Authorization")) {
-        headers.set("Authorization", `Bearer ${token}`);
+      // For sharing routes, prefer the guest session token over the
+      // JWT when the budget id is in the path. The gateway will
+      // translate the `SharingSession` header to the gRPC
+      // `x-session-token` metadata.
+      const budgetId = extractBudgetIdFromPath(path);
+      if (budgetId) {
+        const guestToken = readSharingSession(budgetId);
+        if (guestToken) {
+          headers.set("Authorization", `SharingSession ${guestToken}`);
+        } else {
+          const jwt = this.authHandlers.getToken?.();
+          if (jwt && !headers.has("Authorization")) {
+            headers.set("Authorization", `Bearer ${jwt}`);
+          }
+        }
+      } else {
+        const token = this.authHandlers.getToken?.();
+        if (token && !headers.has("Authorization")) {
+          headers.set("Authorization", `Bearer ${token}`);
+        }
       }
 
       headers.set("X-Request-Id", context.metadata.requestId);
@@ -104,13 +127,32 @@ class ApiClient {
       };
     });
 
-    this.useError((error) => {
-      if (isUnauthorizedError(error)) {
+    this.useError((error, context) => {
+      const isSharingRoute = context.path.startsWith("/api/sharing/");
+
+      // Don't trigger JWT expire flow for sharing routes — they use
+      // SharingSession token. Falling through to expireSession() here
+      // would wipe state for a guest who never had a JWT in the first
+      // place, and stray 401s on sharing routes (e.g. with empty
+      // budget_id) were the source of false 'expired' notices.
+      if (isUnauthorizedError(error) && !isSharingRoute) {
         this.authHandlers.onUnauthorized?.(error);
       }
 
-      if (isForbiddenError(error)) {
+      if (isForbiddenError(error) && !isSharingRoute) {
         this.authHandlers.onForbidden?.(error);
+      }
+
+      // If the failing request hit a sharing budget path and the server
+      // rejected the credentials, the persisted guest session token is
+      // stale (revoked participant, expired token, etc). Purge it from
+      // localStorage so the next request does not retry with the same
+      // dead token. (Bug 3)
+      if (isUnauthorizedError(error)) {
+        const budgetId = extractBudgetIdFromPath(context.path);
+        if (budgetId) {
+          clearSharingSession(budgetId);
+        }
       }
     });
   }

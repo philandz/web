@@ -2,9 +2,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const ROW_HEIGHTS = ["h-20", "h-16", "h-24", "h-14", "h-20"];
 
-export function SectionLoadingState({ rows = 3 }: { rows?: number }) {
+export function SectionLoadingState({ rows = 3, message }: { rows?: number; message?: string }) {
   return (
     <div className="space-y-3" role="status" aria-live="polite" aria-label="Loading">
+      {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
       {Array.from({ length: rows }).map((_, i) => (
         <Skeleton
           key={`skeleton-${i}`}

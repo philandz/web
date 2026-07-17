@@ -7,6 +7,9 @@ export const routes = {
   admin: "/admin",
   adminUsers: "/admin/users",
   adminOrgs: "/admin/organizations",
+  adminSettings: "/admin/settings",
+  adminBudgets: "/admin/budgets",
+  adminBudgetDetail: (id: string) => `/admin/budgets/${id}`,
   selectOrganization: "/select-organization",
   organization: "/organization",
   acceptInvitation: "/accept-invitation",
@@ -14,5 +17,6 @@ export const routes = {
   settings: "/settings",
   budgets: "/budgets",
   budgetDetail: (id: string) => `/budgets/${id}`,
+  sharingDetail: (id: string) => `/sharing/${id}`,
   transactions: "/transactions",
 } as const;

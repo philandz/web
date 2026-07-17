@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSearchParams } from "next/navigation";
 
 import { AuthButton } from "@/components/auth/auth-button";
 import { AuthInput } from "@/components/auth/auth-input";
@@ -17,6 +18,7 @@ import { applyServerValidationErrors, getFormErrorMessage } from "@/lib/form-err
 import { createLoginFormSchema, type LoginFormValues } from "@/modules/auth/forms";
 import { useLoginMutation, useLoginWithGoogleMutation } from "@/modules/auth/hooks";
 import { getPostLoginTarget } from "@/modules/auth/route-guards";
+import { sanitizeReturnTo } from "@/modules/auth/return-to";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -144,6 +146,8 @@ export default function LoginPage() {
   const t = useTranslations("auth.login");
   const tValidation = useTranslations("auth");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = sanitizeReturnTo(searchParams.get("return_to"));
   const sessionNotice = useAuthStore((state) => state.sessionNotice);
   const clearSessionNotice = useAuthStore((state) => state.clearSessionNotice);
   const [formError, setFormError] = useState<string | null>(null);
@@ -169,13 +173,16 @@ export default function LoginPage() {
   const loginData = mutation.data ?? googleMutation.data;
   useEffect(() => {
     if (!loginData) return;
-    const redirectTo = getPostLoginTarget({
-      token: loginData.token,
-      userType: loginData.userType,
-      selectedOrgId: null,
-    });
+    const redirectTo = getPostLoginTarget(
+      {
+        token: loginData.token,
+        userType: loginData.userType,
+        selectedOrgId: null,
+      },
+      { returnTo }
+    );
     if (redirectTo) router.push(redirectTo);
-  }, [loginData, router]);
+  }, [loginData, returnTo, router]);
 
   const isLoading = mutation.isPending || googleMutation.isPending;
 

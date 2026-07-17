@@ -18,6 +18,7 @@
     "organizationCenter": "Trung tâm tổ chức",
     "adminUsers": "Người Dùng",
     "adminOrgs": "Tổ Chức",
+    "adminBudgets": "Tất cả Budget",
     "profile": "Hồ sơ",
     "resetPassword": "Đặt lại mật khẩu",
     "settings": "Cài đặt",
@@ -97,6 +98,29 @@
       "bioLong": "Phần giới thiệu quá dài",
       "timezoneLong": "Múi giờ quá dài",
       "localeLong": "Mã ngôn ngữ quá dài"
+    },
+    "password": {
+      "sectionSecurity": "Bảo mật",
+      "sectionSecurityDescription": "Đổi mật khẩu tài khoản. Chúng tôi sẽ gửi mã 6 số qua email để xác nhận.",
+      "currentPassword": "Mật khẩu hiện tại",
+      "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "newPasswordPlaceholder": "Ít nhất 8 ký tự",
+      "confirmNewPassword": "Xác nhận mật khẩu mới",
+      "confirmNewPasswordPlaceholder": "Nhập lại mật khẩu mới",
+      "sendCode": "Gửi mã xác minh",
+      "sendingCode": "Đang gửi mã...",
+      "codeSentDescription": "Chúng tôi vừa gửi mã 6 số đến email tài khoản của bạn. Nhập mã bên dưới để xác nhận.",
+      "codeLabel": "Mã xác minh",
+      "codeExpiresIn": "Mã hết hạn sau {seconds}s",
+      "codeExpired": "Mã đã hết hạn — yêu cầu mã mới.",
+      "resendCode": "Gửi lại mã",
+      "resendHint": "Nhập lại mật khẩu hiện tại để yêu cầu mã mới.",
+      "errorSend": "Không thể gửi mã xác minh. Kiểm tra mật khẩu hiện tại.",
+      "errorInvalidCode": "Mã không đúng. Thử lại hoặc yêu cầu mã mới.",
+      "success": "Đã cập nhật mật khẩu. Vui lòng đăng nhập lại.",
+      "doneTitle": "Đã đổi mật khẩu",
+      "doneDescription": "Bạn đã được đăng xuất khỏi mọi thiết bị. Đăng nhập lại bằng mật khẩu mới."
     }
   },
   "settings": {

@@ -7,6 +7,9 @@ import { identityService } from "@/services/identity-service";
 import { mediaService } from "@/services/media-service";
 import { useAuthStore } from "@/lib/auth-store";
 import type { ProfileFormValues } from "@/modules/auth/forms";
+import { getPostLoginTarget } from "@/modules/auth/route-guards";
+import { useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 
 type AuthErrorHandler = {
   onUnauthorized: () => void;
@@ -42,6 +45,8 @@ function toUpdateProfileInput(values: ProfileFormValues, avatarUrl?: string) {
 export function useLoginMutation() {
   const setSession = useAuthStore((state) => state.setSession);
   const setProfile = useAuthStore((state) => state.setProfile);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   return useMutation({
     mutationFn: identityService.login,
@@ -49,13 +54,22 @@ export function useLoginMutation() {
       setSession(result);
       const profile = await identityService.profile();
       setProfile(profile);
-    }
+      const target = getPostLoginTarget(
+        { token: result.token, userType: result.userType, selectedOrgId: result.organizations?.[0]?.id ?? null },
+        {
+          returnTo: searchParams?.get("return_to") ?? null,
+        }
+      );
+      if (target) router.push(target);
+    },
   });
 }
 
 export function useLoginWithGoogleMutation() {
   const setSession = useAuthStore((state) => state.setSession);
   const setProfile = useAuthStore((state) => state.setProfile);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   return useMutation({
     mutationFn: (idToken: string) => identityService.loginWithGoogle(idToken),
@@ -63,6 +77,13 @@ export function useLoginWithGoogleMutation() {
       setSession(result);
       const profile = await identityService.profile();
       setProfile(profile);
+      const target = getPostLoginTarget(
+        { token: result.token, userType: result.userType, selectedOrgId: result.organizations?.[0]?.id ?? null },
+        {
+          returnTo: searchParams?.get("return_to") ?? null,
+        }
+      );
+      if (target) router.push(target);
     },
   });
 }
@@ -102,6 +123,32 @@ export function useLogoutMutation() {
 export function useChangePasswordMutation(onUnauthorized: () => void) {
   return useMutation({
     mutationFn: identityService.changePassword,
+    onError: (error: unknown) => {
+      handleAuthError(error, { onUnauthorized });
+    },
+  });
+}
+
+/**
+ * Step 1 of the mandatory-OTP password change. Returns the TTL (seconds) so
+ * the UI can show a countdown; the OTP itself is delivered by email.
+ */
+export function useRequestPasswordChangeOtpMutation(onUnauthorized: () => void) {
+  return useMutation({
+    mutationFn: identityService.requestPasswordChangeOtp,
+    onError: (error: unknown) => {
+      handleAuthError(error, { onUnauthorized });
+    },
+  });
+}
+
+/**
+ * Step 2 of the mandatory-OTP password change. Submits the 6-digit code and,
+ * on success, applies the new password server-side.
+ */
+export function useConfirmPasswordChangeOtpMutation(onUnauthorized: () => void) {
+  return useMutation({
+    mutationFn: identityService.confirmPasswordChangeOtp,
     onError: (error: unknown) => {
       handleAuthError(error, { onUnauthorized });
     },

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { safeDisplayName } from "@/lib/safe-display-name";
 import { cn } from "@/lib/utils";
 
 type UserAvatarProps = {
@@ -41,17 +42,17 @@ export function UserAvatar({ name, src, size = 32, className, fallbackClassName,
   }, [src]);
 
   const initials = useMemo(() => {
-    const label = name?.trim() || "U";
+    const label = safeDisplayName(name, "U");
     return label
       .split(" ")
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
-      .join("");
+      .join("") || "U";
   }, [name]);
 
   const colorClass = useMemo(() => {
-    const seed = name?.trim() || "U";
+    const seed = safeDisplayName(name, "U");
     return AVATAR_PALETTES[hashName(seed) % AVATAR_PALETTES.length];
   }, [name]);
 
@@ -65,7 +66,7 @@ export function UserAvatar({ name, src, size = 32, className, fallbackClassName,
         className,
       )}
       style={{ width: size, height: size }}
-      title={title ?? name}
+      title={title ?? safeDisplayName(name, "Unknown user")}
     >
       {showImage ? (
         <img

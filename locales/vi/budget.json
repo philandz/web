@@ -20,7 +20,8 @@
     "roleViewer": "Xem",
     "emptyTitle": "Chưa có ngân sách",
     "emptySubtitle": "Tạo ngân sách đầu tiên để bắt đầu theo dõi tài chính",
-    "noOrg": "Chọn tổ chức để xem ngân sách"
+    "noOrg": "Chọn tổ chức để xem ngân sách",
+    "count": "{count, plural, =0 {Không có ngân sách} other {# ngân sách}}"
   },
   "card": {
     "balance": "Số dư",
@@ -87,6 +88,7 @@
     "searchPlaceholder": "Tìm giao dịch...",
     "allTypes": "Tất cả loại",
     "allCategories": "Tất cả danh mục",
+    "allMembers": "Tất cả thành viên",
     "income": "Thu nhập",
     "expense": "Chi tiêu",
     "dateFrom": "Từ ngày",
@@ -103,7 +105,27 @@
     "colCategory": "Danh mục",
     "colAmount": "Số tiền",
     "colTags": "Thẻ",
-    "empty": "Không có giao dịch",
+    "empty": {
+      "title": "Không tìm thấy giao dịch nào.",
+      "body": "Thử điều chỉnh tìm kiếm hoặc bộ lọc.",
+      "clear": "Xóa bộ lọc"
+    },
+    "filters": "Bộ lọc",
+    "filterTypeTitle": "Lọc theo loại",
+    "filterMemberTitle": "Lọc theo thành viên",
+    "filterCategoryTitle": "Lọc theo danh mục",
+    "filterDateTitle": "Khoảng thời gian",
+    "clearFilter": "Xóa",
+    "filterActive": "Đang áp dụng",
+    "datePresets": {
+      "today": "Hôm nay",
+      "last7Days": "7 ngày qua",
+      "thisMonth": "Tháng này",
+      "custom": "Tùy chỉnh"
+    },
+    "maxRangeError": "Phạm vi chọn tối đa là 30 ngày.",
+    "refresh": "Làm mới",
+    "search": "Tìm kiếm",
     "importCsv": "Nhập CSV",
     "quickAdd": "Thêm nhanh",
     "addTransaction": "Thêm giao dịch",
@@ -246,6 +268,8 @@
   "members": {
     "title": "Thành viên ngân sách",
     "members": "thành viên",
+    "unknownUser": "Người dùng không xác định",
+    "noEmail": "Chưa có email",
     "invite": "Mời",
     "inviteTitle": "Thêm thành viên",
     "userId": "ID người dùng",
@@ -458,5 +482,14 @@
     "emptyFile": "File có vẻ trống",
     "doneTitle": "Nhập hoàn tất",
     "doneDesc": "{imported} đã nhập, {errors} lỗi"
-  }
+  },
+  "typeStandard": "Tiêu chuẩn",
+  "typeSaving": "Tiết kiệm",
+  "typeDebt": "Nợ",
+  "typeInvest": "Đầu tư",
+  "typeSharing": "Chia sẻ",
+  "roleOwner": "Chủ sở hữu",
+  "roleManager": "Quản lý",
+  "roleContributor": "Cộng tác viên",
+  "roleViewer": "Người xem"
 }

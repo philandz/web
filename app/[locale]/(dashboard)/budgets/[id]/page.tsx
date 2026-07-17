@@ -89,6 +89,19 @@ export default function BudgetDetailPage() {
     );
   }
 
+  // Sharing budgets have their own full view at /sharing/[id] — bounce
+  // over so deep-links and stale bookmarks still land on the right UI.
+  if (budget.type === "sharing") {
+    if (typeof window !== "undefined") {
+      router.replace(routes.sharingDetail(budgetId));
+    }
+    return (
+      <main className="container py-8">
+        <PageLoadingState message={t("loading")} />
+      </main>
+    );
+  }
+
   return (
     <div className="animate-fade-in-up">
       <BudgetDetailWithTabs
