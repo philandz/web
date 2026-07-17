@@ -94,5 +94,131 @@
   "states": {
     "loading": "Loading admin console...",
     "error": "Something went wrong in admin area."
+  },
+  "budgets": {
+    "title": "All Budgets",
+    "subtitle": "Platform-wide view of every budget across every organization. Read-only.",
+    "badge": "Budgets",
+    "loading": "Loading budgets…",
+    "loadError": "Could not load budgets. Check that your account has super-admin access.",
+    "total": "{count, plural, =0 {No budgets} =1 {1 budget} other {# budgets}}",
+    "emptyTitle": "No budgets match your filters",
+    "emptyDescription": "Try clearing the org or type filter, or wait for new budgets to be created.",
+    "filter": {
+      "name": "Search by name",
+      "namePlaceholder": "Type a budget name…",
+      "org": "Organization",
+      "allOrgs": "All organizations",
+      "type": "Type",
+      "allTypes": "All types",
+      "reset": "Reset"
+    },
+    "column": {
+      "name": "Name",
+      "org": "Organization",
+      "type": "Type",
+      "currency": "Currency",
+      "envelope": "Envelope",
+      "members": "Members",
+      "role": "My role"
+    },
+    "pagination": {
+      "summary": "Showing {from}–{to} of {total}"
+    }
+  },
+  "settings": {
+    "title": "Global Settings",
+    "subtitle": "Configure platform-wide integrations. These settings affect every workspace.",
+    "badge": "Settings",
+    "edit": "Edit",
+    "loading": "Loading settings…",
+    "yes": "Active",
+    "no": "Inactive",
+    "cancel": "Cancel",
+    "resend": {
+      "title": "Email delivery (Resend)",
+      "subtitle": "Connect a Resend account to send transactional emails — password resets, invitations, and verification codes.",
+      "apiKeyLabel": "Resend API key",
+      "apiKeyPlaceholder": "re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "apiKeyHint": "Generate at resend.com → API Keys. The key is encrypted at rest and never returned in full.",
+      "showKey": "Show key",
+      "hideKey": "Hide key",
+      "fromAddressLabel": "From address",
+      "fromAddressPlaceholder": "Philandz ‹noreply@yourdomain.com›",
+      "fromAddressHint": "Must use a domain you've verified in your Resend dashboard.",
+      "replyToLabel": "Reply-To (optional)",
+      "replyToPlaceholder": "support@yourdomain.com",
+      "sourceLabel": "Active source",
+      "configuredLabel": "Status",
+      "notConfiguredHint": "Email is currently disabled. Save a Resend key and From address to start delivering.",
+      "save": "Save settings",
+      "saving": "Saving...",
+      "saveSuccess": "Resend configuration updated.",
+      "saveError": "Could not save the configuration. Check the values and try again.",
+      "source": {
+        "db": "Stored in database (admin override)",
+        "env": "From RESEND_API_KEY env var",
+        "none": "Not configured"
+      },
+      "testTitle": "Send a test email",
+      "testSubtitle": "Confirm SPF/DKIM setup by dispatching a one-off message to an address you control.",
+      "testRecipientLabel": "Recipient",
+      "testRecipientPlaceholder": "you@yourdomain.com",
+      "testRecipientHint": "Use a real address you can check — the message arrives in seconds.",
+      "testSend": "Send test email",
+      "testSending": "Sending...",
+      "testSuccess": "Test message dispatched (Resend id: {messageId}).",
+      "testError": "Could not send the test message. Resend rejected the request.",
+      "testNeedsConfigured": "Save the API key and From address above first.",
+      "validation": {
+        "apiKeyMin": "Resend API key must be at least 20 characters",
+        "apiKeyCharset": "Only alphanumeric, underscore and dash characters are allowed",
+        "fromAddress": "From address must be a valid email",
+        "replyTo": "Reply-To must be a valid email",
+        "recipientEmail": "Enter a valid email"
+      }
+    },
+    "diagnostics": {
+      "title": "Runtime environment",
+      "subtitle": "Env-driven values that gate the mail pipeline. Set these on the identity service.",
+      "masterKey": "AES-256-GCM master key used to encrypt platform_settings secrets at rest. Required — service refuses to start without it.",
+      "masterKeyNote": "This is the only env var that must stay out of the UI: rotating the master key would invalidate every encrypted API key in the DB.",
+      "publicUrl": "Public origin used to deep-link reset/invite URLs inside emails.",
+      "fromAddress": "Default From address when the admin has not configured one in this page.",
+      "supportEmail": "Shown in the footer of every transactional email."
+    },
+    "system": {
+      "title": "System environment",
+      "subtitle": "Public URLs, support contact, default locale, and default From address. These values override the same env vars on the identity service — no restart needed.",
+      "loading": "Loading system configuration…",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saveSuccess": "System configuration updated. The next email will use the new values.",
+      "saveError": "Could not save system configuration. Check the values and try again.",
+      "fields": {
+        "appPublicBaseUrl": "App public URL",
+        "supportEmail": "Support email",
+        "defaultLocale": "Default locale",
+        "mailFromAddress": "Default From address"
+      },
+      "hints": {
+        "appPublicBaseUrl": "Used to deep-link reset and invite URLs inside emails (e.g. https://app.philandz.com).",
+        "supportEmail": "Shown in the footer of every transactional email.",
+        "defaultLocale": "Locale prefix for the reset/invite deep links (e.g. en, vi, en-US).",
+        "mailFromAddress": "Sender when the mail provider has no per-mailbox From configured (e.g. Philandz ‹noreply@yourdomain.com›)."
+      },
+      "source": {
+        "db": "Stored in DB",
+        "env": "From env (or live default)",
+        "default": "Built-in default"
+      },
+      "sourceHint": "Sources — URL: {url}, Support: {support}, Locale: {locale}, From: {from}.",
+      "validation": {
+        "urlInvalid": "URL is invalid",
+        "urlProtocol": "URL must start with http:// or https://",
+        "email": "Must be a valid email",
+        "localeFormat": "Use 1-10 lowercase letters, digits or dashes"
+      }
+    }
   }
 }

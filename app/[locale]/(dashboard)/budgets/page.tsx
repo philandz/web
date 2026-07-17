@@ -208,7 +208,7 @@ export default function BudgetsPage() {
           {/* Result count */}
           {!isLoading && budgets.length > 0 && (
             <span className="shrink-0 text-xs text-muted-foreground">
-              {budgets.length}&nbsp;{budgets.length === 1 ? "budget" : "budgets"}
+              {t("count", { count: budgets.length })}
             </span>
           )}
         </div>
@@ -238,7 +238,13 @@ export default function BudgetsPage() {
             <BudgetCard
               key={budget.id}
               budget={budget}
-              onClick={() => router.push(routes.budgetDetail(budget.id))}
+              onClick={() =>
+                router.push(
+                  budget.type === "sharing"
+                    ? routes.sharingDetail(budget.id)
+                    : routes.budgetDetail(budget.id),
+                )
+              }
             />
           ))}
         </div>

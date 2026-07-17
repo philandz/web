@@ -18,6 +18,7 @@
     "organizationCenter": "Organization Center",
     "adminUsers": "Users",
     "adminOrgs": "Organizations",
+    "adminBudgets": "All Budgets",
     "profile": "Profile",
     "resetPassword": "Reset password",
     "settings": "Settings",
@@ -97,6 +98,29 @@
       "bioLong": "Bio is too long",
       "timezoneLong": "Timezone is too long",
       "localeLong": "Locale is too long"
+    },
+    "password": {
+      "sectionSecurity": "Security",
+      "sectionSecurityDescription": "Update your account password. We'll email a 6-digit code to confirm.",
+      "currentPassword": "Current password",
+      "currentPasswordPlaceholder": "Enter your current password",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmNewPassword": "Confirm new password",
+      "confirmNewPasswordPlaceholder": "Re-enter the new password",
+      "sendCode": "Email verification code",
+      "sendingCode": "Sending code...",
+      "codeSentDescription": "We just sent a 6-digit code to your account email. Enter it below to confirm the change.",
+      "codeLabel": "Verification code",
+      "codeExpiresIn": "Code expires in {seconds}s",
+      "codeExpired": "Code expired — request a new one.",
+      "resendCode": "Resend code",
+      "resendHint": "Enter your current password again to request a new code.",
+      "errorSend": "Could not send verification code. Check your current password.",
+      "errorInvalidCode": "That code didn't work. Try again or request a new one.",
+      "success": "Password updated. Please sign in again.",
+      "doneTitle": "Password updated",
+      "doneDescription": "You've been signed out everywhere. Sign back in with your new password."
     }
   },
   "settings": {

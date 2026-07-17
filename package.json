@@ -6,12 +6,22 @@
     "dev": "next dev -p 3100",
     "build": "next build",
     "start": "next start",
+    "test:e2e": "playwright test",
+    "test:e2e:login": "playwright test e2e/login.spec.ts",
+    "test:e2e:register": "playwright test e2e/register.spec.ts",
+    "test:e2e:profile": "playwright test e2e/profile.spec.ts",
+    "test:e2e:organizations": "playwright test e2e/organizations.spec.ts",
+    "test:e2e:budgets": "playwright test e2e/budgets.spec.ts",
+    "test:e2e:transactions": "playwright test e2e/transactions.spec.ts",
+    "test:e2e:categories": "playwright test e2e/categories.spec.ts",
+    "test:e2e:sharing": "playwright test e2e/sharing.spec.ts",
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@radix-ui/react-popover": "^1.1.19",
     "@tanstack/react-query": "^5.90.5",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
@@ -22,6 +32,7 @@
     "next-intl": "^3.26.3",
     "next-themes": "^0.4.6",
     "postcss": "^8.5.6",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.62.0",
@@ -32,6 +43,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^20.19.11",
@@ -40,6 +52,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.33",
     "jsdom": "^25.0.1",
+    "playwright": "^1.61.0",
     "typescript": "^5.9.2",
     "vitest": "^2.1.8"
   }

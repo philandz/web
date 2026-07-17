@@ -5,6 +5,7 @@ import { createJSONStorage, persist, type StateStorage } from "zustand/middlewar
 
 import type { IdentityOrganization, IdentityProfile } from "@/types/identity";
 import type { AppUserType } from "@/lib/identity-normalize";
+import { clearAllSharingSessions } from "@/lib/sharing/session";
 
 interface AuthState {
   hydrated: boolean;
@@ -60,7 +61,14 @@ export const useAuthStore = create<AuthState>()(
           organizations: state.organizations.filter((org) => org.id !== orgId),
           selectedOrgId: state.selectedOrgId === orgId ? null : state.selectedOrgId
         })),
-      clearAuth: () =>
+      clearAuth: () => {
+        // Also purge any persisted guest session tokens. These live in
+        // their own localStorage keys (per budget_id) and are not
+        // part of the zustand `philandz-web-auth` blob, so we have to
+        // scrub them by hand. Without this, a user logging out leaves
+        // orphaned SharingSession tokens that still authenticate them
+        // on `/api/sharing/*` endpoints in another tab (Bug 2).
+        clearAllSharingSessions();
         set({
           sessionNotice: null,
           token: null,
@@ -68,7 +76,8 @@ export const useAuthStore = create<AuthState>()(
           profile: null,
           organizations: [],
           selectedOrgId: null
-        }),
+        });
+      },
       expireSession: () =>
         set({
           sessionNotice: "expired",

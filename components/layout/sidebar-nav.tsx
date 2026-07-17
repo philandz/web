@@ -8,6 +8,7 @@ import {
   Building2,
   ChevronDown,
   LayoutDashboard,
+  Settings as SettingsIcon,
   Users,
   Wallet,
   ArrowLeftRight,
@@ -114,10 +115,12 @@ export function SidebarNav({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const isRoot = pathname === "/" || pathname === "";
+  const isRoot = pathname === "/" || pathname === "" || pathname === "/admin";
   const isOrgs = pathname === "/organization" || pathname.startsWith("/organization/") || pathname.includes("select-organization");
   const isAdminUsers = pathname.includes("admin/users");
   const isAdminOrgs = pathname.includes("admin/organizations");
+  const isAdminSettings = pathname.includes("/admin/settings");
+  const isAdminBudgets = pathname.includes("/admin/budgets");
   const isBudgets = pathname === "/budgets" || pathname.startsWith("/budgets/");
   const isTransactions = pathname === "/transactions";
 
@@ -153,6 +156,18 @@ export function SidebarNav({
               label={tShell("adminOrgs")}
               active={isAdminOrgs}
               onClick={() => onNavigateAdminOrgs ? onNavigateAdminOrgs() : router.push(routes.adminOrgs)}
+            />
+            <NavItem
+              icon={Wallet}
+              label={tShell("adminBudgets")}
+              active={isAdminBudgets}
+              onClick={() => router.push(routes.adminBudgets)}
+            />
+            <NavItem
+              icon={SettingsIcon}
+              label={tShell("settings")}
+              active={isAdminSettings}
+              onClick={() => router.push(routes.adminSettings)}
             />
           </>
         ) : (

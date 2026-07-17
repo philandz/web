@@ -20,7 +20,9 @@
   "actions": {
     "retry": "Retry",
     "cancel": "Cancel",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "prev": "Previous",
+    "next": "Next"
   },
   "states": {
     "loading": "Loading...",

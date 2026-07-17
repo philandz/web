@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminService, type ListParams } from "@/services/admin-service";
+import { adminSettingsService } from "@/services/admin-settings-service";
+import { budgetService, type AdminBudgetListParams } from "@/services/budget-service";
+import { settingsKeys } from "@/lib/query-keys";
 
 // ---------------------------------------------------------------------------
 // Users
@@ -72,5 +75,63 @@ export function useDeleteOrgMutation() {
   return useMutation({
     mutationFn: adminService.deleteOrg,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "orgs"] }),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Platform settings — Resend
+// ---------------------------------------------------------------------------
+
+export function useResendConfigQuery() {
+  return useQuery({
+    queryKey: settingsKeys.resend(),
+    queryFn: () => adminSettingsService.getResendConfig()
+  });
+}
+
+export function useUpdateResendConfigMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: adminSettingsService.updateResendConfig,
+    onSuccess: () => qc.invalidateQueries({ queryKey: settingsKeys.all })
+  });
+}
+
+export function useTestResendConfigMutation() {
+  return useMutation({
+    mutationFn: adminSettingsService.testResendConfig
+  });
+}
+
+export function useSystemConfigQuery() {
+  return useQuery({
+    queryKey: [...settingsKeys.all, "system"] as const,
+    queryFn: () => adminSettingsService.getSystemConfig()
+  });
+}
+
+export function useUpdateSystemConfigMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: adminSettingsService.updateSystemConfig,
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...settingsKeys.all, "system"] })
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Platform-wide budget view (super-admin only)
+// ---------------------------------------------------------------------------
+
+export const adminBudgetKeys = {
+  all: ["admin", "budgets"] as const,
+  lists: () => [...adminBudgetKeys.all, "list"] as const,
+  list: (params: AdminBudgetListParams) => [...adminBudgetKeys.lists(), params] as const,
+};
+
+export function useAdminBudgetsQuery(params: AdminBudgetListParams = {}) {
+  return useQuery({
+    queryKey: adminBudgetKeys.list(params),
+    queryFn: () => budgetService.listBudgetsAdmin(params),
+    placeholderData: (prev) => prev
   });
 }
