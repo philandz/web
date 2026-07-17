@@ -20,6 +20,9 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Remove corrupted lock
+        run: rm -f package-lock.json
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
