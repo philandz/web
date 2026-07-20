@@ -1,16 +1,22 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { AddSharedExpenseDrawer } from "@/components/sharing/add-shared-expense-drawer";
 import type { ParticipantInfo } from "@/services/sharing-service";
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
+// Mock useQueryClient — vitest jsdom + the component's context lookup can
+// fail to find QueryClientProvider when nested under our vi.mock tree.
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      invalidateQueries: vi.fn(),
+      setQueryData: vi.fn(),
+      getQueryData: vi.fn(),
+    }),
+  };
 });
-
-const renderWithProviders = (ui: React.ReactElement) =>
-  render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 
 vi.mock("@/components/ui/sheet", () => ({
   Sheet: ({ children }: { children: React.ReactNode }) => <div data-testid="sheet">{children}</div>,
@@ -100,7 +106,7 @@ describe("AddSharedExpenseDrawer", () => {
   });
 
   it("cancel button calls onOpenChange(false)", () => {
-    renderWithProviders(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
+    render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
     // Cancel is in SheetFooter; the test mock returns the i18n key as-is
     const buttons = screen.getAllByRole("button");
     const cancelBtn = buttons.find((b) => b.textContent === "form.cancel");
