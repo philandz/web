@@ -1,8 +1,16 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { AddSharedExpenseDrawer } from "@/components/sharing/add-shared-expense-drawer";
 import type { ParticipantInfo } from "@/services/sharing-service";
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+const renderWithProviders = (ui: React.ReactElement) =>
+  render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 
 vi.mock("@/components/ui/sheet", () => ({
   Sheet: ({ children }: { children: React.ReactNode }) => <div data-testid="sheet">{children}</div>,
@@ -58,20 +66,20 @@ describe("AddSharedExpenseDrawer", () => {
   const onOpenChange = vi.fn();
 
   it("renders amount input and tabs", () => {
-    render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
+    renderWithProviders(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
     expect(screen.getByTestId("amount-input")).toBeInTheDocument();
     expect(screen.getByTestId("tabs")).toBeInTheDocument();
   });
 
   it("shows participant names", () => {
-    render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
+    renderWithProviders(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
     // Alice appears twice (button and possibly elsewhere) — use getAllByText
     expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Bob").length).toBeGreaterThan(0);
   });
 
   it("disables submit when amount is 0", () => {
-    render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
+    renderWithProviders(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
     // With participants set but no amount entered, the button shows
     // "Add participants to continue" (or "Add expense" depending on
     // state). The contract being tested is: it's disabled. Match
@@ -92,7 +100,7 @@ describe("AddSharedExpenseDrawer", () => {
   });
 
   it("cancel button calls onOpenChange(false)", () => {
-    render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
+    renderWithProviders(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
     // Cancel is in SheetFooter; the test mock returns the i18n key as-is
     const buttons = screen.getAllByRole("button");
     const cancelBtn = buttons.find((b) => b.textContent === "form.cancel");
