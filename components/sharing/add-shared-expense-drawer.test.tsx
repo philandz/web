@@ -66,20 +66,20 @@ describe("AddSharedExpenseDrawer", () => {
   const onOpenChange = vi.fn();
 
   it("renders amount input and tabs", () => {
-    renderWithProviders(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
+    render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
     expect(screen.getByTestId("amount-input")).toBeInTheDocument();
     expect(screen.getByTestId("tabs")).toBeInTheDocument();
   });
 
   it("shows participant names", () => {
-    renderWithProviders(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
+    render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
     // Alice appears twice (button and possibly elsewhere) — use getAllByText
     expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Bob").length).toBeGreaterThan(0);
   });
 
   it("disables submit when amount is 0", () => {
-    renderWithProviders(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
+    render(<AddSharedExpenseDrawer budgetId="b1" open={true} onOpenChange={onOpenChange} />);
     // With participants set but no amount entered, the button shows
     // "Add participants to continue" (or "Add expense" depending on
     // state). The contract being tested is: it's disabled. Match
