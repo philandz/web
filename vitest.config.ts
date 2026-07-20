@@ -9,6 +9,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./test/setup.ts"],
     include: ["**/*.{test,spec}.{ts,tsx}"],
+    // Exclude Playwright e2e tests; those run via `npm run test:e2e`.
+    exclude: ["e2e/**", "node_modules/**", ".next/**", "dist/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"]

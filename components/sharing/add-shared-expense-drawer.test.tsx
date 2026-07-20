@@ -4,6 +4,20 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { AddSharedExpenseDrawer } from "@/components/sharing/add-shared-expense-drawer";
 import type { ParticipantInfo } from "@/services/sharing-service";
 
+// Mock useQueryClient — vitest jsdom + the component's context lookup can
+// fail to find QueryClientProvider when nested under our vi.mock tree.
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      invalidateQueries: vi.fn(),
+      setQueryData: vi.fn(),
+      getQueryData: vi.fn(),
+    }),
+  };
+});
+
 vi.mock("@/components/ui/sheet", () => ({
   Sheet: ({ children }: { children: React.ReactNode }) => <div data-testid="sheet">{children}</div>,
   SheetContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -51,6 +65,7 @@ const noopMutation = { mutate: vi.fn(), isPending: false } as any;
 vi.mock("@/modules/sharing/hooks", () => ({
   useParticipantsQuery: vi.fn(() => ({ data: participants })),
   useAddExpenseMutation: vi.fn(() => noopMutation),
+  useSettlementQuery: vi.fn(() => ({ data: [] })),
 }));
 
 describe("AddSharedExpenseDrawer", () => {
