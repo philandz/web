@@ -50,6 +50,7 @@ import {
   serializeToUrl,
   validateDraft,
 } from "@/lib/query-params/transactions";
+import { DatePreset, getPresetRange } from "@/lib/date-range";
 import type { Transaction, TransactionListParams } from "@/services/transaction-service";
 import { transactionKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
@@ -69,33 +70,6 @@ function fmtDate(dateStr: string) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Date range presets
-// ---------------------------------------------------------------------------
-
-type DatePreset = "today" | "last7Days" | "thisMonth" | "custom";
-
-function getPresetRange(preset: DatePreset): { from: string; to: string } | null {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const fmtYmd = (d: Date) => d.toISOString().split("T")[0];
-
-  switch (preset) {
-    case "today":
-      return { from: fmtYmd(today), to: fmtYmd(today) };
-    case "last7Days": {
-      const from = new Date(today);
-      from.setDate(from.getDate() - 6);
-      return { from: fmtYmd(from), to: fmtYmd(today) };
-    }
-    case "thisMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth(), 1);
-      return { from: fmtYmd(from), to: fmtYmd(today) };
-    }
-    case "custom":
-      return null;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Props
