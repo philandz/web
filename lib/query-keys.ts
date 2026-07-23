@@ -27,6 +27,7 @@ export const transactionKeys = {
   detail: (id: string) => [...transactionKeys.all, "detail", id] as const,
   attachments: (entryId: string) => [...transactionKeys.all, "attachments", entryId] as const,
   comments: (entryId: string) => [...transactionKeys.all, "comments", entryId] as const,
+  summary: (budgetId: string) => [...transactionKeys.all, "summary", budgetId] as const,
 };
 
 export const investKeys = {

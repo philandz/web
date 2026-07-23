@@ -68,7 +68,10 @@
     "add": "Add",
     "spentThisMonth": "Spent this month",
     "remaining": "remaining",
-    "overBudget": "over budget"
+    "overBudget": "over budget",
+    "currentBalance": "Current balance",
+    "totalIncome": "Income",
+    "totalExpense": "Expense"
   },
   "overview": {
     "income": "Total Income",

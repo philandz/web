@@ -89,6 +89,13 @@ export interface BulkImportResult {
   results: Array<{ rowIndex: number; success: boolean; error: string; entryId: string }>;
 }
 
+export interface EntrySummary {
+  budgetId: string;
+  totalIncome: number;
+  totalExpense: number;
+  currentBalance: number;
+}
+
 // ---------------------------------------------------------------------------
 // Raw shapes — gateway returns flat objects
 // ---------------------------------------------------------------------------
@@ -457,6 +464,21 @@ export const transactionService = {
     return {
       splitGroupId: raw.split_group_id,
       legs: (raw.legs ?? []).map(mapEntry),
+    };
+  },
+
+  async getSummary(budgetId: string): Promise<EntrySummary> {
+    const raw = await apiClient.get<{
+      budget_id: string;
+      total_income: number;
+      total_expense: number;
+      current_balance: number;
+    }>(`${BASE}/budgets/${budgetId}/summary`);
+    return {
+      budgetId: raw.budget_id,
+      totalIncome: raw.total_income,
+      totalExpense: raw.total_expense,
+      currentBalance: raw.current_balance,
     };
   },
 };

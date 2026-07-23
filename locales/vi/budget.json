@@ -68,7 +68,10 @@
     "add": "Thêm",
     "spentThisMonth": "Đã chi tháng này",
     "remaining": "còn lại",
-    "overBudget": "vượt ngân sách"
+    "overBudget": "vượt ngân sách",
+    "currentBalance": "Số dư hiện tại",
+    "totalIncome": "Thu nhập",
+    "totalExpense": "Chi tiêu"
   },
   "overview": {
     "income": "Tổng thu nhập",
