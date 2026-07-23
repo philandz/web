@@ -22,7 +22,8 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
 
   const orgId = tenant.selectedOrgId ?? "";
-  const { data: budgets = [], isLoading } = useBudgetsQuery({ orgId, page: 1, pageSize: 50 });
+  const { data: pagedBudgets, isLoading } = useBudgetsQuery({ orgId, page: 1, pageSize: 50 });
+  const budgets = pagedBudgets?.items ?? [];
 
   const selectedBudgetId = searchParams.get("budget") ?? "";
   const selectedBudget = useMemo(() => {
