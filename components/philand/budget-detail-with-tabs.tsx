@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 import { useBurnRateQuery, useBudgetMembersQuery } from "@/modules/budget/hooks";
 import { useCategoriesQuery } from "@/modules/category/hooks";
-import { useTransactionsQuery, useBulkTransactionMutation } from "@/modules/transaction/hooks";
+import { useTransactionsQuery, useBulkTransactionMutation, useEntrySummaryQuery } from "@/modules/transaction/hooks";
 
 import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
 import { QuickAddDrawer } from "@/components/philand/quick-add-drawer";
@@ -789,6 +789,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
 
   const { data: members = [] } = useBudgetMembersQuery(budget.id);
   const { data: envelope } = useBurnRateQuery(budget.id);
+  const summary = useEntrySummaryQuery(budget.id);
 
   const cfg = TYPE_CFG[budget.type] ?? TYPE_CFG.standard;
   const spendPct = envelope?.monthlyLimit ? Math.min(100, (envelope.currentSpend / envelope.monthlyLimit) * 100) : null;
@@ -830,6 +831,21 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              <div className="flex flex-col items-end pr-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {tDetail("currentBalance")}
+                </span>
+                <span className="text-sm font-bold tabular-nums text-foreground">
+                  {summary.isPending || summary.isError
+                    ? "—"
+                    : fmt(summary.data?.currentBalance ?? 0, budget.currency)}
+                </span>
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground tabular-nums">
+                  <span className="text-income">+{fmtShort(summary.data?.totalIncome ?? 0, budget.currency)}</span>
+                  <span>·</span>
+                  <span className="text-expense">-{fmtShort(summary.data?.totalExpense ?? 0, budget.currency)}</span>
+                </div>
+              </div>
               <div className="flex items-center">
                 {members.slice(0, 4).map((m, i) => (
                   <button
