@@ -838,7 +838,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                 <span className="text-base font-bold tabular-nums text-foreground sm:text-lg">
                   {summary.isPending || summary.isError
                     ? "—"
-                    : fmtShort(summary.data?.currentBalance ?? 0, budget.currency)}
+                    : fmt(summary.data?.currentBalance ?? 0, budget.currency)}
                 </span>
               </div>
             </div>
