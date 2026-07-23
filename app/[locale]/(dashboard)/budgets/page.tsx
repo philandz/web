@@ -3,19 +3,31 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
+  ArrowUpDown,
   BarChart2, CreditCard, LayoutGrid,
   PiggyBank, Plus, Search, Share2, Wallet,
 } from "lucide-react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { Pagination } from "@/components/philand/data-table";
 import { BudgetCard } from "@/components/philand/budget-card";
 import { CreateBudgetDialog } from "@/components/philand/create-budget-dialog";
 import { EmptyState } from "@/components/state/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select";
-import { useRouter } from "@/i18n/navigation";
 import { routes } from "@/constants/routes";
+import {
+  changeBudgetFilter,
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_SORT_BY,
+  DEFAULT_SORT_DIR,
+  parseBudgetFilters,
+  serializeBudgetFilters,
+  type BudgetFilters,
+} from "@/lib/query-params/budgets";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import type { BudgetListParams, BudgetRole, BudgetType } from "@/services/budget-service";
@@ -81,20 +93,45 @@ function SkeletonCard() {
 export default function BudgetsPage() {
   const t = useTranslations("budget.list");
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const tenant = useTenantContext();
 
   const [showCreate, setShowCreate] = useState(false);
-  const [params, setParams] = useState<Omit<BudgetListParams, "orgId">>({
-    page: 1,
-    pageSize: 20,
-  });
 
-  function update(patch: Partial<Omit<BudgetListParams, "orgId">>) {
-    setParams((p) => ({ ...p, ...patch, page: patch.page ?? 1 }));
+  const filters = parseBudgetFilters(searchParams);
+
+  function updateFilters(patch: Partial<Omit<BudgetFilters, "page">>) {
+    const next = changeBudgetFilter(filters, patch);
+    const params = serializeBudgetFilters(next);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
+  }
+
+  function setPage(page: number) {
+    const next = { ...filters, page };
+    const params = serializeBudgetFilters(next);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
+  }
+
+  function setPageSize(pageSize: number) {
+    const next = { ...filters, pageSize };
+    const params = serializeBudgetFilters(next);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
   }
 
   const orgId = tenant.selectedOrgId ?? "";
-  const { data: budgets = [], isLoading } = useBudgetsQuery({ ...params, orgId });
+
+  const listParams: BudgetListParams = {
+    ...filters,
+    orgId,
+  };
+
+  const { data, isLoading, isError, refetch } = useBudgetsQuery(listParams);
+  const budgets = data?.items ?? [];
+  const meta = data?.meta;
 
   // ── No org selected ──
   if (!orgId) {
@@ -103,7 +140,7 @@ export default function BudgetsPage() {
     );
   }
 
-  const activeType = params.type ?? "";
+  const activeType = filters.type ?? "";
 
   return (
     <div className="animate-fade-in-up space-y-6">
@@ -127,16 +164,16 @@ export default function BudgetsPage() {
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              value={params.q ?? ""}
-              onChange={(e) => update({ q: e.target.value || undefined })}
+              value={filters.q ?? ""}
+              onChange={(e) => updateFilters({ q: e.target.value || undefined })}
               className="pl-9"
               placeholder={t("searchPlaceholder")}
             />
           </div>
           {/* Role + sort — visible on sm+, hidden on mobile to keep row clean */}
           <SelectNative
-            value={params.role ?? ""}
-            onValueChange={(v) => update({ role: (v as BudgetRole) || undefined })}
+            value={filters.role ?? ""}
+            onValueChange={(v) => updateFilters({ role: (v as BudgetRole) || undefined })}
             className="hidden w-32 sm:block"
           >
             <option value="">{t("allRoles")}</option>
@@ -146,21 +183,31 @@ export default function BudgetsPage() {
             <option value="viewer">{t("roleViewer")}</option>
           </SelectNative>
           <SelectNative
-            value={params.sortBy ?? ""}
-            onValueChange={(v) => update({ sortBy: v || undefined })}
+            value={filters.sortBy ?? ""}
+            onValueChange={(v) => updateFilters({ sortBy: (v as BudgetFilters["sortBy"]) || undefined })}
             className="hidden w-32 sm:block"
           >
             <option value="">{t("sortDefault")}</option>
             <option value="name">{t("sortName")}</option>
             <option value="updated_at">{t("sortUpdated")}</option>
           </SelectNative>
+          {/* Sort direction toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden h-9 w-9 sm:flex"
+            onClick={() => updateFilters({ sortDir: filters.sortDir === "asc" ? "desc" : "asc" })}
+            title={filters.sortDir === "asc" ? "Ascending" : "Descending"}
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Mobile-only: role + sort selects in a scrollable row */}
         <div className="flex gap-2 sm:hidden">
           <SelectNative
-            value={params.role ?? ""}
-            onValueChange={(v) => update({ role: (v as BudgetRole) || undefined })}
+            value={filters.role ?? ""}
+            onValueChange={(v) => updateFilters({ role: (v as BudgetRole) || undefined })}
             className="flex-1"
           >
             <option value="">{t("allRoles")}</option>
@@ -170,14 +217,22 @@ export default function BudgetsPage() {
             <option value="viewer">{t("roleViewer")}</option>
           </SelectNative>
           <SelectNative
-            value={params.sortBy ?? ""}
-            onValueChange={(v) => update({ sortBy: v || undefined })}
+            value={filters.sortBy ?? ""}
+            onValueChange={(v) => updateFilters({ sortBy: (v as BudgetFilters["sortBy"]) || undefined })}
             className="flex-1"
           >
             <option value="">{t("sortDefault")}</option>
             <option value="name">{t("sortName")}</option>
             <option value="updated_at">{t("sortUpdated")}</option>
           </SelectNative>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-9 shrink-0 px-0"
+            onClick={() => updateFilters({ sortDir: filters.sortDir === "asc" ? "desc" : "asc" })}
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Row 2: type quick-filter chips — horizontally scrollable, no wrap */}
@@ -189,7 +244,7 @@ export default function BudgetsPage() {
                 <button
                   key={value || "all"}
                   type="button"
-                  onClick={() => update({ type: (value as BudgetType) || undefined })}
+                  onClick={() => updateFilters({ type: (value as BudgetType) || undefined })}
                   className={cn(
                     "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium",
                     "transition-all duration-150",
@@ -205,17 +260,27 @@ export default function BudgetsPage() {
             })}
           </div>
 
-          {/* Result count */}
-          {!isLoading && budgets.length > 0 && (
+          {/* Result count from meta */}
+          {!isLoading && meta && (
             <span className="shrink-0 text-xs text-muted-foreground">
-              {t("count", { count: budgets.length })}
+              {t("count", { count: meta.totalRows })}
             </span>
           )}
         </div>
       </div>
 
       {/* ── Content ── */}
-      {isLoading ? (
+      {isError ? (
+        <EmptyState
+          title={t("emptyTitle")}
+          description={t("emptySubtitle")}
+          action={(
+            <Button size="sm" variant="outline" onClick={() => refetch()}>
+              {t("refresh")}
+            </Button>
+          )}
+        />
+      ) : isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <SkeletonCard key={i} />
@@ -248,6 +313,18 @@ export default function BudgetsPage() {
             />
           ))}
         </div>
+      )}
+
+      {/* ── Pagination ── */}
+      {meta && meta.totalPages > 1 && (
+        <Pagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          totalRows={meta.totalRows}
+          pageSize={meta.pageSize}
+          onPage={setPage}
+          onPageSize={setPageSize}
+        />
       )}
 
       <CreateBudgetDialog

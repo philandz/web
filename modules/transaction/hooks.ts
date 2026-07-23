@@ -15,6 +15,14 @@ export function useTransactionsQuery(params: TransactionListParams = {}) {
   });
 }
 
+export function useEntrySummaryQuery(budgetId: string | null) {
+  return useQuery({
+    queryKey: transactionKeys.summary(budgetId ?? ""),
+    queryFn: () => transactionService.getSummary(budgetId!),
+    enabled: Boolean(budgetId),
+  });
+}
+
 export function useTransactionQuery(transactionId: string | null) {
   return useQuery({
     queryKey: transactionKeys.detail(transactionId ?? ""),

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Link } from "@/i18n/navigation";
 import { useBurnRateQuery } from "@/modules/budget/hooks";
+import { useEntrySummaryQuery } from "@/modules/transaction/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import { routes } from "@/constants/routes";
 import { cn } from "@/lib/utils";
@@ -79,6 +80,7 @@ export function BudgetDetailHeader({
   const t = useTranslations("budget.detail");
   const profile = useAuthStore((s) => s.profile);
   const { data: envelope } = useBurnRateQuery(budget.id);
+  const summary = useEntrySummaryQuery(budget.id);
 
   const { Icon, iconBg, badge, label, stripe } = TYPE_CONFIG[budget.type];
   const visibleMembers = members.slice(0, 4);
@@ -148,44 +150,45 @@ export function BudgetDetailHeader({
             </div>
           </div>
 
-          {/* Right: avatars + actions */}
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {/* Stacked member avatars — desktop only */}
-            {visibleMembers.length > 0 && (
-              <div className="hidden items-center sm:flex">
-                <div className="flex -space-x-2">
-                  {visibleMembers.map((m) => (
-                    <UserAvatar
-                      key={m.userId}
-                      name={m.displayName}
-                      src={m.avatar ?? (m.userId === profile?.id ? profile?.avatar : undefined)}
-                      size={28}
-                      className="ring-2 ring-card"
-                      fallbackClassName="text-[9px]"
-                    />
-                  ))}
-                </div>
-                {overflow > 0 && (
-                  <span className="ml-2 text-xs text-muted-foreground">+{overflow}</span>
-                )}
+          {/* Right: all-time balance summary */}
+          <div className="flex shrink-0 flex-col items-end gap-0.5">
+            {/* Current balance — primary metric */}
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">
+                {t("currentBalance")}
+              </p>
+              <p className="text-sm font-bold tabular-nums text-foreground sm:text-base">
+                {(() => {
+                  if (summary.isPending || summary.isError) return "—";
+                  return fmt(summary.data?.currentBalance ?? 0);
+                })()}
+              </p>
+            </div>
+            {/* Income + Expense secondary row */}
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">
+                  {t("totalIncome")}
+                </p>
+                <p className="text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
+                  {(() => {
+                    if (summary.isPending || summary.isError) return "—";
+                    return fmt(summary.data?.totalIncome ?? 0);
+                  })()}
+                </p>
               </div>
-            )}
-            {/* Ghost action buttons */}
-            <button
-              type="button"
-              title="Share"
-              className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
-            >
-              <Share2 className="h-3.5 w-3.5" />
-              Share
-            </button>
-            <button
-              type="button"
-              title="Settings"
-              className="hidden items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"
-            >
-              <Settings className="h-3.5 w-3.5" />
-            </button>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">
+                  {t("totalExpense")}
+                </p>
+                <p className="text-xs tabular-nums text-red-500">
+                  {(() => {
+                    if (summary.isPending || summary.isError) return "—";
+                    return fmt(summary.data?.totalExpense ?? 0);
+                  })()}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

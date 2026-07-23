@@ -15,7 +15,8 @@ export default function TransactionsPage() {
   const tenant = useTenantContext();
   const orgId = tenant.selectedOrgId ?? "";
 
-  const { data: budgets = [] } = useBudgetsQuery({ orgId });
+  const { data: pagedBudgets } = useBudgetsQuery({ orgId });
+  const budgets = pagedBudgets?.items ?? [];
   const [budgetId, setBudgetId] = useState<string>("");
 
   return (

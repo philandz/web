@@ -5,6 +5,7 @@ import {
   type BudgetListParams,
   type BudgetRole,
   type BudgetType,
+  type PagedBudgets,
   type RolloverPolicy,
 } from "@/services/budget-service";
 import { budgetKeys } from "@/lib/query-keys";
@@ -14,7 +15,7 @@ import { budgetKeys } from "@/lib/query-keys";
 // ---------------------------------------------------------------------------
 
 export function useBudgetsQuery(params: BudgetListParams) {
-  return useQuery({
+  return useQuery<PagedBudgets>({
     queryKey: budgetKeys.list(params),
     queryFn: () => budgetService.listBudgets(params),
     enabled: Boolean(params.orgId),

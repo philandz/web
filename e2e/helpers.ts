@@ -1,4 +1,4 @@
-import { Page, expect, BrowserContext } from '@playwright/test';
+import { APIRequestContext, BrowserContext, Page, expect, request } from '@playwright/test';
 
 /**
  * Generates a unique email per test run so parallel agents don't collide
@@ -144,4 +144,180 @@ export async function expectRedirectToLogin(
   expect(finalPath).toMatch(
     /\/(login|signup|select-organization)(\/|$)/
   );
+}
+
+/**
+ * Persists a fully-shaped Zustand auth state so the (dashboard) layout
+ * does not redirect to /select-organization or /login. The auth store
+ * is keyed 'philandz-web-auth' (see lib/auth-store.ts).
+ */
+export async function seedAuthState(
+  page: Page,
+  state: {
+    token: string;
+    userType: 'normal' | 'super_admin';
+    profile: { id: string; displayName: string; email: string };
+    organizations: unknown[];
+    selectedOrgId: string;
+  }
+) {
+  const persisted = {
+    state: {
+      hydrated: true,
+      sessionNotice: null,
+      token: state.token,
+      userType: state.userType,
+      profile: state.profile,
+      organizations: state.organizations,
+      selectedOrgId: state.selectedOrgId,
+    },
+    version: 0,
+  };
+  await page.goto('/');
+  await page.evaluate(
+    (s) => localStorage.setItem('philandz-web-auth', s),
+    JSON.stringify(persisted),
+  );
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+}
+
+/**
+ * Creates a real user + personal org + budget via the Gateway API and
+ * seeds the browser auth state so the (dashboard) layout loads without
+ * bouncing through the UI login form. Returns the created budget plus
+ * the bearer token for follow-up API calls.
+ */
+export interface BudgetFixture {
+  token: string;
+  userId: string;
+  orgId: string;
+  budgetId: string;
+  api: APIRequestContext;
+  page: Page;
+}
+
+export async function createBudgetFixture(
+  page: Page,
+  options: {
+    budgetName?: string;
+    budgetType?: 'standard' | 'saving' | 'debt' | 'invest' | 'sharing';
+    currency?: string;
+    displayName?: string;
+  } = {}
+): Promise<BudgetFixture> {
+  const apiUrl = process.env.PW_API_URL || 'http://127.0.0.1:9100';
+  const email = uniqueEmail('pw');
+  const password = TEST_PASSWORD;
+  const displayName = options.displayName ?? 'Playwright E2E';
+  const budgetName = options.budgetName ?? `E2E ${Date.now()}`;
+  const budgetType = options.budgetType ?? 'standard';
+  const currency = options.currency ?? 'VND';
+
+  const api = await request.newContext({ baseURL: apiUrl });
+
+  const reg = await api.post('/api/identity/register', {
+    data: { display_name: displayName, email, password },
+  });
+  expect(reg.status(), `register failed: ${await reg.text()}`).toBe(201);
+
+  const login = await api.post('/api/identity/login', {
+    data: { email, password },
+  });
+  expect(login.status(), `login failed: ${await login.text()}`).toBe(200);
+  const body = await login.json();
+  const token: string = body.access_token;
+  const orgId: string = body.organizations?.[0]?.base?.id;
+  const userId: string = body.user?.base?.id ?? body.user?.id;
+  expect(token, 'no access_token').toBeTruthy();
+  expect(orgId, 'no org_id').toBeTruthy();
+  expect(userId, 'no user_id').toBeTruthy();
+
+  const budget = await api.post('/api/budget/budgets', {
+    data: { org_id: orgId, name: budgetName, budget_type: budgetType, currency },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  expect(budget.status(), `budget failed: ${await budget.text()}`).toBe(201);
+  const budgetBody = await budget.json();
+  const budgetId: string = budgetBody.base?.id || budgetBody.id;
+  expect(budgetId, 'no budget_id').toBeTruthy();
+
+  await seedAuthState(page, {
+    token,
+    userType: 'normal',
+    profile: { id: userId, displayName, email },
+    organizations: body.organizations,
+    selectedOrgId: orgId,
+  });
+
+  return { token, userId, orgId, budgetId, api, page };
+}
+
+/**
+ * Invites a second user to the same budget via the admin path, returns
+ * the new bearer token + user id so tests can create entries as that
+ * member.
+ */
+export async function addSecondBudgetMember(
+  fixture: BudgetFixture,
+  options: { email?: string; displayName?: string; role?: 'manager' | 'contributor' | 'viewer' } = {}
+): Promise<{ token: string; userId: string; email: string }> {
+  const email = options.email ?? uniqueEmail('member');
+  const password = TEST_PASSWORD;
+  const displayName = options.displayName ?? 'Second Member';
+  const role = options.role ?? 'contributor';
+
+  const reg = await fixture.api.post('/api/identity/register', {
+    data: { display_name: displayName, email, password },
+  });
+  expect(reg.status(), `second member register failed: ${await reg.text()}`).toBe(201);
+  const login = await fixture.api.post('/api/identity/login', {
+    data: { email, password },
+  });
+  const body = await login.json();
+  const token: string = body.access_token;
+  const userId: string = body.user?.base?.id ?? body.user?.id;
+
+  // First add to org so the budget can be shared
+  const addOrg = await fixture.api.post(`/api/identity/organizations/${fixture.orgId}/members`, {
+    data: { user_id: userId, role: 'member' },
+    headers: { Authorization: `Bearer ${fixture.token}` },
+  });
+  // Already-in-org errors are acceptable; budget add below is the real test
+  if (!addOrg.ok() && addOrg.status() !== 409) {
+    throw new Error(`org invite failed: ${addOrg.status()} ${await addOrg.text()}`);
+  }
+
+  const addBudget = await fixture.api.post(
+    `/api/budget/budgets/${fixture.budgetId}/members`,
+    { data: { user_id: userId, role }, headers: { Authorization: `Bearer ${fixture.token}` } }
+  );
+  expect(addBudget.status(), `budget member add failed: ${await addBudget.text()}`).toBeLessThan(300);
+
+  return { token, userId, email };
+}
+
+/**
+ * Creates an entry through the entry API using the supplied bearer
+ * token. Defaults to expense kind (1) and today's date.
+ */
+export async function createEntry(
+  fixture: BudgetFixture,
+  options: { token: string; amount: number; kind?: 'income' | 'expense'; description?: string; date?: string }
+) {
+  const kind = options.kind === 'income' ? 2 : 1;
+  const today = new Date().toISOString().split('T')[0];
+  const date = options.date ?? today;
+  const res = await fixture.api.post('/api/entry/entries', {
+    data: {
+      budget_id: fixture.budgetId,
+      kind,
+      amount: options.amount,
+      description: options.description ?? 'E2E entry',
+      entry_date: date,
+    },
+    headers: { Authorization: `Bearer ${options.token}` },
+  });
+  expect(res.status(), `entry create failed: ${await res.text()}`).toBeLessThan(300);
+  return res.json();
 }

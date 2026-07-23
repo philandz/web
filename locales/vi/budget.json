@@ -21,7 +21,8 @@
     "emptyTitle": "Chưa có ngân sách",
     "emptySubtitle": "Tạo ngân sách đầu tiên để bắt đầu theo dõi tài chính",
     "noOrg": "Chọn tổ chức để xem ngân sách",
-    "count": "{count, plural, =0 {Không có ngân sách} other {# ngân sách}}"
+    "count": "{count, plural, =0 {Không có ngân sách} other {# ngân sách}}",
+    "refresh": "Làm mới"
   },
   "card": {
     "balance": "Số dư",
@@ -68,7 +69,10 @@
     "add": "Thêm",
     "spentThisMonth": "Đã chi tháng này",
     "remaining": "còn lại",
-    "overBudget": "vượt ngân sách"
+    "overBudget": "vượt ngân sách",
+    "currentBalance": "Số dư hiện tại",
+    "totalIncome": "Thu nhập",
+    "totalExpense": "Chi tiêu"
   },
   "overview": {
     "income": "Tổng thu nhập",

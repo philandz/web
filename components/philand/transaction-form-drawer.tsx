@@ -162,10 +162,11 @@ export function TransactionFormDrawer({
     isEdit && transaction?.hasAttachment ? transaction.id : null,
   );
   const tenant = useTenantContext();
-  const { data: allBudgets = [] } = useBudgetsQuery({
+  const { data: pagedBudgets } = useBudgetsQuery({
     orgId: tenant.selectedOrgId ?? "",
     pageSize: 100,
   });
+  const allBudgets = pagedBudgets?.items ?? [];
 
   const [type, setType] = useState<TransactionType>(transaction?.type ?? defaultType);
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
