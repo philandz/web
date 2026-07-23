@@ -831,20 +831,20 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <div className="flex flex-col items-end pr-1">
+              <div className="flex flex-col items-end pr-1 text-right">
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {tDetail("currentBalance")}
                 </span>
                 <span className="text-sm font-bold tabular-nums text-foreground">
                   {summary.isPending || summary.isError
                     ? "—"
-                    : fmt(summary.data?.currentBalance ?? 0, budget.currency)}
+                    : fmtShort(summary.data?.currentBalance ?? 0, budget.currency)}
                 </span>
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground tabular-nums">
-                  <span className="text-income">+{fmtShort(summary.data?.totalIncome ?? 0, budget.currency)}</span>
-                  <span>·</span>
-                  <span className="text-expense">-{fmtShort(summary.data?.totalExpense ?? 0, budget.currency)}</span>
-                </div>
+                {summary.data ? (
+                  <span className="text-[10px] tabular-nums text-muted-foreground">
+                    {summary.data.currentBalance >= 0 ? "Net" : "Short"}
+                  </span>
+                ) : null}
               </div>
               <div className="flex items-center">
                 {members.slice(0, 4).map((m, i) => (
