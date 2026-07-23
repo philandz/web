@@ -61,6 +61,18 @@ export interface BudgetListParams {
   pageSize?: number;
 }
 
+export interface PageMeta {
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalRows: number;
+}
+
+export interface PagedBudgets {
+  items: Budget[];
+  meta: PageMeta;
+}
+
 export interface AdminBudgetListParams {
   orgId?: string;
   budgetType?: BudgetType;
@@ -105,6 +117,13 @@ interface RawBase {
   id: string;
   created_at?: number;
   updated_at?: number;
+}
+
+interface RawPageMeta {
+  page: number;
+  page_size: number;
+  total_pages: number;
+  total_rows: number;
 }
 
 interface RawBudget {
@@ -211,11 +230,21 @@ function buildQuery(params: Omit<BudgetListParams, "orgId"> & { orgId?: string }
 
 export const budgetService = {
   // Budget CRUD
-  async listBudgets(params: BudgetListParams): Promise<Budget[]> {
-    const raw = await apiClient.get<{ budgets: RawBudget[] }>(
+  async listBudgets(params: BudgetListParams): Promise<PagedBudgets> {
+    const raw = await apiClient.get<{ budgets: RawBudget[]; meta: RawPageMeta }>(
       `${BASE}/budgets${buildQuery(params)}`
     );
-    return (raw.budgets ?? []).map(mapBudget);
+    return {
+      items: (raw.budgets ?? []).map(mapBudget),
+      meta: raw.meta
+        ? {
+            page: raw.meta.page,
+            pageSize: raw.meta.page_size,
+            totalPages: raw.meta.total_pages,
+            totalRows: raw.meta.total_rows,
+          }
+        : { page: 1, pageSize: 20, totalPages: 0, totalRows: 0 },
+    };
   },
 
   /**

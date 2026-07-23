@@ -37,8 +37,7 @@ interface RawCategory {
   id?: string;
   budget_id: string;
   name: string;
-  // gateway maps proto enum int → field name "cat_type"
-  cat_type: number | string;
+  kind: number | string;
   icon?: string;
   color?: string;
   planned_amount?: number;
@@ -60,7 +59,7 @@ function mapCategory(raw: RawCategory): Category {
     id: raw.id ?? raw.base?.id ?? "",
     budgetId: raw.budget_id,
     name: raw.name,
-    type: toCatType(raw.cat_type),
+    type: toCatType(raw.kind),
     icon: raw.icon ?? "📦",
     color: raw.color ?? "#6366f1",
     plannedAmount: raw.planned_amount,
@@ -96,7 +95,7 @@ export const categoryService = {
       `${BASE}/budgets/${budgetId}/categories`,
       {
         name: input.name,
-        cat_type: input.type === "income" ? 2 : 1,
+        kind: input.type === "income" ? 2 : 1,
         icon: input.icon ?? "📦",
         color: input.color ?? "#6366f1",
         planned_amount: input.plannedAmount,

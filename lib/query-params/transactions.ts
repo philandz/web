@@ -115,41 +115,8 @@ export function isDateRangeTooWide(from: string, to: string, maxDays = 30): bool
   return Math.floor((new Date(to).getTime() - new Date(from).getTime()) / msPerDay) > maxDays;
 }
 
-/**
- * Returns { from, to } for the current calendar month (first day → today).
- */
-export function getCurrentMonthRange(): { from: string; to: string } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const fmtYmd = (d: Date) => d.toISOString().split("T")[0];
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  return { from: fmtYmd(firstOfMonth), to: fmtYmd(today) };
-}
-
-/**
- * Returns { from, to } for a preset, or null for "custom".
- */
-export function getPresetRange(
-  preset: "today" | "last7Days" | "thisMonth" | "custom",
-): { from: string; to: string } | null {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const fmtYmd = (d: Date) => d.toISOString().split("T")[0];
-
-  switch (preset) {
-    case "today":
-      return { from: fmtYmd(today), to: fmtYmd(today) };
-    case "last7Days": {
-      const from = new Date(today);
-      from.setDate(from.getDate() - 6);
-      return { from: fmtYmd(from), to: fmtYmd(today) };
-    }
-    case "thisMonth":
-      return getCurrentMonthRange();
-    case "custom":
-      return null;
-  }
-}
+// Re-export from shared local-date module
+export { getCurrentMonthRange, getPresetRange } from "@/lib/date-range";
 
 export function countActiveFilters(applied: TransactionDraft): number {
   let count = 0;

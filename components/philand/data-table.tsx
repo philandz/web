@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { detectDatePreset } from "@/lib/date-range";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -405,26 +406,7 @@ export function DateDropdown({
   onCustomChange: (from: string, to: string) => void;
   validationError?: string;
 }) {
-  const currentPreset = (() => {
-    if (!from && !to) return null;
-    if (from && to) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const fmtYmd = (d: Date) => d.toISOString().split("T")[0];
-      const t = fmtYmd(today);
-      if (from === t && to === t) return "today" as DatePreset;
-      const fromD = new Date(from); const toD = new Date(to);
-      const diffMs = toD.getTime() - fromD.getTime();
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      if (diffDays === 6) {
-        const from7 = new Date(today); from7.setDate(from7.getDate() - 6);
-        if (fmtYmd(from7) === from) return "last7Days" as DatePreset;
-      }
-      const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      if (from === fmtYmd(firstOfMonth) && to === t) return "thisMonth" as DatePreset;
-    }
-    return "custom" as DatePreset;
-  })();
+  const currentPreset = detectDatePreset(from, to);
 
   const [open, setOpen] = useState(false);
   const [showCustom, setShowCustom] = useState(currentPreset === "custom");

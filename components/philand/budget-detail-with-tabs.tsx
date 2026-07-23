@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 import { useBurnRateQuery, useBudgetMembersQuery } from "@/modules/budget/hooks";
 import { useCategoriesQuery } from "@/modules/category/hooks";
-import { useTransactionsQuery, useBulkTransactionMutation } from "@/modules/transaction/hooks";
+import { useTransactionsQuery, useBulkTransactionMutation, useEntrySummaryQuery } from "@/modules/transaction/hooks";
 
 import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
 import { QuickAddDrawer } from "@/components/philand/quick-add-drawer";
@@ -789,6 +789,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
 
   const { data: members = [] } = useBudgetMembersQuery(budget.id);
   const { data: envelope } = useBurnRateQuery(budget.id);
+  const summary = useEntrySummaryQuery(budget.id);
 
   const cfg = TYPE_CFG[budget.type] ?? TYPE_CFG.standard;
   const spendPct = envelope?.monthlyLimit ? Math.min(100, (envelope.currentSpend / envelope.monthlyLimit) * 100) : null;
@@ -829,26 +830,17 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="flex items-center">
-                {members.slice(0, 4).map((m, i) => (
-                  <button
-                    key={m.userId}
-                    type="button"
-                    onClick={() => onTab("members")}
-                    className={cn(i > 0 && "-ml-2")}
-                    aria-label={tDetail("tabMembers")}
-                  >
-                    <UserAvatar name={m.displayName} src={m.avatar} size={28} className="ring-2 ring-card" fallbackClassName="text-[10px]" />
-                  </button>
-                ))}
+            <div className="flex shrink-0 items-center gap-3">
+              <div className="flex flex-col items-end text-right">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {tDetail("currentBalance")}
+                </span>
+                <span className="text-base font-bold tabular-nums text-foreground sm:text-lg">
+                  {summary.isPending || summary.isError
+                    ? "—"
+                    : fmt(summary.data?.currentBalance ?? 0, budget.currency)}
+                </span>
               </div>
-              <button type="button" className="h-8 rounded-lg px-2 text-xs font-semibold text-muted-foreground hover:bg-muted" title="Share" onClick={() => onTab("members")}>
-                Share
-              </button>
-              <button type="button" className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted" title="Settings" aria-label="Settings" onClick={() => onTab("settings")}>
-                ⚙
-              </button>
             </div>
           </div>
 
