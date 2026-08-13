@@ -103,11 +103,25 @@ interface RawSnapshot {
   source: string;
 }
 
+// Convert the wire-format asset_type (string OR integer from the proto
+// enum) into the `AssetType` union. The legacy invest view calls
+// `asset.assetType.replace("_", " ")` so a non-string crashes the page.
+const ASSET_TYPE_MAP: Record<number, AssetType> = {
+  1: "savings_deposit",
+  2: "gold",
+  3: "stock",
+};
+
+function toAssetType(v: number | string): AssetType {
+  if (typeof v === "string") return v as AssetType;
+  return ASSET_TYPE_MAP[v] ?? "savings_deposit";
+}
+
 function mapAsset(raw: RawAsset): InvestAsset {
   return {
     id: raw.id,
     budgetId: raw.budget_id,
-    assetType: raw.asset_type as AssetType,
+    assetType: toAssetType(raw.asset_type),
     name: raw.name,
     status: raw.status as AssetStatus,
     principal: raw.principal,

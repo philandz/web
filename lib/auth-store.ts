@@ -29,6 +29,31 @@ interface AuthState {
   clearSessionNotice: () => void;
 }
 
+/**
+ * Custom merge for zustand's persist middleware. The default merge does
+ * `{ ...currentState, ...persistedState }`, which doesn't unwrap the
+ * `{state: {...}, version: 0}` envelope that zustand writes to localStorage.
+ * Without unwrapping, the in-memory store stays at its initial values
+ * (token: null, userType: null) after rehydration, breaking all auth-gated
+ * pages on a fresh page load.
+ */
+function mergePersistedAuth(
+  persistedState: unknown,
+  currentState: AuthState,
+): AuthState {
+  if (
+    persistedState &&
+    typeof persistedState === "object" &&
+    "state" in persistedState &&
+    (persistedState as { state: unknown }).state &&
+    typeof (persistedState as { state: unknown }).state === "object"
+  ) {
+    const inner = (persistedState as { state: Partial<AuthState> }).state;
+    return { ...currentState, ...inner };
+  }
+  return { ...currentState, ...(persistedState as Partial<AuthState>) };
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({

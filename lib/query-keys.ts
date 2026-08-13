@@ -37,6 +37,22 @@ export const investKeys = {
   snapshots: (assetId: string) => [...investKeys.all, "snapshots", assetId] as const,
 };
 
+export const portfolioKeys = {
+  all: ["portfolio"] as const,
+  lists: () => [...portfolioKeys.all, "list"] as const,
+  list: (params: { budgetId: string; source?: string }) =>
+    [...portfolioKeys.lists(), params] as const,
+  details: () => [...portfolioKeys.all, "detail"] as const,
+  detail: (budgetId: string, assetId: string) =>
+    [...portfolioKeys.details(), budgetId, assetId] as const,
+  summary: (budgetId: string, source?: string) =>
+    [...portfolioKeys.all, "summary", budgetId, source ?? "auto"] as const,
+  observations: (budgetId: string, assetId: string) =>
+    [...portfolioKeys.detail(budgetId, assetId), "observations"] as const,
+  activity: (budgetId: string, assetId: string) =>
+    [...portfolioKeys.detail(budgetId, assetId), "activity"] as const,
+};
+
 export const settingsKeys = {
   all: ["settings"] as const,
   resend: () => [...settingsKeys.all, "resend"] as const,

@@ -15,6 +15,7 @@
     "test:e2e:transactions": "playwright test e2e/transactions.spec.ts",
     "test:e2e:categories": "playwright test e2e/categories.spec.ts",
     "test:e2e:sharing": "playwright test e2e/sharing.spec.ts",
+    "test:e2e:invest-budget": "playwright test e2e/invest-budget-full-flow.spec.ts",
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest"
