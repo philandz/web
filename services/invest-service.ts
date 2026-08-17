@@ -170,7 +170,7 @@ export const investService = {
   },
 
   async createAsset(budgetId: string, input: Omit<InvestAsset, "id" | "budgetId" | "currentValue" | "costBasis" | "unrealizedPnl" | "pnlPct">): Promise<InvestAsset> {
-    const raw = await apiClient.post<{ asset: RawAsset }>(
+    const raw = await apiClient.post<RawAsset | { asset: RawAsset }>(
       `${BASE}/budgets/${budgetId}/invest/assets`,
       {
         asset_type: input.assetType,
@@ -190,7 +190,8 @@ export const investService = {
         purchase_date: input.purchaseDate,
       }
     );
-    return mapAsset(raw.asset);
+    const data = "asset" in raw ? raw.asset : raw;
+    return mapAsset(data);
   },
 
   async updateAsset(budgetId: string, assetId: string, input: Partial<InvestAsset>): Promise<InvestAsset> {
