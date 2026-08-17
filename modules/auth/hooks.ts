@@ -55,7 +55,7 @@ export function useLoginMutation() {
       const profile = await identityService.profile();
       setProfile(profile);
       const target = getPostLoginTarget(
-        { token: result.token, userType: result.userType, selectedOrgId: result.organizations?.[0]?.base?.id ?? result.organizations?.[0]?.id ?? null },
+        { token: result.token, userType: result.userType, selectedOrgId: result.organizations?.[0]?.id ?? null },
         {
           returnTo: searchParams?.get("return_to") ?? null,
         }
@@ -78,7 +78,7 @@ export function useLoginWithGoogleMutation() {
       const profile = await identityService.profile();
       setProfile(profile);
       const target = getPostLoginTarget(
-        { token: result.token, userType: result.userType, selectedOrgId: result.organizations?.[0]?.base?.id ?? result.organizations?.[0]?.id ?? null },
+        { token: result.token, userType: result.userType, selectedOrgId: result.organizations?.[0]?.id ?? null },
         {
           returnTo: searchParams?.get("return_to") ?? null,
         }
@@ -114,7 +114,7 @@ export function useSignupMutation() {
         {
           token: loginResult.token,
           userType: loginResult.userType,
-          selectedOrgId: loginResult.organizations?.[0]?.base?.id ?? loginResult.organizations?.[0]?.id ?? null
+          selectedOrgId: loginResult.organizations?.[0]?.id ?? null
         },
         { returnTo: searchParams?.get("return_to") ?? null }
       );
