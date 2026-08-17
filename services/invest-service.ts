@@ -219,16 +219,17 @@ export const investService = {
   },
 
   async addPriceSnapshot(assetId: string, price: number, snapshotDate: string): Promise<PriceSnapshot> {
-    const raw = await apiClient.post<{ snapshot: RawSnapshot }>(
+    const raw = await apiClient.post<RawSnapshot | { snapshot: RawSnapshot }>(
       `${BASE}/invest/assets/${assetId}/snapshots`,
       { price, snapshot_date: snapshotDate, source: "manual" }
     );
+    const data = "snapshot" in raw ? raw.snapshot : raw;
     return {
-      id: raw.snapshot.id,
-      assetId: raw.snapshot.asset_id,
-      price: raw.snapshot.price,
-      snapshotDate: raw.snapshot.snapshot_date,
-      source: raw.snapshot.source as PriceSource,
+      id: data.id,
+      assetId: data.asset_id,
+      price: data.price,
+      snapshotDate: data.snapshot_date,
+      source: data.source as PriceSource,
     };
   },
 
