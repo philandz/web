@@ -15,6 +15,7 @@ import { SharingSettlementCard } from "./sharing-settlement-card";
 import { AddSharedExpenseDrawer } from "./add-shared-expense-drawer";
 import { ExpenseDetailSheet } from "./expense-detail-sheet";
 import { InviteMemberDialog } from "./invite-member-dialog";
+import { MembersTab } from "./members-tab";
 
 type BudgetTab = "overview" | "members" | "balances" | "settle" | "settings";
 
@@ -123,11 +124,7 @@ export function SharingBudgetView({
               onAddExpense={handleAddExpense}
             />
           )}
-          {tab === "members" && (
-            <div className="rounded-lg border border-border/60 bg-card p-6 text-center text-muted-foreground">
-              {t("tabs.comingSoon")}
-            </div>
-          )}
+          {tab === "members" && <MembersTab budgetId={budgetId} />}
           {tab === "balances" && (
             <div className="rounded-lg border border-border/60 bg-card p-6 text-center text-muted-foreground">
               {t("tabs.comingSoon")}

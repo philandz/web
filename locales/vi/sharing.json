@@ -34,14 +34,23 @@
   "members": {
     "title": "Thành viên",
     "guest": "Khách",
+    "guestLabel": "Thành viên khách",
     "member": "Thành viên",
+    "memberLabel": "Thành viên chia sẻ",
     "revoked": "Đã xóa",
     "leaveBudget": "Rời khỏi",
     "leaveBudgetConfirm": "Bạn có chắc muốn rời khỏi chia sẻ chi tiêu này không?",
     "revokeParticipant": "Xóa",
     "revokeConfirm": "Xóa {name} khỏi chia sẻ chi tiêu này?",
+    "remove": "Xóa",
+    "removeSuccess": "Đã xóa thành viên",
+    "confirmRemoveMessage": "Xóa {name} khỏi chia sẻ chi tiêu này? Hành động này không thể hoàn tác.",
     "inviteFirstCta": "Mời thành viên đầu tiên",
-    "you": "Bạn"
+    "you": "Bạn",
+    "noMembers": "Chưa có thành viên trong chia sẻ chi tiêu này",
+    "transferOwnership": "Chuyển quyền sở hữu",
+    "changeRole": "Thay đổi vai trò",
+    "notYetSupported": "Sắp ra mắt"
   },
   "expense": {
     "paidBy": "{name} đã trả",

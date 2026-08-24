@@ -34,14 +34,23 @@
   "members": {
     "title": "Members",
     "guest": "Guest",
+    "guestLabel": "Guest member",
     "member": "Member",
+    "memberLabel": "Budget member",
     "revoked": "Revoked",
     "leaveBudget": "Leave budget",
     "leaveBudgetConfirm": "Are you sure you want to leave this sharing budget?",
     "revokeParticipant": "Remove",
     "revokeConfirm": "Remove {name} from this sharing budget?",
+    "remove": "Remove",
+    "removeSuccess": "Member removed",
+    "confirmRemoveMessage": "Remove {name} from this sharing budget? This cannot be undone.",
     "inviteFirstCta": "Invite your first member",
-    "you": "You"
+    "you": "You",
+    "noMembers": "No members in this sharing budget",
+    "transferOwnership": "Transfer ownership",
+    "changeRole": "Change role",
+    "notYetSupported": "Coming soon"
   },
   "expense": {
     "paidBy": "Paid by {name}",
