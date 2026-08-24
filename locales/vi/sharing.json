@@ -191,7 +191,11 @@
     "members": "Thành viên",
     "expenses": "Chi tiêu",
     "settle": "Cân bằng",
-    "activity": "Hoạt động"
+    "activity": "Hoạt động",
+    "overview": "Tổng quan",
+    "balances": "Số dư",
+    "settings": "Cài đặt",
+    "comingSoon": "Sắp ra mắt"
   },
   "invite": {
     "title": "Mời vào {budget}",

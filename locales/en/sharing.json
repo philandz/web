@@ -191,7 +191,11 @@
     "members": "Members",
     "expenses": "Expenses",
     "settle": "Settle",
-    "activity": "Activity"
+    "activity": "Activity",
+    "overview": "Overview",
+    "balances": "Balances",
+    "settings": "Settings",
+    "comingSoon": "Coming soon"
   },
   "invite": {
     "title": "Invite to {budget}",
