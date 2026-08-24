@@ -48,8 +48,10 @@
     "inviteFirstCta": "Invite your first member",
     "you": "You",
     "noMembers": "No members in this sharing budget",
+    "owner": "Owner",
     "transferOwnership": "Transfer ownership",
     "changeRole": "Change role",
+    "confirmRemove": "Remove member?",
     "notYetSupported": "Coming soon"
   },
   "expense": {

@@ -76,11 +76,19 @@ export function MembersTab({ budgetId }: MembersTabProps) {
     );
   }
 
+  // TODO(t2.6): backend does not expose per-budget owner field yet.
+  // Fallback: first non-guest member is treated as owner until T2.6 wires real field.
+  const firstNonGuestId =
+    participants.find(
+      (p) => p.kind !== "GUEST" && (typeof p.kind !== "number" || p.kind !== 2),
+    )?.participantId ?? null;
+
   return (
     <div className="space-y-3">
       {participants.map((p) => {
         const isGuest =
           p.kind === "GUEST" || (typeof p.kind === "number" && p.kind === 2);
+        const isFallbackOwner = !isGuest && p.participantId === firstNonGuestId;
 
         return (
           <div
@@ -97,6 +105,14 @@ export function MembersTab({ budgetId }: MembersTabProps) {
                 <span className="truncate text-sm font-medium text-foreground">
                   {safeDisplayName(p.displayName)}
                 </span>
+                {isFallbackOwner && (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-500/50 text-[10px] text-amber-600 dark:text-amber-400"
+                  >
+                    {t("members.owner")}
+                  </Badge>
+                )}
                 {isGuest && (
                   <Badge
                     variant="outline"
@@ -111,20 +127,14 @@ export function MembersTab({ budgetId }: MembersTabProps) {
               </p>
             </div>
 
-            {/* Role badge — MEMBER gets a crown hint for owner context */}
-            {!isGuest && (
-              <Badge
-                variant="secondary"
-                className="shrink-0 text-xs"
-              >
+            {/* Role badge */}
+            {!isGuest && !isFallbackOwner && (
+              <Badge variant="secondary" className="shrink-0 text-xs">
                 {t("members.member")}
               </Badge>
             )}
             {isGuest && (
-              <Badge
-                variant="outline"
-                className="shrink-0 text-xs"
-              >
+              <Badge variant="outline" className="shrink-0 text-xs">
                 {t("members.guest")}
               </Badge>
             )}
@@ -132,6 +142,24 @@ export function MembersTab({ budgetId }: MembersTabProps) {
             {/* Owner-only actions */}
             {isOwner && (
               <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 text-muted-foreground hover:text-amber-500"
+                  disabled
+                  title={t("members.notYetSupported")}
+                >
+                  <Crown className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-xs text-muted-foreground"
+                  disabled
+                  title={t("members.notYetSupported")}
+                >
+                  {t("members.changeRole")}
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -152,7 +180,7 @@ export function MembersTab({ budgetId }: MembersTabProps) {
       <ConfirmDialog
         open={confirmRevoke !== null}
         onOpenChange={(open) => !open && setConfirmRevoke(null)}
-        title={t("members.remove")}
+        title={t("members.confirmRemove")}
         description={
           confirmRevoke
             ? t("members.confirmRemoveMessage", { name: confirmRevoke.displayName })

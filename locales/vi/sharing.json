@@ -48,8 +48,10 @@
     "inviteFirstCta": "Mời thành viên đầu tiên",
     "you": "Bạn",
     "noMembers": "Chưa có thành viên trong chia sẻ chi tiêu này",
+    "owner": "Chủ sở hữu",
     "transferOwnership": "Chuyển quyền sở hữu",
     "changeRole": "Thay đổi vai trò",
+    "confirmRemove": "Xóa thành viên?",
     "notYetSupported": "Sắp ra mắt"
   },
   "expense": {
