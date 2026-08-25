@@ -213,7 +213,7 @@
       "next": "Next"
     }
   },
-  "portfolios": \{
+  "portfolios": {
     "title": "Invest Portfolios",
     "subtitle": "Platform-wide view of all invest portfolios across organizations.",
     "badge": "Portfolios",
