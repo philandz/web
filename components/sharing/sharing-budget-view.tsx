@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { Receipt, Users, Scale, Settings, Wallet } from "lucide-react";
 import { useExpensesQuery, useParticipantsQuery, useSettlementQuery, useDeleteExpenseMutation } from "@/modules/sharing/hooks";
 import { useToast } from "@/components/state/toast-provider";
+import { useAuthStore } from "@/lib/auth-store";
+import { readSharingSession } from "@/lib/sharing/session";
 import type { Expense } from "@/services/sharing-service";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +20,7 @@ import { InviteMemberDialog } from "./invite-member-dialog";
 import { MembersTab } from "./members-tab";
 import { BalancesTab } from "./balances-tab";
 import { SettingsTab } from "./settings-tab";
+import { GuestViewBanner } from "./guest-view-banner";
 
 type BudgetTab = "overview" | "members" | "balances" | "settle" | "settings";
 
@@ -40,6 +43,7 @@ export function SharingBudgetView({
 }: SharingBudgetViewProps) {
   const t = useTranslations("sharing");
   const toast = useToast();
+  const token = useAuthStore((s) => s.token);
 
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [showExpenseDetail, setShowExpenseDetail] = useState(false);
@@ -58,6 +62,7 @@ export function SharingBudgetView({
   );
 
   const hasUnsettled = (settlement?.transfers ?? []).length > 0;
+  const isGuest = !token && !!readSharingSession(budgetId);
 
   function handleExpenseClick(expense: Expense) {
     setSelectedExpense(expense);
@@ -75,6 +80,9 @@ export function SharingBudgetView({
   return (
     <>
     <div className="animate-fade-in-up min-h-screen bg-background">
+      <div className="px-4 pt-4 sm:px-6">
+        <GuestViewBanner budgetId={budgetId} />
+      </div>
       <SharingPageHeader
         budgetId={budgetId}
         budgetName={budgetName}
@@ -87,6 +95,7 @@ export function SharingBudgetView({
         }))}
         onInviteClick={() => setInviteOpen(true)}
         onAddExpenseClick={handleAddExpense}
+        mask={isGuest}
       />
 
       {/* Budget tab bar */}

@@ -285,6 +285,12 @@
   "filterScope": "Lọc theo phạm vi",
   "filterMember": "Lọc theo thành viên",
   "filterCategory": "Lọc theo danh mục",
+  "guest": {
+    "banner": "Bạn đang xem với tư cách {name}.",
+    "guestLabel": "Khách",
+    "guestDefaultName": "Khách",
+    "limitation": "Một số chi tiết bị ẩn."
+  },
   "time": {
     "justNow": "Vừa xong",
     "minutesAgo": "{count} phút trước",

@@ -285,6 +285,12 @@
   "filterScope": "Filter by scope",
   "filterMember": "Filter by member",
   "filterCategory": "Filter by category",
+  "guest": {
+    "banner": "You're viewing as {name}.",
+    "guestLabel": "Guest",
+    "guestDefaultName": "Guest",
+    "limitation": "Some details are hidden."
+  },
   "time": {
     "justNow": "Just now",
     "minutesAgo": "{count} minutes ago",
