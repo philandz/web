@@ -54,6 +54,16 @@
     "confirmRemove": "Xóa thành viên?",
     "notYetSupported": "Sắp ra mắt"
   },
+  "transferOwnership": {
+    "title": "Chuyển quyền sở hữu",
+    "selectLabel": "Chủ sở hữu mới",
+    "selectPlaceholder": "Chọn thành viên…",
+    "warning": "Quyền sở hữu chỉ được chuyển lại khi {name} chuyển cho người khác. {name} sẽ trở thành chủ sở hữu mới.",
+    "confirm": "Chuyển quyền sở hữu",
+    "success": "Đã chuyển quyền sở hữu",
+    "error": "Không thể chuyển quyền sở hữu",
+    "notImplemented": "Tính năng chuyển quyền sở hữu chưa khả dụng"
+  },
   "expense": {
     "paidBy": "{name} đã trả",
     "description": "Mô tả",

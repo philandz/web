@@ -54,6 +54,16 @@
     "confirmRemove": "Remove member?",
     "notYetSupported": "Coming soon"
   },
+  "transferOwnership": {
+    "title": "Transfer ownership",
+    "selectLabel": "New owner",
+    "selectPlaceholder": "Select a member…",
+    "warning": "Ownership is permanent until they transfer back. {name} will become the new owner.",
+    "confirm": "Transfer ownership",
+    "success": "Ownership transferred",
+    "error": "Failed to transfer ownership",
+    "notImplemented": "Transfer ownership is not yet available"
+  },
   "expense": {
     "paidBy": "Paid by {name}",
     "description": "Description",

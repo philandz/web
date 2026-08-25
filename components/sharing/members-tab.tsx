@@ -15,6 +15,8 @@ import {
 } from "@/modules/sharing/hooks";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { safeDisplayName } from "@/lib/safe-display-name";
+import { useAuthStore } from "@/lib/auth-store";
+import { TransferOwnershipDialog } from "./transfer-ownership-dialog";
 
 type MembersTabProps = {
   budgetId: string;
@@ -33,6 +35,8 @@ export function MembersTab({ budgetId }: MembersTabProps) {
     id: string;
     displayName: string;
   } | null>(null);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const currentUserId = useAuthStore((state) => state.profile?.id);
 
   function performRevoke() {
     if (!confirmRevoke) return;
@@ -146,8 +150,8 @@ export function MembersTab({ budgetId }: MembersTabProps) {
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 text-muted-foreground hover:text-amber-500"
-                  disabled
-                  title={t("members.notYetSupported")}
+                  onClick={() => setTransferDialogOpen(true)}
+                  aria-label={t("members.transferOwnership")}
                 >
                   <Crown className="h-3.5 w-3.5" />
                 </Button>
@@ -191,6 +195,14 @@ export function MembersTab({ budgetId }: MembersTabProps) {
         onConfirm={performRevoke}
         destructive
         loading={revokeMutation.isPending}
+      />
+
+      <TransferOwnershipDialog
+        budgetId={budgetId}
+        participants={participants ?? []}
+        currentUserId={currentUserId}
+        open={transferDialogOpen}
+        onOpenChange={setTransferDialogOpen}
       />
     </div>
   );
