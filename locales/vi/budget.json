@@ -436,6 +436,8 @@
     "delete": "Xóa",
     "deleteTitle": "Xóa tài sản",
     "deleteDescription": "Hành động này không thể hoàn tác.",
+    "deletePnlLoss": "Bạn sẽ mất",
+    "deleteWarning": "Bạn sẽ mất {pnl} lãi/lỗ chưa thực hiện.",
     "confirmDelete": "Xóa",
     "deleting": "Đang xóa...",
     "deleteSuccess": "Đã xóa tài sản",

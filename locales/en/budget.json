@@ -436,6 +436,8 @@
     "delete": "Delete",
     "deleteTitle": "Delete Asset",
     "deleteDescription": "This action cannot be undone.",
+    "deletePnlLoss": "You will lose",
+    "deleteWarning": "You will lose {sign}{pnl} in unrealized P&L.",
     "confirmDelete": "Delete",
     "deleting": "Deleting...",
     "deleteSuccess": "Asset deleted",
