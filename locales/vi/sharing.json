@@ -159,6 +159,16 @@
     "settlements": "Các khoản cân bằng",
     "noSettlements": "Chưa có khoản cân bằng nào"
   },
+  "balances": {
+    "title": "Số dư ròng",
+    "owed": "được nhận",
+    "owes": "nợ",
+    "suggestedTransfers": "Các khoản chuyển gợi ý",
+    "markSettled": "Đánh dấu đã cân bằng",
+    "settled": "Đã cân bằng",
+    "empty": "Chưa có số dư — thêm chi tiêu để xem ai nợ gì.",
+    "unavailable": "Số dư hiện không khả dụng. Theo dõi T2.6 để xác minh route gateway đã được kết nối."
+  },
   "activity": {
     "title": "Hoạt động",
     "activityEmpty": "Chưa có hoạt động",

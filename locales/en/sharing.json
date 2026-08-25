@@ -159,6 +159,16 @@
     "settlements": "Settlements",
     "noSettlements": "No settlements recorded"
   },
+  "balances": {
+    "title": "Net balances",
+    "owed": "is owed",
+    "owes": "owes",
+    "suggestedTransfers": "Suggested transfers",
+    "markSettled": "Mark settled",
+    "settled": "Settled",
+    "empty": "No balances yet — add expenses to see who owes what.",
+    "unavailable": "Balances are currently unavailable. Follow up in T2.6 to verify the gateway route is wired."
+  },
   "activity": {
     "title": "Activity",
     "activityEmpty": "No activity yet",
