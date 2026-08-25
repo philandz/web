@@ -97,7 +97,10 @@ export function BudgetDetailHeader({
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const isOwner = orgRole === "owner";
+  // Use budget-level role (budget.myRole) as the authoritative source for
+  // edit/delete permissions. Falls back to org-level owner role for invest
+  // budgets where orgRole may not reflect budget-level ownership.
+  const isOwner = budget.myRole === "owner" || orgRole === "owner";
 
   const { Icon, iconBg, badge, label, stripe } = TYPE_CONFIG[budget.type];
   const visibleMembers = members.slice(0, 4);

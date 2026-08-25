@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertTriangle, ChevronDown, Clock, Plus, RefreshCw, TrendingDown, TrendingUp, Trash2 } from "lucide-react";
+import { AssetDeleteDialog } from "@/components/invest/asset-delete-dialog";
+import { AssetEditDialog } from "@/components/invest/asset-edit-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -17,7 +19,6 @@ import { useToast } from "@/components/state/toast-provider";
 import {
   useAddPriceSnapshotMutation,
   useCreateAssetMutation,
-  useDeleteAssetMutation,
   useInvestAssetsQuery,
   usePortfolioSummaryQuery,
   usePriceSnapshotsQuery,
@@ -92,15 +93,13 @@ interface AssetCardProps {
   asset: InvestAsset;
   budgetId: string;
   onEdit: (a: InvestAsset) => void;
+  onDelete: (a: InvestAsset) => void;
   onUpdatePrice: (a: InvestAsset) => void;
   onClick: (a: InvestAsset) => void;
 }
 
-function AssetCard({ asset, budgetId, onEdit, onUpdatePrice, onClick }: AssetCardProps) {
+function AssetCard({ asset, budgetId, onEdit, onDelete, onUpdatePrice, onClick }: AssetCardProps) {
   const t = useTranslations("budget.invest");
-  const toast = useToast();
-  const deleteMutation = useDeleteAssetMutation(budgetId);
-  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isPositive = asset.unrealizedPnl >= 0;
   const maturityDays = daysUntil(asset.maturityDate);
@@ -110,14 +109,13 @@ function AssetCard({ asset, budgetId, onEdit, onUpdatePrice, onClick }: AssetCar
   const isMatured = maturityDays !== null && maturityDays < 0;
 
   return (
-    <>
-      <Card
-        className={cn(
-          "surface-panel transition-shadow",
-          (asset.assetType === "gold" || asset.assetType === "stock") && "cursor-pointer hover:shadow-md",
-        )}
-        onClick={() => {
-          if (asset.assetType === "gold" || asset.assetType === "stock") onClick(asset);
+    <Card
+      className={cn(
+        "surface-panel transition-shadow",
+        (asset.assetType === "gold" || asset.assetType === "stock") && "cursor-pointer hover:shadow-md",
+      )}
+      onClick={() => {
+        if (asset.assetType === "gold" || asset.assetType === "stock") onClick(asset);
         }}
       >
         <CardContent className="p-5 space-y-3">
@@ -158,7 +156,7 @@ function AssetCard({ asset, budgetId, onEdit, onUpdatePrice, onClick }: AssetCar
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onEdit(asset)}>{t("edit")}</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive" onClick={() => setConfirmDelete(true)}>
+                  <DropdownMenuItem className="text-destructive" onClick={() => onDelete(asset)}>
                     <Trash2 className="mr-2 h-3.5 w-3.5" />{t("delete")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -208,28 +206,6 @@ function AssetCard({ asset, budgetId, onEdit, onUpdatePrice, onClick }: AssetCar
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={confirmDelete} onOpenChange={(v) => !v && setConfirmDelete(false)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>{t("deleteTitle")}</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">{t("deleteDescription")}</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(false)}>{t("cancel")}</Button>
-            <Button
-              variant="outline"
-              className="border-destructive text-destructive hover:bg-destructive/10"
-              disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(asset.id, {
-                onSuccess: () => { toast.success(t("deleteSuccess")); setConfirmDelete(false); },
-                onError: () => toast.error(t("deleteError")),
-              })}
-            >
-              {deleteMutation.isPending ? t("deleting") : t("confirmDelete")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
   );
 }
 
@@ -594,6 +570,7 @@ export function InvestBudgetView({ budgetId }: { budgetId: string }) {
 
   const [addOpen, setAddOpen] = useState(false);
   const [editAsset, setEditAsset] = useState<InvestAsset | null>(null);
+  const [deleteAsset, setDeleteAsset] = useState<InvestAsset | null>(null);
   const [priceAsset, setPriceAsset] = useState<InvestAsset | null>(null);
   const [historyAsset, setHistoryAsset] = useState<InvestAsset | null>(null);
 
@@ -626,6 +603,7 @@ export function InvestBudgetView({ budgetId }: { budgetId: string }) {
               asset={a}
               budgetId={budgetId}
               onEdit={setEditAsset}
+              onDelete={setDeleteAsset}
               onUpdatePrice={setPriceAsset}
               onClick={setHistoryAsset}
             />
@@ -634,7 +612,22 @@ export function InvestBudgetView({ budgetId }: { budgetId: string }) {
       )}
 
       <AddAssetDialog open={addOpen} onClose={() => setAddOpen(false)} budgetId={budgetId} />
-      {editAsset && <AddAssetDialog open onClose={() => setEditAsset(null)} budgetId={budgetId} asset={editAsset} />}
+      {editAsset && (
+        <AssetEditDialog
+          asset={editAsset}
+          budgetId={budgetId}
+          open
+          onOpenChange={(v) => !v && setEditAsset(null)}
+        />
+      )}
+      {deleteAsset && (
+        <AssetDeleteDialog
+          asset={deleteAsset}
+          budgetId={budgetId}
+          open
+          onOpenChange={(v) => !v && setDeleteAsset(null)}
+        />
+      )}
       <UpdatePriceDrawer open={Boolean(priceAsset)} onClose={() => setPriceAsset(null)} asset={priceAsset} budgetId={budgetId} />
       <PriceHistoryDrawer open={Boolean(historyAsset)} onClose={() => setHistoryAsset(null)} asset={historyAsset} />
     </div>
