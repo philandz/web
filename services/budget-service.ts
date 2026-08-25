@@ -22,6 +22,7 @@ export interface Budget {
   memberCount: number;
   createdAt: number;
   updatedAt: number;
+  is_private?: boolean;
 }
 
 export interface BudgetMember {
@@ -140,6 +141,7 @@ interface RawBudget {
   member_count?: number;
   created_at?: number;
   updated_at?: number;
+  is_private?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +179,7 @@ function mapBudget(raw: RawBudget): Budget {
     memberCount: raw.member_count ?? 0,
     createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
     updatedAt: raw.updated_at ?? raw.base?.updated_at ?? 0,
+    is_private: raw.is_private ?? false,
   };
 }
 
@@ -294,11 +297,11 @@ export const budgetService = {
 
   async updateBudget(
     budgetId: string,
-    input: { name?: string; type?: BudgetType }
+    input: { name?: string; type?: BudgetType; is_private?: boolean }
   ): Promise<Budget> {
     const raw = await apiClient.patch<RawBudget>(
       `${BASE}/budgets/${budgetId}`,
-      { name: input.name, budget_type: input.type }
+      { name: input.name, budget_type: input.type, is_private: input.is_private }
     );
     return mapBudget(raw);
   },

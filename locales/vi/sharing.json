@@ -218,6 +218,17 @@
     "settings": "Cài đặt",
     "comingSoon": "Sắp ra mắt"
   },
+  "settings": {
+    "budgetName": "Tên ngân sách",
+    "save": "Lưu",
+    "nameSaved": "Đã lưu tên",
+    "currency": "Tiền tệ",
+    "private": "Riêng tư",
+    "privateDescription": "Chỉ hiển thị với thành viên bạn mời",
+    "deleteBudget": "Xóa ngân sách này",
+    "confirmDelete": "Hành động này không thể hoàn tác.",
+    "comingSoon": "Sắp ra mắt"
+  },
   "invite": {
     "title": "Mời vào {budget}",
     "tabLink": "Liên kết",

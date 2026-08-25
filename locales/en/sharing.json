@@ -218,6 +218,17 @@
     "settings": "Settings",
     "comingSoon": "Coming soon"
   },
+  "settings": {
+    "budgetName": "Budget name",
+    "save": "Save",
+    "nameSaved": "Name saved",
+    "currency": "Currency",
+    "private": "Private",
+    "privateDescription": "Only visible to members you invite",
+    "deleteBudget": "Delete this budget",
+    "confirmDelete": "This action cannot be undone.",
+    "comingSoon": "Coming soon"
+  },
   "invite": {
     "title": "Invite to {budget}",
     "tabLink": "Link",
