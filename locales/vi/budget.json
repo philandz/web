@@ -100,6 +100,11 @@
     "totalIncome": "Thu nhập",
     "totalExpense": "Chi tiêu"
   },
+  "header": {
+    "menu": "Menu",
+    "edit": "Sửa",
+    "delete": "Xóa"
+  },
   "overview": {
     "income": "Tổng thu nhập",
     "expense": "Tổng chi tiêu",

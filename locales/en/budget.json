@@ -100,6 +100,11 @@
     "totalIncome": "Income",
     "totalExpense": "Expense"
   },
+  "header": {
+    "menu": "Menu",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
   "overview": {
     "income": "Total Income",
     "expense": "Total Expense",
