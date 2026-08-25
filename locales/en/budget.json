@@ -51,6 +51,32 @@
     "success": "Budget created",
     "error": "Failed to create budget"
   },
+  "dialogs": {
+    "edit": {
+      "title": "Edit Budget",
+      "name": "Budget name",
+      "namePlaceholder": "e.g. Household expenses",
+      "currency": "Currency",
+      "type": "Type",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "success": "Budget updated",
+      "error": "Failed to update budget"
+    },
+    "delete": {
+      "title": "Delete Budget",
+      "warningTitle": "This action cannot be undone",
+      "warningText": "All expenses, categories, and members will be permanently removed.",
+      "confirmLabel": "Type the budget name to confirm",
+      "confirmPlaceholder": "Budget name",
+      "confirm": "Delete",
+      "deleting": "Deleting...",
+      "cancel": "Cancel",
+      "success": "Budget deleted",
+      "error": "Failed to delete budget"
+    }
+  },
   "detail": {
     "loading": "Loading budget...",
     "notFound": "Budget not found or you do not have access.",

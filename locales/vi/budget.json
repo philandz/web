@@ -51,6 +51,32 @@
     "success": "Đã tạo ngân sách",
     "error": "Không thể tạo ngân sách"
   },
+  "dialogs": {
+    "edit": {
+      "title": "Sửa ngân sách",
+      "name": "Tên ngân sách",
+      "namePlaceholder": "VD: Chi tiêu gia đình",
+      "currency": "Tiền tệ",
+      "type": "Loại",
+      "save": "Lưu",
+      "saving": "Đang lưu...",
+      "cancel": "Hủy",
+      "success": "Đã cập nhật ngân sách",
+      "error": "Không thể cập nhật ngân sách"
+    },
+    "delete": {
+      "title": "Xóa ngân sách",
+      "warningTitle": "Hành động này không thể hoàn tác",
+      "warningText": "Tất cả chi tiêu, danh mục và thành viên sẽ bị xóa vĩnh viễn.",
+      "confirmLabel": "Nhập tên ngân sách để xác nhận",
+      "confirmPlaceholder": "Tên ngân sách",
+      "confirm": "Xóa",
+      "deleting": "Đang xóa...",
+      "cancel": "Hủy",
+      "success": "Đã xóa ngân sách",
+      "error": "Không thể xóa ngân sách"
+    }
+  },
   "detail": {
     "loading": "Đang tải ngân sách...",
     "notFound": "Không tìm thấy ngân sách hoặc bạn không có quyền truy cập.",
