@@ -82,7 +82,7 @@ export default function BudgetDetailPage() {
       return (
         <div className="animate-fade-in-up space-y-4">
           <BudgetDetailHeader budget={budget} members={members} />
-          <InvestBudgetView budgetId={budgetId} />
+          <InvestBudgetView budgetId={budgetId} myRole={budget.myRole} />
         </div>
       );
     }
@@ -91,7 +91,7 @@ export default function BudgetDetailPage() {
     return (
       <div className="animate-fade-in-up space-y-4">
         <BudgetDetailHeader budget={budget} members={members} />
-        <InvestBudgetView budgetId={budgetId} />
+        <InvestBudgetView budgetId={budgetId} myRole={budget.myRole} />
       </div>
     );
   }

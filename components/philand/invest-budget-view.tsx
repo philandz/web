@@ -16,6 +16,7 @@ import { SelectNative } from "@/components/ui/select";
 import { Sheet, SheetBody, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { SectionLoadingState } from "@/components/state/section-loading-state";
 import { useToast } from "@/components/state/toast-provider";
+import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import {
   useAddPriceSnapshotMutation,
   useCreateAssetMutation,
@@ -92,14 +93,19 @@ function PortfolioSummaryCard({ budgetId }: { budgetId: string }) {
 interface AssetCardProps {
   asset: InvestAsset;
   budgetId: string;
+  myRole?: string;
   onEdit: (a: InvestAsset) => void;
   onDelete: (a: InvestAsset) => void;
   onUpdatePrice: (a: InvestAsset) => void;
   onClick: (a: InvestAsset) => void;
 }
 
-function AssetCard({ asset, budgetId, onEdit, onDelete, onUpdatePrice, onClick }: AssetCardProps) {
+function AssetCard({ asset, budgetId, myRole, onEdit, onDelete, onUpdatePrice, onClick }: AssetCardProps) {
   const t = useTranslations("budget.invest");
+  const { orgRole } = useTenantContext();
+
+  // Mirror budget-detail-header pattern: budget-level role OR org-level role
+  const isOwner = myRole === "owner" || orgRole === "owner";
 
   const isPositive = asset.unrealizedPnl >= 0;
   const maturityDays = daysUntil(asset.maturityDate);
@@ -142,25 +148,27 @@ function AssetCard({ asset, budgetId, onEdit, onDelete, onUpdatePrice, onClick }
               <p className="text-xs text-muted-foreground capitalize">{asset.assetType.replace("_", " ")}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
-              {(asset.assetType === "gold" || asset.assetType === "stock") && (
+              {isOwner && (asset.assetType === "gold" || asset.assetType === "stock") && (
                 <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onUpdatePrice(asset)}>
                   <RefreshCw className="mr-1 h-3 w-3" />{t("updatePrice")}
                 </Button>
               )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit(asset)}>{t("edit")}</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive" onClick={() => onDelete(asset)}>
-                    <Trash2 className="mr-2 h-3.5 w-3.5" />{t("delete")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {isOwner && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEdit(asset)}>{t("edit")}</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive" onClick={() => onDelete(asset)}>
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />{t("delete")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
 
@@ -564,7 +572,7 @@ function AddAssetDialog({
 }
 
 // Main view
-export function InvestBudgetView({ budgetId }: { budgetId: string }) {
+export function InvestBudgetView({ budgetId, myRole }: { budgetId: string; myRole?: string }) {
   const t = useTranslations("budget.invest");
   const { data: assets = [], isLoading } = useInvestAssetsQuery(budgetId);
 
@@ -602,6 +610,7 @@ export function InvestBudgetView({ budgetId }: { budgetId: string }) {
               key={a.id}
               asset={a}
               budgetId={budgetId}
+              myRole={myRole}
               onEdit={setEditAsset}
               onDelete={setDeleteAsset}
               onUpdatePrice={setPriceAsset}
