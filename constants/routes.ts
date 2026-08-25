@@ -10,6 +10,8 @@ export const routes = {
   adminSettings: "/admin/settings",
   adminBudgets: "/admin/budgets",
   adminBudgetDetail: (id: string) => `/admin/budgets/${id}`,
+  adminPortfolios: "/admin/portfolios",
+  adminPortfolioDetail: (id: string) => `/admin/portfolios/${id}`,
   selectOrganization: "/select-organization",
   organization: "/organization",
   acceptInvitation: "/accept-invitation",

@@ -126,6 +126,27 @@
       "summary": "Hiển thị {from}–{to} trên {total}"
     }
   },
+  "portfolios": {
+    "title": "Danh Mục Đầu Tư",
+    "subtitle": "Tầm nhìn toàn nền tảng về mọi danh mục đầu tư trên mọi tổ chức.",
+    "badge": "Danh Mục",
+    "loading": "Đang tải danh mục…",
+    "loadError": "Không thể tải danh mục. Kiểm tra tài khoản có quyền super-admin.",
+    "total": "{count, plural, =0 {Không có danh mục} =1 {1 danh mục} other {# danh mục}}",
+    "emptyTitle": "Không có danh mục đầu tư",
+    "emptyDescription": "Chưa có danh mục đầu tư nào trên nền tảng.",
+    "column": {
+      "org": "Tổ Chức",
+      "budget": "Budget",
+      "value": "Tổng Giá Trị",
+      "assets": "Tài Sản",
+      "lastRefresh": "Cập Nhật Lần Cuối"
+    },
+    "refresh": "Làm Mới",
+    "refreshing": "Đang làm mới…",
+    "refreshSuccess": "Đã làm mới danh mục.",
+    "refreshError": "Không thể làm mới danh mục."
+  },
   "settings": {
     "title": "Cài đặt chung",
     "subtitle": "Cấu hình các tích hợp toàn nền tảng. Những cài đặt này áp dụng cho mọi không gian làm việc.",

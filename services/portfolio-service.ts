@@ -516,4 +516,12 @@ export const portfolioService = {
       body,
     );
   },
+
+  /** Force-refresh portfolio valuations from price providers (admin action). */
+  refreshPortfolio(budgetId: string) {
+    return apiClient.post<{ ok: boolean }>(
+      `${BASE}/budgets/${budgetId}/portfolio/refresh`,
+      {},
+    );
+  },
 };
