@@ -89,8 +89,37 @@ export function useLoginWithGoogleMutation() {
 }
 
 export function useSignupMutation() {
+  const setSession = useAuthStore((state) => state.setSession);
+  const setProfile = useAuthStore((state) => state.setProfile);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   return useMutation({
-    mutationFn: identityService.register
+    // Auto-login after register. register() creates the user, then login() mints
+    // a token so we land on the correct post-login target instead of bouncing
+    // through /login for an explicit re-auth.
+    mutationFn: async (input: {
+      email: string;
+      password: string;
+      displayName: string;
+    }) => {
+      await identityService.register(input);
+      return identityService.login({ email: input.email, password: input.password });
+    },
+    onSuccess: async (loginResult) => {
+      setSession(loginResult);
+      const profile = await identityService.profile();
+      setProfile(profile);
+      const target = getPostLoginTarget(
+        {
+          token: loginResult.token,
+          userType: loginResult.userType,
+          selectedOrgId: loginResult.organizations?.[0]?.id ?? null
+        },
+        { returnTo: searchParams?.get("return_to") ?? null }
+      );
+      if (target) router.push(target);
+    }
   });
 }
 

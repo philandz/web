@@ -34,14 +34,35 @@
   "members": {
     "title": "Members",
     "guest": "Guest",
+    "guestLabel": "Guest member",
     "member": "Member",
+    "memberLabel": "Budget member",
     "revoked": "Revoked",
     "leaveBudget": "Leave budget",
     "leaveBudgetConfirm": "Are you sure you want to leave this sharing budget?",
     "revokeParticipant": "Remove",
     "revokeConfirm": "Remove {name} from this sharing budget?",
+    "remove": "Remove",
+    "removeSuccess": "Member removed",
+    "confirmRemoveMessage": "Remove {name} from this sharing budget? This cannot be undone.",
     "inviteFirstCta": "Invite your first member",
-    "you": "You"
+    "you": "You",
+    "noMembers": "No members in this sharing budget",
+    "owner": "Owner",
+    "transferOwnership": "Transfer ownership",
+    "changeRole": "Change role",
+    "confirmRemove": "Remove member?",
+    "notYetSupported": "Coming soon"
+  },
+  "transferOwnership": {
+    "title": "Transfer ownership",
+    "selectLabel": "New owner",
+    "selectPlaceholder": "Select a member…",
+    "warning": "Ownership is permanent until they transfer back. {name} will become the new owner.",
+    "confirm": "Transfer ownership",
+    "success": "Ownership transferred",
+    "error": "Failed to transfer ownership",
+    "notImplemented": "Transfer ownership is not yet available"
   },
   "expense": {
     "paidBy": "Paid by {name}",
@@ -148,6 +169,16 @@
     "settlements": "Settlements",
     "noSettlements": "No settlements recorded"
   },
+  "balances": {
+    "title": "Net balances",
+    "owed": "is owed",
+    "owes": "owes",
+    "suggestedTransfers": "Suggested transfers",
+    "markSettled": "Mark settled",
+    "settled": "Settled",
+    "empty": "No balances yet — add expenses to see who owes what.",
+    "unavailable": "Balances are currently unavailable. Follow up in T2.6 to verify the gateway route is wired."
+  },
   "activity": {
     "title": "Activity",
     "activityEmpty": "No activity yet",
@@ -191,7 +222,22 @@
     "members": "Members",
     "expenses": "Expenses",
     "settle": "Settle",
-    "activity": "Activity"
+    "activity": "Activity",
+    "overview": "Overview",
+    "balances": "Balances",
+    "settings": "Settings",
+    "comingSoon": "Coming soon"
+  },
+  "settings": {
+    "budgetName": "Budget name",
+    "save": "Save",
+    "nameSaved": "Name saved",
+    "currency": "Currency",
+    "private": "Private",
+    "privateDescription": "Only visible to members you invite",
+    "deleteBudget": "Delete this budget",
+    "confirmDelete": "This action cannot be undone.",
+    "comingSoon": "Coming soon"
   },
   "invite": {
     "title": "Invite to {budget}",
@@ -239,6 +285,12 @@
   "filterScope": "Filter by scope",
   "filterMember": "Filter by member",
   "filterCategory": "Filter by category",
+  "guest": {
+    "banner": "You're viewing as {name}.",
+    "guestLabel": "Guest",
+    "guestDefaultName": "Guest",
+    "limitation": "Some details are hidden."
+  },
   "time": {
     "justNow": "Just now",
     "minutesAgo": "{count} minutes ago",

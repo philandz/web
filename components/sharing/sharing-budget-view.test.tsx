@@ -23,16 +23,7 @@ vi.mock("@/components/sharing/sharing-page-header", () => ({
 
 // Use unique testids so multi-render instances (desktop + mobile) can be
 // queried with getAllByTestId without ambiguity.
-let membersIdx = 0;
 let settlementIdx = 0;
-let activityIdx = 0;
-
-vi.mock("@/components/sharing/sharing-members-card", () => ({
-  SharingMembersCard: () => {
-    membersIdx += 1;
-    return <div data-testid={`members-card-${membersIdx}`} />;
-  },
-}));
 
 vi.mock("@/components/sharing/sharing-expenses-list", () => ({
   SharingExpensesList: ({ onExpenseClick, onAddExpense }: any) => (
@@ -53,13 +44,6 @@ vi.mock("@/components/sharing/sharing-settlement-card", () => ({
   SharingSettlementCard: () => {
     settlementIdx += 1;
     return <div data-testid={`settlement-card-${settlementIdx}`} />;
-  },
-}));
-
-vi.mock("@/components/sharing/activity-log-list", () => ({
-  ActivityLogList: () => {
-    activityIdx += 1;
-    return <div data-testid={`activity-log-${activityIdx}`} />;
   },
 }));
 
@@ -106,6 +90,7 @@ vi.mock("@/modules/sharing/hooks", () => ({
   useParticipantsQuery: () => hooksState.participants,
   useSettlementQuery: () => hooksState.settlement,
   useDeleteExpenseMutation: () => ({ mutate: vi.fn(), isPending: false }),
+  useRevokeParticipantMutation: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 function setHooks(expenses: any, participants: any, settlement = { data: undefined }) {
@@ -113,9 +98,7 @@ function setHooks(expenses: any, participants: any, settlement = { data: undefin
 }
 
 beforeEach(() => {
-  membersIdx = 0;
   settlementIdx = 0;
-  activityIdx = 0;
   setHooks(
     { data: undefined, isLoading: false },
     { data: undefined, isLoading: false },
@@ -128,13 +111,32 @@ describe("SharingBudgetView", () => {
     expect(screen.getByTestId("page-header-name")).toHaveTextContent("Trip 2026");
   });
 
-  it("renders the settlement card, expenses list, and members card", () => {
+  it("renders the tab bar with all 5 sub-tabs", () => {
     renderWithIntl(<SharingBudgetView budgetId="b1" />);
-    expect(screen.getAllByTestId(/^settlement-card-/)[0]).toBeInTheDocument();
-    expect(screen.getAllByTestId("expenses-list").length).toBeGreaterThan(0);
-    expect(screen.getAllByTestId(/^members-card-/)[0]).toBeInTheDocument();
-    // Activity log renders in two slots (right rail + mobile fallback).
-    expect(screen.getAllByTestId(/^activity-log-/).length).toBeGreaterThan(0);
+    // All 5 tabs are present (use getAllBy since strict mode renders twice)
+    expect(screen.getAllByRole("tab", { name: /overview/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("tab", { name: /members/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("tab", { name: /balances/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("tab", { name: /settle/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("tab", { name: /settings/i })[0]).toBeInTheDocument();
+  });
+
+  it("renders expenses list on the overview tab (default)", () => {
+    renderWithIntl(<SharingBudgetView budgetId="b1" />);
+    expect(screen.getAllByTestId("expenses-list")[0]).toBeInTheDocument();
+  });
+
+  it("renders the settlement card when the Settle tab is active", () => {
+    renderWithIntl(<SharingBudgetView budgetId="b1" />);
+    fireEvent.click(screen.getAllByRole("tab", { name: /settle/i })[0]);
+    expect(screen.getByTestId("settlement-card-1")).toBeInTheDocument();
+  });
+
+  it("renders members content when the Members tab is active", () => {
+    renderWithIntl(<SharingBudgetView budgetId="b1" />);
+    fireEvent.click(screen.getAllByRole("tab", { name: /members/i })[0]);
+    // MembersTab renders a container with participant rows (no specific testid, use role)
+    expect(screen.getAllByRole("tab", { name: /members/i })[0]).toHaveAttribute("aria-selected", "true");
   });
 
   it("clicking an expense opens the detail sheet", () => {

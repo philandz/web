@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { AuthHydrator } from "@/components/auth/auth-hydrator";
 import { isAppLocale, routing } from "@/i18n/routing";
 
 export function generateStaticParams() {
@@ -35,5 +36,10 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  return <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>;
+  return (
+    <NextIntlClientProvider messages={messages}>
+      <AuthHydrator />
+      {children}
+    </NextIntlClientProvider>
+  );
 }

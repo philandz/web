@@ -126,6 +126,17 @@ export interface ParticipantInfo {
 }
 
 // ---------------------------------------------------------------------------
+// Balance (from GetBalances)
+// ---------------------------------------------------------------------------
+
+export interface Balance {
+  userId: string;
+  displayName: string;
+  email: string;
+  netBalance: number; // positive = owed to this person, negative = owes others
+}
+
+// ---------------------------------------------------------------------------
 // Raw response shapes
 // ---------------------------------------------------------------------------
 
@@ -253,6 +264,13 @@ interface RawParticipant {
   user_id?: string;
 }
 
+interface RawBalance {
+  user_id: string;
+  display_name: string;
+  email: string;
+  net_balance: number;
+}
+
 // ---------------------------------------------------------------------------
 // Mappers
 // ---------------------------------------------------------------------------
@@ -366,6 +384,15 @@ function mapParticipant(raw: RawParticipant): ParticipantInfo {
     lastSeenAt: raw.last_seen_at,
     revoked: raw.revoked,
     userId: raw.user_id,
+  };
+}
+
+function mapBalance(raw: RawBalance): Balance {
+  return {
+    userId: raw.user_id,
+    displayName: raw.display_name,
+    email: raw.email,
+    netBalance: raw.net_balance,
   };
 }
 
@@ -627,5 +654,50 @@ export const sharingService = {
       `${BASE}/budgets/${budgetId}/participants/${participantId}`,
       { method: "DELETE" }
     );
+  },
+
+  // --- Balances ---
+
+  async getBalances(budgetId: string): Promise<Balance[]> {
+    const raw = await apiClient.get<{ balances: RawBalance[] }>(
+      `${BASE}/budgets/${budgetId}/balances`
+    );
+    return (raw.balances ?? []).map(mapBalance);
+  },
+
+  // --- Ownership & roles ---
+
+  /**
+   * Transfer budget ownership to another member.
+   * TODO: backend RPC missing — stub throws until implemented.
+   */
+  async transferOwnership(budgetId: string, toUserId: string): Promise<void> {
+    // TODO: backend RPC missing — needs TransferOwnership RPC in proto + handler.
+    throw new Error("transferOwnership: backend RPC not yet implemented");
+  },
+
+  /**
+   * Update a participant's role within a budget.
+   * TODO: backend RPC missing — stub throws until implemented.
+   */
+  async updateMemberRole(
+    budgetId: string,
+    participantId: string,
+    role: "ADMIN" | "MEMBER" | "GUEST"
+  ): Promise<void> {
+    // TODO: backend RPC missing — needs UpdateMemberRole RPC in proto + handler.
+    throw new Error("updateMemberRole: backend RPC not yet implemented");
+  },
+
+  /**
+   * Leave a budget (self-removes the current user from the budget).
+   * TODO: backend RPC missing — stub throws until implemented.
+   *       The backend may support this via RevokeParticipant with a
+   *       self-referencing participant ID derived from the auth session.
+   */
+  async leaveBudget(budgetId: string): Promise<void> {
+    // TODO: backend RPC missing — may map to RevokeParticipant with
+    // caller-derived participantId (needs x-session-token or JWT sub claim).
+    throw new Error("leaveBudget: backend RPC not yet implemented");
   },
 };

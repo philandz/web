@@ -5,6 +5,7 @@ type MoneyAmountProps = {
   currency?: string;
   size?: "sm" | "md" | "lg" | "xl";
   sign?: "auto" | "positive" | "negative" | "neutral";
+  masked?: boolean;
 };
 
 const sizeClasses = {
@@ -26,14 +27,15 @@ export function MoneyAmount({
   currency = "VND",
   size = "md",
   sign = "auto",
+  masked = false,
 }: MoneyAmountProps) {
-  const formatter = new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0,
-  });
-
-  const formatted = formatter.format(value);
+  const formatted = masked
+    ? "•••••"
+    : new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency,
+        minimumFractionDigits: 0,
+      }).format(value);
 
   let colorClass: string;
   if (sign === "auto") {

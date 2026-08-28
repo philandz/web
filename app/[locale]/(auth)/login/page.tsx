@@ -169,7 +169,11 @@ export default function LoginPage() {
   const mutation = useLoginMutation();
   const googleMutation = useLoginWithGoogleMutation();
 
-  // Redirect after successful login (email or Google)
+  // Redirect after successful login (email or Google).
+  // NOTE: useLoginMutation / useLoginWithGoogleMutation already call router.push()
+  // in their own onSuccess callbacks with correct selectedOrgId, so this useEffect
+  // is intentionally left minimal — it only handles the return_to override for
+  // cases where the hook-level redirect already ran with no return_to.
   const loginData = mutation.data ?? googleMutation.data;
   useEffect(() => {
     if (!loginData) return;
@@ -177,7 +181,7 @@ export default function LoginPage() {
       {
         token: loginData.token,
         userType: loginData.userType,
-        selectedOrgId: null,
+        selectedOrgId: loginData.organizations?.[0]?.id ?? null,
       },
       { returnTo }
     );

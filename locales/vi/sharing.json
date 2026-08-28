@@ -34,14 +34,35 @@
   "members": {
     "title": "Thành viên",
     "guest": "Khách",
+    "guestLabel": "Thành viên khách",
     "member": "Thành viên",
+    "memberLabel": "Thành viên chia sẻ",
     "revoked": "Đã xóa",
     "leaveBudget": "Rời khỏi",
     "leaveBudgetConfirm": "Bạn có chắc muốn rời khỏi chia sẻ chi tiêu này không?",
     "revokeParticipant": "Xóa",
     "revokeConfirm": "Xóa {name} khỏi chia sẻ chi tiêu này?",
+    "remove": "Xóa",
+    "removeSuccess": "Đã xóa thành viên",
+    "confirmRemoveMessage": "Xóa {name} khỏi chia sẻ chi tiêu này? Hành động này không thể hoàn tác.",
     "inviteFirstCta": "Mời thành viên đầu tiên",
-    "you": "Bạn"
+    "you": "Bạn",
+    "noMembers": "Chưa có thành viên trong chia sẻ chi tiêu này",
+    "owner": "Chủ sở hữu",
+    "transferOwnership": "Chuyển quyền sở hữu",
+    "changeRole": "Thay đổi vai trò",
+    "confirmRemove": "Xóa thành viên?",
+    "notYetSupported": "Sắp ra mắt"
+  },
+  "transferOwnership": {
+    "title": "Chuyển quyền sở hữu",
+    "selectLabel": "Chủ sở hữu mới",
+    "selectPlaceholder": "Chọn thành viên…",
+    "warning": "Quyền sở hữu chỉ được chuyển lại khi {name} chuyển cho người khác. {name} sẽ trở thành chủ sở hữu mới.",
+    "confirm": "Chuyển quyền sở hữu",
+    "success": "Đã chuyển quyền sở hữu",
+    "error": "Không thể chuyển quyền sở hữu",
+    "notImplemented": "Tính năng chuyển quyền sở hữu chưa khả dụng"
   },
   "expense": {
     "paidBy": "{name} đã trả",
@@ -148,6 +169,16 @@
     "settlements": "Các khoản cân bằng",
     "noSettlements": "Chưa có khoản cân bằng nào"
   },
+  "balances": {
+    "title": "Số dư ròng",
+    "owed": "được nhận",
+    "owes": "nợ",
+    "suggestedTransfers": "Các khoản chuyển gợi ý",
+    "markSettled": "Đánh dấu đã cân bằng",
+    "settled": "Đã cân bằng",
+    "empty": "Chưa có số dư — thêm chi tiêu để xem ai nợ gì.",
+    "unavailable": "Số dư hiện không khả dụng. Theo dõi T2.6 để xác minh route gateway đã được kết nối."
+  },
   "activity": {
     "title": "Hoạt động",
     "activityEmpty": "Chưa có hoạt động",
@@ -191,7 +222,22 @@
     "members": "Thành viên",
     "expenses": "Chi tiêu",
     "settle": "Cân bằng",
-    "activity": "Hoạt động"
+    "activity": "Hoạt động",
+    "overview": "Tổng quan",
+    "balances": "Số dư",
+    "settings": "Cài đặt",
+    "comingSoon": "Sắp ra mắt"
+  },
+  "settings": {
+    "budgetName": "Tên ngân sách",
+    "save": "Lưu",
+    "nameSaved": "Đã lưu tên",
+    "currency": "Tiền tệ",
+    "private": "Riêng tư",
+    "privateDescription": "Chỉ hiển thị với thành viên bạn mời",
+    "deleteBudget": "Xóa ngân sách này",
+    "confirmDelete": "Hành động này không thể hoàn tác.",
+    "comingSoon": "Sắp ra mắt"
   },
   "invite": {
     "title": "Mời vào {budget}",
@@ -239,6 +285,12 @@
   "filterScope": "Lọc theo phạm vi",
   "filterMember": "Lọc theo thành viên",
   "filterCategory": "Lọc theo danh mục",
+  "guest": {
+    "banner": "Bạn đang xem với tư cách {name}.",
+    "guestLabel": "Khách",
+    "guestDefaultName": "Khách",
+    "limitation": "Một số chi tiết bị ẩn."
+  },
   "time": {
     "justNow": "Vừa xong",
     "minutesAgo": "{count} phút trước",
