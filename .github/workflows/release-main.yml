@@ -64,6 +64,15 @@ jobs:
             if [[ "$subject" =~ ^Merge\  ]]; then
               continue
             fi
+            if [[ "$subject" =~ ^Release[:\ ] ]]; then
+              continue
+            fi
+            if [[ "$subject" =~ ^Sprint\  ]]; then
+              continue
+            fi
+            if [[ "$subject" =~ ^Develop$ ]]; then
+              continue
+            fi
             if ! [[ "$subject" =~ ^(feat|fix|docs|style|refactor|test|chore|ci)(\([^\)]+\))?!?:\ .+ ]]; then
               echo "Invalid commit message: $subject"
               invalid=1
