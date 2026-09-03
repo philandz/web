@@ -103,11 +103,25 @@ interface RawSnapshot {
   source: string;
 }
 
+// Convert the wire-format asset_type (string OR integer from the proto
+// enum) into the `AssetType` union. The legacy invest view calls
+// `asset.assetType.replace("_", " ")` so a non-string crashes the page.
+const ASSET_TYPE_MAP: Record<number, AssetType> = {
+  1: "savings_deposit",
+  2: "gold",
+  3: "stock",
+};
+
+function toAssetType(v: number | string): AssetType {
+  if (typeof v === "string") return v as AssetType;
+  return ASSET_TYPE_MAP[v] ?? "savings_deposit";
+}
+
 function mapAsset(raw: RawAsset): InvestAsset {
   return {
     id: raw.id,
     budgetId: raw.budget_id,
-    assetType: raw.asset_type as AssetType,
+    assetType: toAssetType(raw.asset_type),
     name: raw.name,
     status: raw.status as AssetStatus,
     principal: raw.principal,
@@ -156,7 +170,7 @@ export const investService = {
   },
 
   async createAsset(budgetId: string, input: Omit<InvestAsset, "id" | "budgetId" | "currentValue" | "costBasis" | "unrealizedPnl" | "pnlPct">): Promise<InvestAsset> {
-    const raw = await apiClient.post<{ asset: RawAsset }>(
+    const raw = await apiClient.post<RawAsset | { asset: RawAsset }>(
       `${BASE}/budgets/${budgetId}/invest/assets`,
       {
         asset_type: input.assetType,
@@ -176,7 +190,8 @@ export const investService = {
         purchase_date: input.purchaseDate,
       }
     );
-    return mapAsset(raw.asset);
+    const data = "asset" in raw ? raw.asset : raw;
+    return mapAsset(data);
   },
 
   async updateAsset(budgetId: string, assetId: string, input: Partial<InvestAsset>): Promise<InvestAsset> {
@@ -204,16 +219,17 @@ export const investService = {
   },
 
   async addPriceSnapshot(assetId: string, price: number, snapshotDate: string): Promise<PriceSnapshot> {
-    const raw = await apiClient.post<{ snapshot: RawSnapshot }>(
+    const raw = await apiClient.post<RawSnapshot | { snapshot: RawSnapshot }>(
       `${BASE}/invest/assets/${assetId}/snapshots`,
       { price, snapshot_date: snapshotDate, source: "manual" }
     );
+    const data = "snapshot" in raw ? raw.snapshot : raw;
     return {
-      id: raw.snapshot.id,
-      assetId: raw.snapshot.asset_id,
-      price: raw.snapshot.price,
-      snapshotDate: raw.snapshot.snapshot_date,
-      source: raw.snapshot.source as PriceSource,
+      id: data.id,
+      assetId: data.asset_id,
+      price: data.price,
+      snapshotDate: data.snapshot_date,
+      source: data.source as PriceSource,
     };
   },
 

@@ -17,7 +17,7 @@ import { useBudgetMembersQuery, useBudgetQuery } from "@/modules/budget/hooks";
 // Tab config
 // ---------------------------------------------------------------------------
 
-const ALL_TABS = ["overview", "transactions", "categories", "members", "settings"] as const;
+const ALL_TABS = ["overview", "transactions", "categories", "members", "settings", "assets"] as const;
 type TabName = (typeof ALL_TABS)[number];
 
 function isValidTab(v: string | null): v is TabName {
@@ -76,15 +76,22 @@ export default function BudgetDetailPage() {
     );
   }
 
-  // Invest budgets get their own full view (no tabs)
+  // Invest budgets — assets tab renders InvestBudgetView, other tabs deferred
   if (budget.type === "invest") {
+    if (activeTab === "assets") {
+      return (
+        <div className="animate-fade-in-up space-y-4">
+          <BudgetDetailHeader budget={budget} members={members} />
+          <InvestBudgetView budgetId={budgetId} myRole={budget.myRole} />
+        </div>
+      );
+    }
+    // For now, all other invest tabs fall back to the assets view
+    // (invest budgets don't have per-tab content yet)
     return (
       <div className="animate-fade-in-up space-y-4">
-        <BudgetDetailHeader
-          budget={budget}
-          members={members}
-        />
-        <InvestBudgetView budgetId={budgetId} />
+        <BudgetDetailHeader budget={budget} members={members} />
+        <InvestBudgetView budgetId={budgetId} myRole={budget.myRole} />
       </div>
     );
   }

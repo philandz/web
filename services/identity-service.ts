@@ -40,11 +40,18 @@ const BASE_PATH = "/api/identity";
 
 export const identityService = {
   async register(input: { email: string; password: string; displayName: string }): Promise<RegisterResult> {
-    const raw = await apiClient.post<RawProfileResponse>(`${BASE_PATH}/register`, {
-      email: input.email,
-      password: input.password,
-      display_name: input.displayName
-    });
+    // `keepalive: true` lets the request outlive a same-tab navigation so the
+    // browser doesn't surface the in-flight POST as ERR_ABORTED when the
+    // mutation's onSuccess pushes to /select-organization or /budgets.
+    const raw = await apiClient.post<RawProfileResponse>(
+      `${BASE_PATH}/register`,
+      {
+        email: input.email,
+        password: input.password,
+        display_name: input.displayName
+      },
+      { keepalive: true }
+    );
 
     return {
       id: raw.user.base?.id ?? "",

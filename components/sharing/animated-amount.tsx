@@ -8,6 +8,7 @@ type AnimatedAmountProps = {
   currency?: string;
   size?: "sm" | "md" | "lg" | "xl";
   durationMs?: number;
+  mask?: boolean;
 };
 
 function easeOutCubic(t: number): number {
@@ -19,6 +20,7 @@ export function AnimatedAmount({
   currency = "VND",
   size = "xl",
   durationMs = 600,
+  mask = false,
 }: AnimatedAmountProps) {
   const [display, setDisplay] = useState(value);
   const fromRef = useRef(value);
@@ -51,6 +53,18 @@ export function AnimatedAmount({
     // value is the only trigger; display is intentionally not in deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, durationMs]);
+
+  if (mask) {
+    return (
+      <MoneyAmount
+        value={0}
+        currency={currency}
+        size={size}
+        sign="neutral"
+        masked={true}
+      />
+    );
+  }
 
   return (
     <MoneyAmount

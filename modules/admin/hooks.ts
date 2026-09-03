@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminService, type ListParams } from "@/services/admin-service";
 import { adminSettingsService } from "@/services/admin-settings-service";
 import { budgetService, type AdminBudgetListParams } from "@/services/budget-service";
+import { portfolioService } from "@/services/portfolio-service";
 import { settingsKeys } from "@/lib/query-keys";
 
 // ---------------------------------------------------------------------------
@@ -133,5 +134,19 @@ export function useAdminBudgetsQuery(params: AdminBudgetListParams = {}) {
     queryKey: adminBudgetKeys.list(params),
     queryFn: () => budgetService.listBudgetsAdmin(params),
     placeholderData: (prev) => prev
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Portfolio refresh (super-admin action)
+// ---------------------------------------------------------------------------
+
+export function useRefreshPortfolioMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (budgetId: string) => portfolioService.refreshPortfolio(budgetId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: adminBudgetKeys.all });
+    },
   });
 }

@@ -1,18 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   ArrowLeft, BarChart2, CreditCard, LayoutGrid,
-  PiggyBank, Settings, Share2, Users,
+  Pencil, PiggyBank, Settings, Share2, Trash2, Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Link } from "@/i18n/navigation";
+import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { useBurnRateQuery } from "@/modules/budget/hooks";
 import { useEntrySummaryQuery } from "@/modules/transaction/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import { routes } from "@/constants/routes";
 import { cn } from "@/lib/utils";
+import { BudgetEditDialog } from "./budget-edit-dialog";
+import { BudgetDeleteDialog } from "./budget-delete-dialog";
 import type { Budget, BudgetMember, BudgetType } from "@/services/budget-service";
 import type { LucideIcon } from "lucide-react";
 
@@ -81,6 +92,15 @@ export function BudgetDetailHeader({
   const profile = useAuthStore((s) => s.profile);
   const { data: envelope } = useBurnRateQuery(budget.id);
   const summary = useEntrySummaryQuery(budget.id);
+  const { orgRole } = useTenantContext();
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  // Use budget-level role (budget.myRole) as the authoritative source for
+  // edit/delete permissions. Falls back to org-level owner role for invest
+  // budgets where orgRole may not reflect budget-level ownership.
+  const isOwner = budget.myRole === "owner" || orgRole === "owner";
 
   const { Icon, iconBg, badge, label, stripe } = TYPE_CONFIG[budget.type];
   const visibleMembers = members.slice(0, 4);
@@ -190,6 +210,34 @@ export function BudgetDetailHeader({
               </div>
             </div>
           </div>
+
+          {/* Owner-only overflow menu */}
+          {isOwner && (
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <button
+                  className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label={t("menu")}
+                >
+                  <Settings className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  {t("edit")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeleteOpen(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t("delete")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* ── Envelope burn-rate bar ── */}
@@ -239,6 +287,18 @@ export function BudgetDetailHeader({
           </div>
         )}
       </div>
+
+      <BudgetEditDialog
+        open={editOpen}
+        budget={budget}
+        onClose={() => setEditOpen(false)}
+      />
+      <BudgetDeleteDialog
+        open={deleteOpen}
+        budgetId={budget.id}
+        budgetName={budget.name}
+        onClose={() => setDeleteOpen(false)}
+      />
     </div>
   );
 }

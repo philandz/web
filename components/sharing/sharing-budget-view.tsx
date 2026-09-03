@@ -1,21 +1,36 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Receipt, Users, Scale, Settings, Wallet } from "lucide-react";
 import { useExpensesQuery, useParticipantsQuery, useSettlementQuery, useDeleteExpenseMutation } from "@/modules/sharing/hooks";
 import { useToast } from "@/components/state/toast-provider";
+import { useAuthStore } from "@/lib/auth-store";
+import { readSharingSession } from "@/lib/sharing/session";
 import type { Expense } from "@/services/sharing-service";
+import { cn } from "@/lib/utils";
 
 import { SharingPageHeader } from "./sharing-page-header";
-import { SharingMobileTabs, type MobileTab } from "./sharing-mobile-tabs";
 import { SharingBottomBar } from "./sharing-bottom-bar";
-import { SharingMembersCard } from "./sharing-members-card";
 import { SharingExpensesList } from "./sharing-expenses-list";
 import { SharingSettlementCard } from "./sharing-settlement-card";
-import { ActivityLogList } from "./activity-log-list";
 import { AddSharedExpenseDrawer } from "./add-shared-expense-drawer";
 import { ExpenseDetailSheet } from "./expense-detail-sheet";
 import { InviteMemberDialog } from "./invite-member-dialog";
+import { MembersTab } from "./members-tab";
+import { BalancesTab } from "./balances-tab";
+import { SettingsTab } from "./settings-tab";
+import { GuestViewBanner } from "./guest-view-banner";
+
+type BudgetTab = "overview" | "members" | "balances" | "settle" | "settings";
+
+const BUDGET_TABS: { value: BudgetTab; icon: typeof Receipt; labelKey: string }[] = [
+  { value: "overview", icon: Receipt, labelKey: "overview" },
+  { value: "members", icon: Users, labelKey: "members" },
+  { value: "balances", icon: Scale, labelKey: "balances" },
+  { value: "settle", icon: Wallet, labelKey: "settle" },
+  { value: "settings", icon: Settings, labelKey: "settings" },
+];
 
 type SharingBudgetViewProps = {
   budgetId: string;
@@ -28,12 +43,13 @@ export function SharingBudgetView({
 }: SharingBudgetViewProps) {
   const t = useTranslations("sharing");
   const toast = useToast();
+  const token = useAuthStore((s) => s.token);
 
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [showExpenseDetail, setShowExpenseDetail] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [mobileTab, setMobileTab] = useState<MobileTab>("members");
+  const [tab, setTab] = useState<BudgetTab>("overview");
 
   const { data: expenses } = useExpensesQuery(budgetId);
   const { data: participants } = useParticipantsQuery(budgetId);
@@ -46,18 +62,7 @@ export function SharingBudgetView({
   );
 
   const hasUnsettled = (settlement?.transfers ?? []).length > 0;
-
-  const refs = {
-    members: useRef<HTMLDivElement>(null),
-    expenses: useRef<HTMLDivElement>(null),
-    settle: useRef<HTMLDivElement>(null),
-    activity: useRef<HTMLDivElement>(null),
-  };
-
-  function handleMobileTabChange(tab: MobileTab) {
-    setMobileTab(tab);
-    refs[tab].current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  const isGuest = !token && !!readSharingSession(budgetId);
 
   function handleExpenseClick(expense: Expense) {
     setSelectedExpense(expense);
@@ -69,13 +74,15 @@ export function SharingBudgetView({
   }
 
   function handleMarkSettled() {
-    refs.settle.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setMobileTab("settle");
+    setTab("settle");
   }
 
   return (
     <>
     <div className="animate-fade-in-up min-h-screen bg-background">
+      <div className="px-4 pt-4 sm:px-6">
+        <GuestViewBanner budgetId={budgetId} />
+      </div>
       <SharingPageHeader
         budgetId={budgetId}
         budgetName={budgetName}
@@ -88,43 +95,52 @@ export function SharingBudgetView({
         }))}
         onInviteClick={() => setInviteOpen(true)}
         onAddExpenseClick={handleAddExpense}
+        mask={isGuest}
       />
 
-      <SharingMobileTabs active={mobileTab} onChange={handleMobileTabChange} />
+      {/* Budget tab bar */}
+      <div className="sticky top-[57px] sm:top-[65px] z-20 mb-4 border-b border-border/60 bg-background/90 backdrop-blur-md">
+        <div role="tablist" className="no-scrollbar flex gap-1 overflow-x-auto py-1 px-4 sm:px-6">
+          {BUDGET_TABS.map(({ value, icon: Icon, labelKey }) => {
+            const isActive = tab === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setTab(value)}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-lg min-h-[44px] px-3 py-2.5 text-xs font-medium transition-all",
+                  isActive
+                    ? "bg-amber-500/12 text-amber-600 dark:text-amber-400"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t(`tabs.${labelKey}`)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <main className="mx-auto max-w-5xl min-h-[calc(100vh-12rem)] px-4 pb-32 pt-4 [padding-bottom:calc(8rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-24 lg:pb-10 lg:[padding-bottom:2.5rem]">
-        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-          {/* Main column */}
-          <div className="space-y-4">
-            <div ref={refs.settle}>
-              <SharingSettlementCard budgetId={budgetId} />
-            </div>
-            <div ref={refs.expenses}>
-              <SharingExpensesList
-                budgetId={budgetId}
-                onExpenseClick={handleExpenseClick}
-                onAddExpense={handleAddExpense}
-              />
-            </div>
-            <div ref={refs.activity} className="lg:hidden">
-              <ActivityLogList budgetId={budgetId} />
-            </div>
-          </div>
-
-          {/* Right rail (desktop) */}
-          <aside className="hidden lg:block space-y-4">
-            <div ref={refs.members}>
-              <SharingMembersCard budgetId={budgetId} budgetName={budgetName} />
-            </div>
-            <div ref={refs.activity}>
-              <ActivityLogList budgetId={budgetId} />
-            </div>
-          </aside>
-
-          {/* Mobile-only Members card at the bottom (after expenses) */}
-          <div ref={refs.members} className="lg:hidden">
-            <SharingMembersCard budgetId={budgetId} budgetName={budgetName} />
-          </div>
+        {/* Tab content */}
+        <div className="space-y-4">
+          {tab === "overview" && (
+            <SharingExpensesList
+              budgetId={budgetId}
+              onExpenseClick={handleExpenseClick}
+              onAddExpense={handleAddExpense}
+            />
+          )}
+          {tab === "members" && <MembersTab budgetId={budgetId} />}
+          {tab === "balances" && <BalancesTab budgetId={budgetId} />}
+          {tab === "settle" && (
+            <SharingSettlementCard budgetId={budgetId} />
+          )}
+          {tab === "settings" && <SettingsTab budgetId={budgetId} />}
         </div>
       </main>
 

@@ -25,6 +25,7 @@ type SharingPageHeaderProps = {
   participants: Participant[];
   isLoading?: boolean;
   canInvite?: boolean;
+  mask?: boolean;
   onInviteClick: () => void;
   onAddExpenseClick: () => void;
 };
@@ -37,6 +38,7 @@ export function SharingPageHeader({
   participants,
   isLoading = false,
   canInvite = true,
+  mask = false,
   onInviteClick,
   onAddExpenseClick,
 }: SharingPageHeaderProps) {
@@ -111,7 +113,7 @@ export function SharingPageHeader({
               {isLoading ? (
                 <div className="mt-1 h-7 w-28 animate-pulse rounded bg-muted" />
               ) : (
-                <AnimatedAmount value={totalSpent} currency={currency} size="lg" />
+                <AnimatedAmount value={totalSpent} currency={currency} size="lg" mask={mask} />
               )}
             </div>
 

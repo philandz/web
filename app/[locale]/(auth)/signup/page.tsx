@@ -11,20 +11,17 @@ import { AuthInput } from "@/components/auth/auth-input";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { InlineAlert } from "@/components/state/inline-alert";
 import { routes } from "@/constants/routes";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { applyServerValidationErrors, getFormErrorMessage } from "@/lib/form-errors";
 import { createSignupFormSchema, type SignupFormValues } from "@/modules/auth/forms";
 import { useSignupMutation } from "@/modules/auth/hooks";
-import { sanitizeReturnTo } from "@/modules/auth/return-to";
 import { identityService } from "@/services/identity-service";
 
 export default function SignupPage() {
   const t = useTranslations("auth.signup");
   const tValidation = useTranslations("auth");
-  const router = useRouter();
   const searchParams = useSearchParams();
   const invitationToken = searchParams.get("invitation");
-  const returnTo = sanitizeReturnTo(searchParams.get("return_to"));
 
   const [formError, setFormError] = useState<string | null>(null);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
@@ -44,20 +41,9 @@ export default function SignupPage() {
     }
   });
 
+  // useSignupMutation now does auto-login + navigation internally. We only
+  // need to handle invite acceptance as a post-success side effect.
   const mutation = useSignupMutation();
-
-  async function onSignupSuccess() {
-    if (invitationToken) {
-      setAcceptingInvite(true);
-      try {
-        await identityService.acceptInvitation(invitationToken);
-      } catch {
-        // Non-fatal: token may have expired between page load and signup.
-        // User can ask for a new invite after logging in.
-      }
-    }
-    router.push(returnTo ? `${routes.login}?return_to=${encodeURIComponent(returnTo)}` : routes.login);
-  }
 
   const isPending = mutation.isPending || acceptingInvite;
 
@@ -74,7 +60,6 @@ export default function SignupPage() {
               password: values.password
             },
             {
-              onSuccess: () => { void onSignupSuccess(); },
               onError: (error) => {
                 const applied = applyServerValidationErrors(setError, error, {
                   display_name: "displayName",
@@ -89,6 +74,16 @@ export default function SignupPage() {
               }
             }
           );
+
+          // Best-effort invite acceptance. The hook will navigate once the
+          // mutation settles; acceptInvitation runs in parallel and the
+          // mutation's router.push is the authoritative redirect.
+          if (invitationToken) {
+            setAcceptingInvite(true);
+            void identityService.acceptInvitation(invitationToken).finally(() => {
+              setAcceptingInvite(false);
+            });
+          }
         })}
       >
         {invitationToken ? (
