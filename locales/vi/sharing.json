@@ -167,7 +167,8 @@
     "transferFrom": "{from} trả cho {to}",
     "transferAmount": "{amount}",
     "settlements": "Các khoản cân bằng",
-    "noSettlements": "Chưa có khoản cân bằng nào"
+    "noSettlements": "Chưa có khoản cân bằng nào",
+    "duplicateWarning": "Một khoản cân bằng đã được ghi nhận lúc {time}. // TODO: translate"
   },
   "balances": {
     "title": "Số dư ròng",

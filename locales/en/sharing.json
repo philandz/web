@@ -167,7 +167,8 @@
     "transferFrom": "{from} pays {to}",
     "transferAmount": "{amount}",
     "settlements": "Settlements",
-    "noSettlements": "No settlements recorded"
+    "noSettlements": "No settlements recorded",
+    "duplicateWarning": "A settlement was already recorded at {time}."
   },
   "balances": {
     "title": "Net balances",
