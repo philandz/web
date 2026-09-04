@@ -310,6 +310,14 @@ export const budgetService = {
     await apiClient.request(`${BASE}/budgets/${budgetId}`, { method: "DELETE" });
   },
 
+  async forceCloseBudget(budgetId: string): Promise<Budget> {
+    const raw = await apiClient.post<RawBudget>(
+      `${BASE}/budgets/${budgetId}/force-close`,
+      {}
+    );
+    return mapBudget(raw);
+  },
+
   // Members
   async listMembers(budgetId: string): Promise<BudgetMember[]> {
     const raw = await apiClient.get<{ members: RawMember[] }>(

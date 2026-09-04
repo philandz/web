@@ -626,10 +626,18 @@ export const sharingService = {
     budgetId: string;
     since?: number;
     limit?: number;
+    dateFromUnix?: number;
+    dateToUnix?: number;
+    actorUserId?: string;
+    action?: string;
   }): Promise<ActivityLogEntry[]> {
     const qs = new URLSearchParams();
     if (input.since != null) qs.set("since", String(input.since));
     if (input.limit != null) qs.set("limit", String(input.limit));
+    if (input.dateFromUnix != null) qs.set("date_from", String(input.dateFromUnix));
+    if (input.dateToUnix != null) qs.set("date_to", String(input.dateToUnix));
+    if (input.actorUserId) qs.set("actor_user_id", input.actorUserId);
+    if (input.action) qs.set("action", input.action);
     const query = qs.toString() ? `?${qs.toString()}` : "";
     const raw = await apiClient.get<{ entries: RawActivityEntry[] }>(
       `${BASE}/budgets/${input.budgetId}/activity${query}`

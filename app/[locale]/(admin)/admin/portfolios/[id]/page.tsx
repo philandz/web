@@ -313,14 +313,13 @@ export default function AdminPortfolioDetailPage() {
   const handleForceClose = useCallback(async () => {
     setForceClosing(true);
     try {
-      // TODO: backend force-close RPC not yet implemented — stub only
-      // await budgetService.forceCloseBudget(budgetId);
-      await new Promise((r) => setTimeout(r, 800)); // simulate
+      await budgetService.forceCloseBudget(budgetId);
+      router.refresh();
     } finally {
       setForceClosing(false);
       setShowForceClose(false);
     }
-  }, [budgetId]);
+  }, [budgetId, router]);
 
   if (budgetLoading) {
     return (
