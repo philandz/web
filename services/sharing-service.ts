@@ -669,35 +669,37 @@ export const sharingService = {
 
   /**
    * Transfer budget ownership to another member.
-   * TODO: backend RPC missing — stub throws until implemented.
    */
   async transferOwnership(budgetId: string, toUserId: string): Promise<void> {
-    // TODO: backend RPC missing — needs TransferOwnership RPC in proto + handler.
-    throw new Error("transferOwnership: backend RPC not yet implemented");
+    await apiClient.request(`${BASE}/budgets/${budgetId}/transfer-ownership`, {
+      method: "POST",
+      body: { to_user_id: toUserId },
+    });
   },
 
   /**
    * Update a participant's role within a budget.
-   * TODO: backend RPC missing — stub throws until implemented.
    */
   async updateMemberRole(
     budgetId: string,
     participantId: string,
     role: "ADMIN" | "MEMBER" | "GUEST"
   ): Promise<void> {
-    // TODO: backend RPC missing — needs UpdateMemberRole RPC in proto + handler.
-    throw new Error("updateMemberRole: backend RPC not yet implemented");
+    await apiClient.request(
+      `${BASE}/budgets/${budgetId}/participants/${participantId}/role`,
+      {
+        method: "PATCH",
+        body: { role },
+      }
+    );
   },
 
   /**
    * Leave a budget (self-removes the current user from the budget).
-   * TODO: backend RPC missing — stub throws until implemented.
-   *       The backend may support this via RevokeParticipant with a
-   *       self-referencing participant ID derived from the auth session.
    */
   async leaveBudget(budgetId: string): Promise<void> {
-    // TODO: backend RPC missing — may map to RevokeParticipant with
-    // caller-derived participantId (needs x-session-token or JWT sub claim).
-    throw new Error("leaveBudget: backend RPC not yet implemented");
+    await apiClient.request(`${BASE}/budgets/${budgetId}/leave`, {
+      method: "POST",
+    });
   },
 };
