@@ -20,6 +20,8 @@ export interface Budget {
   burnRatePct: number;
   currentSpend: number;
   memberCount: number;
+  totalCurrentValue: number;
+  assetCount: number;
   createdAt: number;
   updatedAt: number;
   is_private?: boolean;
@@ -177,6 +179,8 @@ function mapBudget(raw: RawBudget): Budget {
     currentSpend: raw.current_spend ?? 0,
     burnRatePct: raw.burn_rate_pct ?? 0,
     memberCount: raw.member_count ?? 0,
+    totalCurrentValue: (raw as any).total_current_value ?? 0,
+    assetCount: (raw as any).asset_count ?? 0,
     createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
     updatedAt: raw.updated_at ?? raw.base?.updated_at ?? 0,
     is_private: raw.is_private ?? false,

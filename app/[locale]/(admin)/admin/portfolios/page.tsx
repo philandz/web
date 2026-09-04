@@ -151,10 +151,10 @@ function PortfolioRow({
         </Link>
       </td>
       <td className="px-4 py-3 tabular-nums font-mono text-xs">
-        {formatCurrency(budget.currentSpend, budget.currency, locale)}
+        {formatCurrency(budget.totalCurrentValue, budget.currency, locale)}
       </td>
       <td className="px-4 py-3 tabular-nums text-muted-foreground">
-        {budget.memberCount}
+        {budget.assetCount}
       </td>
       <td className="px-4 py-3 text-muted-foreground">
         {formatTimestamp(budget.updatedAt, locale)}
