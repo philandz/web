@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Receipt, Users, Scale, Settings, Wallet } from "lucide-react";
-import { useExpensesQuery, useParticipantsQuery, useSettlementQuery, useDeleteExpenseMutation } from "@/modules/sharing/hooks";
+import { useExpensesQuery, useParticipantsQuery, useSettlementQuery, useDeleteExpenseMutation, sharingKeys } from "@/modules/sharing/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { budgetService } from "@/services/budget-service";
 import { useToast } from "@/components/state/toast-provider";
 import { useAuthStore } from "@/lib/auth-store";
 import { readSharingSession } from "@/lib/sharing/session";
@@ -55,6 +57,11 @@ export function SharingBudgetView({
   const { data: participants } = useParticipantsQuery(budgetId);
   const { data: settlement } = useSettlementQuery(budgetId);
   const deleteExpense = useDeleteExpenseMutation();
+  const { data: budget } = useQuery({
+    queryKey: sharingKeys.budget(budgetId),
+    queryFn: () => budgetService.getBudget(budgetId),
+    enabled: Boolean(budgetId),
+  });
 
   const totalSpent = useMemo(
     () => expenses?.reduce((sum, e) => sum + e.totalAmount, 0) ?? 0,
@@ -63,6 +70,7 @@ export function SharingBudgetView({
 
   const hasUnsettled = (settlement?.transfers ?? []).length > 0;
   const isGuest = !token && !!readSharingSession(budgetId);
+  const isPrivate = budget?.is_private ?? false;
 
   function handleExpenseClick(expense: Expense) {
     setSelectedExpense(expense);
@@ -96,6 +104,8 @@ export function SharingBudgetView({
         onInviteClick={() => setInviteOpen(true)}
         onAddExpenseClick={handleAddExpense}
         mask={isGuest}
+        isGuest={isGuest}
+        isPrivate={isPrivate}
       />
 
       {/* Budget tab bar */}
@@ -133,10 +143,12 @@ export function SharingBudgetView({
               budgetId={budgetId}
               onExpenseClick={handleExpenseClick}
               onAddExpense={handleAddExpense}
+              isGuest={isGuest}
+              isPrivate={isPrivate}
             />
           )}
           {tab === "members" && <MembersTab budgetId={budgetId} />}
-          {tab === "balances" && <BalancesTab budgetId={budgetId} />}
+          {tab === "balances" && <BalancesTab budgetId={budgetId} isGuest={isGuest} isPrivate={isPrivate} />}
           {tab === "settle" && (
             <SharingSettlementCard budgetId={budgetId} />
           )}

@@ -9,6 +9,8 @@ type AnimatedAmountProps = {
   size?: "sm" | "md" | "lg" | "xl";
   durationMs?: number;
   mask?: boolean;
+  isGuest?: boolean;
+  isPrivate?: boolean;
 };
 
 function easeOutCubic(t: number): number {
@@ -21,6 +23,8 @@ export function AnimatedAmount({
   size = "xl",
   durationMs = 600,
   mask = false,
+  isGuest = false,
+  isPrivate = false,
 }: AnimatedAmountProps) {
   const [display, setDisplay] = useState(value);
   const fromRef = useRef(value);
@@ -54,7 +58,7 @@ export function AnimatedAmount({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, durationMs]);
 
-  if (mask) {
+  if (mask || (isGuest && isPrivate)) {
     return (
       <MoneyAmount
         value={0}
