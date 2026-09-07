@@ -26,6 +26,8 @@ type SharingPageHeaderProps = {
   isLoading?: boolean;
   canInvite?: boolean;
   mask?: boolean;
+  isGuest?: boolean;
+  isPrivate?: boolean;
   onInviteClick: () => void;
   onAddExpenseClick: () => void;
 };
@@ -39,6 +41,8 @@ export function SharingPageHeader({
   isLoading = false,
   canInvite = true,
   mask = false,
+  isGuest = false,
+  isPrivate = false,
   onInviteClick,
   onAddExpenseClick,
 }: SharingPageHeaderProps) {
@@ -113,7 +117,7 @@ export function SharingPageHeader({
               {isLoading ? (
                 <div className="mt-1 h-7 w-28 animate-pulse rounded bg-muted" />
               ) : (
-                <AnimatedAmount value={totalSpent} currency={currency} size="lg" mask={mask} />
+                <AnimatedAmount value={totalSpent} currency={currency} size="lg" mask={mask} isGuest={isGuest} isPrivate={isPrivate} />
               )}
             </div>
 

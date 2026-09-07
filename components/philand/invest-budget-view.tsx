@@ -149,7 +149,7 @@ function AssetCard({ asset, budgetId, myRole, onEdit, onDelete, onUpdatePrice, o
             </div>
             <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
               {isOwner && (asset.assetType === "gold" || asset.assetType === "stock") && (
-                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onUpdatePrice(asset)}>
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onUpdatePrice(asset)} data-testid="update-price-btn">
                   <RefreshCw className="mr-1 h-3 w-3" />{t("updatePrice")}
                 </Button>
               )}
@@ -161,9 +161,9 @@ function AssetCard({ asset, budgetId, myRole, onEdit, onDelete, onUpdatePrice, o
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(asset)}>{t("edit")}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onEdit(asset)} data-testid="edit-asset-btn">{t("edit")}</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive" onClick={() => onDelete(asset)}>
+                    <DropdownMenuItem className="text-destructive" onClick={() => onDelete(asset)} data-testid="delete-asset-btn">
                       <Trash2 className="mr-2 h-3.5 w-3.5" />{t("delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>

@@ -26,6 +26,8 @@ type SharingExpensesListProps = {
   budgetId: string;
   onExpenseClick?: (expense: Expense) => void;
   onAddExpense?: () => void;
+  isGuest?: boolean;
+  isPrivate?: boolean;
 };
 
 type Scope = "all" | "shared" | "personal";
@@ -95,6 +97,8 @@ export function SharingExpensesList({
   budgetId,
   onExpenseClick,
   onAddExpense,
+  isGuest = false,
+  isPrivate = false,
 }: SharingExpensesListProps) {
   const t = useTranslations("sharing");
   const [searchQuery, setSearchQuery] = useState("");
@@ -404,6 +408,7 @@ export function SharingExpensesList({
                         value={expense.totalAmount}
                         currency="VND"
                         size="sm"
+                        masked={isGuest && isPrivate}
                       />
                     </button>
                   );

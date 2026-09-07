@@ -19,6 +19,7 @@ import { routes } from "@/constants/routes";
 import { formatCurrency, useFormatLocale } from "@/lib/format";
 import { useBudgetQuery, useBudgetMembersQuery } from "@/modules/budget/hooks";
 import { portfolioService, type PortfolioAsset } from "@/services/portfolio-service";
+import { budgetService } from "@/services/budget-service";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
@@ -313,14 +314,13 @@ export default function AdminPortfolioDetailPage() {
   const handleForceClose = useCallback(async () => {
     setForceClosing(true);
     try {
-      // TODO: backend force-close RPC not yet implemented — stub only
-      // await budgetService.forceCloseBudget(budgetId);
-      await new Promise((r) => setTimeout(r, 800)); // simulate
+      await budgetService.forceCloseBudget(budgetId);
+      router.refresh();
     } finally {
       setForceClosing(false);
       setShowForceClose(false);
     }
-  }, [budgetId]);
+  }, [budgetId, router]);
 
   if (budgetLoading) {
     return (
