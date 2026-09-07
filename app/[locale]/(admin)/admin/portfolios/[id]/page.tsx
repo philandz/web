@@ -19,6 +19,7 @@ import { routes } from "@/constants/routes";
 import { formatCurrency, useFormatLocale } from "@/lib/format";
 import { useBudgetQuery, useBudgetMembersQuery } from "@/modules/budget/hooks";
 import { portfolioService, type PortfolioAsset } from "@/services/portfolio-service";
+import { budgetService } from "@/services/budget-service";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
