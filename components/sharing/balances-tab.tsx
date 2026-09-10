@@ -19,12 +19,14 @@ import { useQuery } from "@tanstack/react-query";
 
 type BalancesTabProps = {
   budgetId: string;
+  isGuest?: boolean;
+  isPrivate?: boolean;
 };
 
 // TODO(t2.6): If the gateway REST route for GET /budgets/{id}/balances is
 // missing, sharingService.getBalances will reject at runtime. The fallback
 // empty state below prevents a crash; follow up in T2.6 to wire the route.
-export function BalancesTab({ budgetId }: BalancesTabProps) {
+export function BalancesTab({ budgetId, isGuest = false, isPrivate = false }: BalancesTabProps) {
   const t = useTranslations("sharing");
   const { data: balances, isLoading: balancesLoading, isError: balancesError } = useQuery({
     queryKey: ["sharing", "balances", budgetId] as const,
@@ -142,6 +144,7 @@ export function BalancesTab({ budgetId }: BalancesTabProps) {
                     currency="VND"
                     size="sm"
                     sign={isPositive ? "positive" : "negative"}
+                    masked={isGuest && isPrivate}
                   />
                 </div>
               );
@@ -177,7 +180,7 @@ export function BalancesTab({ budgetId }: BalancesTabProps) {
                       {fromName} → {toName}
                     </p>
                   </div>
-                  <MoneyAmount value={amount} currency="VND" size="sm" sign="positive" />
+                  <MoneyAmount value={amount} currency="VND" size="sm" sign="positive" masked={isGuest && isPrivate} />
                   <Button
                     size="sm"
                     variant="outline"

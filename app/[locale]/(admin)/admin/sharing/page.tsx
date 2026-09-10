@@ -61,11 +61,19 @@ function BudgetDetail({
   budgetCurrency,
   locale,
   t,
+  dateFromUnix,
+  dateToUnix,
+  actorUserId,
+  actionType,
 }: {
   budgetId: string;
   budgetCurrency: string;
   locale: string;
   t: ReturnType<typeof useTranslations>;
+  dateFromUnix?: number;
+  dateToUnix?: number;
+  actorUserId?: string;
+  actionType?: string;
 }) {
   const { data: participants, isLoading: participantsLoading } = useQuery({
     queryKey: ["sharing-participants", budgetId],
@@ -74,8 +82,8 @@ function BudgetDetail({
   });
 
   const { data: activityData, isLoading: activityLoading } = useQuery({
-    queryKey: ["sharing-activity", budgetId],
-    queryFn: () => sharingService.listActivity({ budgetId, limit: 20 }),
+    queryKey: ["sharing-activity", budgetId, dateFromUnix, dateToUnix, actionType],
+    queryFn: () => sharingService.listActivity({ budgetId, limit: 20, dateFromUnix, dateToUnix, action: actionType }),
     enabled: true,
   });
 
@@ -197,11 +205,19 @@ function SharingBudgetRow({
   orgName,
   locale,
   t,
+  dateFromUnix,
+  dateToUnix,
+  actorUserId,
+  actionType,
 }: {
   budget: { id: string; name: string; currency: string; memberCount: number; updatedAt: number };
   orgName: string | undefined;
   locale: string;
   t: ReturnType<typeof useTranslations>;
+  dateFromUnix?: number;
+  dateToUnix?: number;
+  actorUserId?: string;
+  actionType?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -250,6 +266,10 @@ function SharingBudgetRow({
               budgetCurrency={budget.currency}
               locale={locale}
               t={t}
+              dateFromUnix={dateFromUnix}
+              dateToUnix={dateToUnix}
+              actorUserId={actorUserId}
+              actionType={actionType}
             />
           </td>
         </tr>
@@ -461,6 +481,10 @@ export default function AdminSharingPage() {
                       orgName={orgNameById.get(b.orgId)}
                       locale={locale}
                       t={t}
+                      dateFromUnix={filters.dateFrom ? Math.floor(new Date(filters.dateFrom).getTime() / 1000) : undefined}
+                      dateToUnix={filters.dateTo ? Math.floor(new Date(filters.dateTo).getTime() / 1000) : undefined}
+                      actorUserId={undefined}
+                      actionType={filters.actionType || undefined}
                     />
                   ))}
                 </tbody>

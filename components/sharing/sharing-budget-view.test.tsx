@@ -11,6 +11,14 @@ vi.mock("@/components/state/toast-provider", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: vi.fn(() => hooksState.budget),
+}));
+
+vi.mock("@/services/budget-service", () => ({
+  budgetService: { getBudget: vi.fn() },
+}));
+
 vi.mock("@/components/sharing/sharing-page-header", () => ({
   SharingPageHeader: ({ budgetName, onInviteClick, onAddExpenseClick }: any) => (
     <div data-testid="page-header">
@@ -79,10 +87,12 @@ let hooksState: {
   expenses: any;
   participants: any;
   settlement: any;
+  budget: any;
 } = {
   expenses: { data: undefined, isLoading: false },
   participants: { data: undefined, isLoading: false },
   settlement: { data: undefined, isLoading: false },
+  budget: { data: undefined, isLoading: false },
 };
 
 vi.mock("@/modules/sharing/hooks", () => ({
@@ -91,10 +101,14 @@ vi.mock("@/modules/sharing/hooks", () => ({
   useSettlementQuery: () => hooksState.settlement,
   useDeleteExpenseMutation: () => ({ mutate: vi.fn(), isPending: false }),
   useRevokeParticipantMutation: () => ({ mutate: vi.fn(), isPending: false }),
+  sharingKeys: {
+    all: ["sharing"],
+    budget: (id: string) => ["sharing", "budget", id],
+  },
 }));
 
-function setHooks(expenses: any, participants: any, settlement = { data: undefined }) {
-  hooksState = { expenses, participants, settlement };
+function setHooks(expenses: any, participants: any, settlement: any = { data: undefined }, budget: any = { data: undefined }) {
+  hooksState = { expenses, participants, settlement, budget };
 }
 
 beforeEach(() => {
@@ -102,6 +116,8 @@ beforeEach(() => {
   setHooks(
     { data: undefined, isLoading: false },
     { data: undefined, isLoading: false },
+    { data: undefined, isLoading: false },
+    { data: { id: "b1", is_private: false }, isLoading: false },
   );
 });
 
