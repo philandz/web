@@ -406,6 +406,52 @@ export interface AddExpenseItemInput {
   assignments: { userId: string; numerator: number }[];
 }
 
+export interface ExpenseInput {
+  paidBy: string;
+  totalAmount: number;
+  description: string;
+  expenseDate: string;
+  categoryId?: string;
+  splitMethod: SplitMethod;
+  legs: { userId: string; amount: number; weight?: number }[];
+  items?: AddExpenseItemInput[];
+  receiptMediaId?: string;
+}
+
+/** Wire body shared by create (POST) and update (PATCH). */
+function buildExpenseBody(input: ExpenseInput) {
+  // For percentage the weight slot carries basis points (0-10000); the UI
+  // captures 0-100, so convert here at the wire boundary.
+  const legs = input.legs.map((l) => ({
+    user_id: l.userId,
+    amount: l.amount,
+    weight:
+      input.splitMethod === "percentage"
+        ? Math.round((l.weight ?? 0) * 100)
+        : l.weight ?? 0,
+  }));
+  const items =
+    input.items?.map((it) => ({
+      label: it.label,
+      amount: it.amount,
+      assignments: it.assignments.map((a) => ({
+        user_id: a.userId,
+        numerator: a.numerator,
+      })),
+    })) ?? [];
+  return {
+    paid_by: input.paidBy,
+    total_amount: input.totalAmount,
+    description: input.description,
+    expense_date: input.expenseDate,
+    category_id: input.categoryId ?? "",
+    split_method: SPLIT_METHOD_TO_NUM[input.splitMethod],
+    legs,
+    items,
+    receipt_media_id: input.receiptMediaId ?? "",
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
@@ -425,57 +471,28 @@ export const sharingService = {
     return mapExpense(raw);
   },
 
-  async addExpense(input: {
-    budgetId: string;
-    paidBy: string;
-    totalAmount: number;
-    description: string;
-    expenseDate: string;
-    categoryId?: string;
-    splitMethod: SplitMethod;
-    legs: { userId: string; amount: number; weight?: number }[];
-    items?: AddExpenseItemInput[];
-    receiptMediaId?: string;
-  }): Promise<Expense> {
-    const splitMethodNum = SPLIT_METHOD_TO_NUM[input.splitMethod];
-
-    // Build legs payload; for percentage the third slot (weight) carries
-    // basis-points (0-10000). The UI captures percentages 0-100, so we
-    // convert here at the wire boundary.
-    const legs = input.legs.map((l) => ({
-      user_id: l.userId,
-      amount: l.amount,
-      weight:
-        input.splitMethod === "percentage"
-          ? Math.round((l.weight ?? 0) * 100)
-          : l.weight ?? 0,
-    }));
-
-    // Build items payload; only used for BY_ITEM split
-    const items = input.items?.map((it) => ({
-      label: it.label,
-      amount: it.amount,
-      assignments: it.assignments.map((a) => ({
-        user_id: a.userId,
-        numerator: a.numerator,
-      })),
-    })) ?? [];
-
+  async addExpense(input: ExpenseInput & { budgetId: string }): Promise<Expense> {
     const raw = await apiClient.post<RawExpense>(
       `${BASE}/budgets/${input.budgetId}/expenses`,
-      {
-        paid_by: input.paidBy,
-        total_amount: input.totalAmount,
-        description: input.description,
-        expense_date: input.expenseDate,
-        category_id: input.categoryId ?? "",
-        split_method: splitMethodNum,
-        legs,
-        items,
-        receipt_media_id: input.receiptMediaId ?? "",
-      }
+      buildExpenseBody(input),
     );
     return mapExpense(raw);
+  },
+
+  async updateExpense(input: ExpenseInput & { expenseId: string }): Promise<Expense> {
+    const raw = await apiClient.patch<RawExpense>(
+      `${BASE}/expenses/${input.expenseId}`,
+      buildExpenseBody(input),
+    );
+    return mapExpense(raw);
+  },
+
+  async archiveBudget(budgetId: string): Promise<void> {
+    await apiClient.post(`${BASE}/budgets/${budgetId}/archive`, {});
+  },
+
+  async reopenBudget(budgetId: string): Promise<void> {
+    await apiClient.post(`${BASE}/budgets/${budgetId}/reopen`, {});
   },
 
   async deleteExpense(expenseId: string): Promise<void> {

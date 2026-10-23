@@ -50,6 +50,7 @@ export function SharingBudgetView({
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [showExpenseDetail, setShowExpenseDetail] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [tab, setTab] = useState<BudgetTab>("overview");
 
@@ -71,6 +72,7 @@ export function SharingBudgetView({
   const hasUnsettled = (settlement?.transfers ?? []).length > 0;
   const isGuest = !token && !!readSharingSession(budgetId);
   const isPrivate = budget?.is_private ?? false;
+  const isArchived = budget?.status === "archived";
 
   function handleExpenseClick(expense: Expense) {
     setSelectedExpense(expense);
@@ -78,6 +80,8 @@ export function SharingBudgetView({
   }
 
   function handleAddExpense() {
+    if (isArchived) return;
+    setEditingExpense(null);
     setShowAddExpense(true);
   }
 
@@ -90,6 +94,14 @@ export function SharingBudgetView({
     <div className="animate-fade-in-up min-h-screen bg-background">
       <div className="px-4 pt-4 sm:px-6">
         <GuestViewBanner budgetId={budgetId} />
+        {isArchived && (
+          <div
+            role="status"
+            className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300"
+          >
+            {t("archive.archivedBanner")}
+          </div>
+        )}
       </div>
       <SharingPageHeader
         budgetId={budgetId}
@@ -150,7 +162,12 @@ export function SharingBudgetView({
           {tab === "members" && <MembersTab budgetId={budgetId} />}
           {tab === "balances" && <BalancesTab budgetId={budgetId} isGuest={isGuest} isPrivate={isPrivate} />}
           {tab === "settle" && (
-            <SharingSettlementCard budgetId={budgetId} />
+            <SharingSettlementCard
+              budgetId={budgetId}
+              budgetName={budget?.name ?? budgetName}
+              totalSpent={totalSpent}
+              readOnly={isArchived}
+            />
           )}
           {tab === "settings" && <SettingsTab budgetId={budgetId} />}
         </div>
@@ -172,6 +189,16 @@ export function SharingBudgetView({
           setShowExpenseDetail(open);
           if (!open) setSelectedExpense(null);
         }}
+        onEdit={
+          isArchived
+            ? undefined
+            : (expense) => {
+                setShowExpenseDetail(false);
+                setSelectedExpense(null);
+                setEditingExpense(expense);
+                setShowAddExpense(true);
+              }
+        }
         onDelete={(expenseId) => {
           deleteExpense.mutate(expenseId, {
             onSuccess: () => {
@@ -186,7 +213,11 @@ export function SharingBudgetView({
       <AddSharedExpenseDrawer
         budgetId={budgetId}
         open={showAddExpense}
-        onOpenChange={setShowAddExpense}
+        expense={editingExpense}
+        onOpenChange={(open) => {
+          setShowAddExpense(open);
+          if (!open) setEditingExpense(null);
+        }}
       />
     </div>
       {/* Bottom bar is mounted outside the animated wrapper so its fixed position anchors to the viewport, not the transformed parent. */}

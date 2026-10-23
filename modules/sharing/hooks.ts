@@ -49,6 +49,29 @@ export function useAddExpenseMutation() {
   });
 }
 
+export function useUpdateExpenseMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: sharingService.updateExpense,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: sharingKeys.all });
+    },
+  });
+}
+
+export function useSharingStatusMutation(budgetId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (action: "archive" | "reopen") =>
+      action === "archive"
+        ? sharingService.archiveBudget(budgetId)
+        : sharingService.reopenBudget(budgetId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: sharingKeys.all });
+    },
+  });
+}
+
 export function useDeleteExpenseMutation() {
   const qc = useQueryClient();
   return useMutation({

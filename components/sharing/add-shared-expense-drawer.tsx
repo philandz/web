@@ -8,18 +8,20 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Button } from "@/components/ui/button";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { MoneyAmount } from "@/components/ui/money-amount";
-import { useAddExpenseMutation, useParticipantsQuery, useSettlementQuery } from "@/modules/sharing/hooks";
+import { useAddExpenseMutation, useUpdateExpenseMutation, useParticipantsQuery, useSettlementQuery } from "@/modules/sharing/hooks";
 import { useToast } from "@/components/state/toast-provider";
 import { useAuthStore } from "@/lib/auth-store";
 import { Loader2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import type { SplitMethod, AddExpenseItemInput } from "@/services/sharing-service";
+import type { SplitMethod, AddExpenseItemInput, Expense } from "@/services/sharing-service";
 
 type AddSharedExpenseDrawerProps = {
   budgetId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** When set, the drawer edits this expense instead of creating one. */
+  expense?: Expense | null;
 };
 
 type Tab = "equal" | "custom" | "weighted" | "percentage" | "by_item";
@@ -47,13 +49,15 @@ export function AddSharedExpenseDrawer({
   budgetId,
   open,
   onOpenChange,
+  expense = null,
 }: AddSharedExpenseDrawerProps) {
   const t = useTranslations("sharing");
   const [tab, setTab] = useState<Tab>("equal");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
-  const [expenseDate] = useState(new Date().toISOString().split("T")[0]);
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split("T")[0]);
+  const isEdit = Boolean(expense);
 
   // Custom split state
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
@@ -70,7 +74,9 @@ export function AddSharedExpenseDrawer({
   const toast = useToast();
   const currentUserId = useAuthStore((state) => state.profile?.id);
   const { data: participants } = useParticipantsQuery(budgetId);
-  const addExpense = useAddExpenseMutation();
+  const addExpenseMutation = useAddExpenseMutation();
+  const updateExpenseMutation = useUpdateExpenseMutation();
+  const addExpense = isEdit ? updateExpenseMutation : addExpenseMutation;
   const settlementQuery = useSettlementQuery(budgetId);
   const queryClient = useQueryClient();
 
@@ -119,6 +125,35 @@ export function AddSharedExpenseDrawer({
     }
   }, [participants]);
 
+  // Edit mode: hydrate the form from the expense being edited.
+  useEffect(() => {
+    if (!open || !expense) return;
+    setTab(expense.splitMethod as Tab);
+    setAmount(String(expense.totalAmount));
+    setDescription(expense.description);
+    setExpenseDate(expense.expenseDate || new Date().toISOString().split("T")[0]);
+    setSelectedParticipantIds(expense.legs.map((l) => l.userId));
+    setCustomAmounts(
+      Object.fromEntries(expense.legs.map((l) => [l.userId, String(l.amount)])),
+    );
+    setWeights(
+      Object.fromEntries(expense.legs.map((l) => [l.userId, String(l.weight ?? 0)])),
+    );
+    // Percentages are stored as basis points on the wire.
+    setPercentages(
+      Object.fromEntries(
+        expense.legs.map((l) => [l.userId, String(Math.round((l.weight ?? 0) / 100))]),
+      ),
+    );
+    setItems(
+      (expense.items ?? []).map((it) => ({
+        label: it.label,
+        amount: String(it.amount),
+        assignedTo: it.assignments.map((a) => a.userId),
+      })),
+    );
+  }, [open, expense]);
+
   function buildLegs() {
     const ids = selectedParticipantIds.length > 0
       ? selectedParticipantIds
@@ -148,6 +183,7 @@ export function AddSharedExpenseDrawer({
         return ids.map((userId) => ({
           userId,
           amount: Math.floor((numericAmount * (parseInt(percentages[userId] || "0") || 0)) / 100),
+          weight: parseInt(percentages[userId] || "0") || 0, // percent; service converts to basis points
         }));
       }
       case "by_item": {
@@ -187,20 +223,25 @@ export function AddSharedExpenseDrawer({
   function handleSubmit() {
     if (!isValid) return;
     const legs = buildLegs();
-    addExpense.mutate(
-      {
-        budgetId,
-        paidBy: currentUserId ?? "",
-        totalAmount: numericAmount,
-        description: description.trim(),
-        expenseDate,
-        splitMethod: tab as SplitMethod,
-        legs,
-        items: buildItems(),
-      },
+    const payload = {
+      paidBy: expense?.paidBy ?? currentUserId ?? "",
+      totalAmount: numericAmount,
+      description: description.trim(),
+      expenseDate,
+      categoryId: expense?.categoryId,
+      receiptMediaId: expense?.receiptMediaId,
+      splitMethod: tab as SplitMethod,
+      legs,
+      items: buildItems(),
+    };
+    const mutate = (callbacks: Parameters<typeof addExpenseMutation.mutate>[1]) =>
+      expense
+        ? updateExpenseMutation.mutate({ ...payload, expenseId: expense.id }, callbacks as never)
+        : addExpenseMutation.mutate({ ...payload, budgetId }, callbacks);
+    mutate(
       {
         onSuccess: () => {
-          toast.success(t("comment.commentAdded"));
+          toast.success(isEdit ? t("expense.updated") : t("comment.commentAdded"));
           // Briefly wait for the gateway to recompute settlement, then
           // tell the user whether the new entry creates a transfer.
           setTimeout(() => {
@@ -273,7 +314,7 @@ export function AddSharedExpenseDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col p-0">
         <SheetHeader className="shrink-0 border-b border-border/60 px-5 py-4">
-          <SheetTitle>{t("budget.addExpense")}</SheetTitle>
+          <SheetTitle>{isEdit ? t("expense.editExpense") : t("budget.addExpense")}</SheetTitle>
         </SheetHeader>
 
         <SheetBody className="flex-1 overflow-y-auto space-y-5 px-5 py-4">
@@ -538,7 +579,7 @@ export function AddSharedExpenseDrawer({
               ) : selectedParticipantIds.length === 0 ? (
                 t("splitMethod.needParticipants")
               ) : (
-                t("form.submit")
+                isEdit ? t("form.save") : t("form.submit")
               )}
             </Button>
           </div>

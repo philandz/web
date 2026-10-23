@@ -25,6 +25,8 @@ export interface Budget {
   createdAt: number;
   updatedAt: number;
   is_private?: boolean;
+  /** active | archived | closed */
+  status?: string;
   /** 1..28: the day a budget period starts */
   periodStartDay: number;
   timezone: string;
@@ -147,6 +149,7 @@ interface RawBudget {
   created_at?: number;
   updated_at?: number;
   is_private?: boolean;
+  status?: string;
   period_start_day?: number;
   timezone?: string;
 }
@@ -189,6 +192,7 @@ function mapBudget(raw: RawBudget): Budget {
     createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
     updatedAt: raw.updated_at ?? raw.base?.updated_at ?? 0,
     is_private: raw.is_private ?? false,
+    status: raw.status || "active",
     periodStartDay: raw.period_start_day || 1,
     timezone: raw.timezone || "Asia/Ho_Chi_Minh",
   };

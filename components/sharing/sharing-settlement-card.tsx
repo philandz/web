@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
-import { ArrowRight, CheckCircle2, Circle, Loader2, Wallet } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { ArrowRight, CheckCircle2, Circle, Copy, Loader2, Wallet } from "lucide-react";
 import { MoneyAmount } from "@/components/ui/money-amount";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,27 @@ import {
 import { useParticipantNameLookup } from "@/modules/sharing/participant-name-lookup";
 import { safeDisplayName } from "@/lib/safe-display-name";
 import { MarkAsSettledDialog } from "./mark-as-settled-dialog";
+import { buildSettlementSummary } from "@/lib/sharing/summary";
+import { useToast } from "@/components/state/toast-provider";
+import { formatCurrency } from "@/lib/format";
 
 type SharingSettlementCardProps = {
   budgetId: string;
+  budgetName?: string;
+  totalSpent?: number;
+  /** Archived budgets cannot record settlements. */
+  readOnly?: boolean;
 };
 
-export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) {
+export function SharingSettlementCard({
+  budgetId,
+  budgetName = "",
+  totalSpent = 0,
+  readOnly = false,
+}: SharingSettlementCardProps) {
   const t = useTranslations("sharing");
+  const toast = useToast();
+  const locale = useLocale();
   const { data: settlement, isLoading: calcLoading } = useSettlementQuery(budgetId);
   const { data: confirmations, isLoading: confLoading } =
     useSettlementsQuery(budgetId);
@@ -76,6 +90,35 @@ export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) 
   );
   const settledConfirmed = (confirmations ?? []).filter((c) => c.settledAt);
 
+  async function handleCopySummary() {
+    const name = (id: string, fallback?: string) =>
+      safeDisplayName(participantNameById.get(id) ?? fallback ?? id);
+    const text = buildSettlementSummary(
+      unsettled.map((tr: any) => {
+        const fromId = tr.fromUserId ?? tr.from_user_id ?? "";
+        const toId = tr.toUserId ?? tr.to_user_id ?? "";
+        return {
+          from: name(fromId, tr.fromName),
+          to: name(toId, tr.toName),
+          amount: Number(tr.amount ?? 0),
+        };
+      }),
+      {
+        header: t("summary.header", { name: budgetName }),
+        total: t("summary.total", { amount: formatCurrency(totalSpent, "VND", locale) }),
+        nobody: t("summary.nobody"),
+        line: (from, to, amount) => t("summary.line", { from, to, amount }),
+      },
+      (n) => formatCurrency(n, "VND", locale),
+    );
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(t("summary.copied"));
+    } catch {
+      toast.error(t("errors.errorGeneric"));
+    }
+  }
+
   return (
     <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
       <header className="mb-3 flex items-center gap-2">
@@ -85,8 +128,17 @@ export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) 
         <h3 className="text-base font-semibold text-foreground">
           {t("settlement.settlements")}
         </h3>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto h-7 gap-1 px-2 text-xs"
+          onClick={handleCopySummary}
+        >
+          <Copy className="h-3.5 w-3.5" />
+          {t("summary.copy")}
+        </Button>
         {unsettled.length === 0 && settledConfirmed.length > 0 && (
-          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-3 w-3" />
             {t("settlement.allSettled")}
           </span>
@@ -149,7 +201,7 @@ export function SharingSettlementCard({ budgetId }: SharingSettlementCardProps) 
                           amount,
                         })
                       }
-                      disabled={markSettled.isPending}
+                      disabled={markSettled.isPending || readOnly}
                     >
                       {t("settlement.markSettled")}
                     </Button>

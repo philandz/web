@@ -91,7 +91,9 @@
     "shared": "Đã chia",
     "personal": "Cá nhân",
     "settledNoTransfer": "Không cần chuyển khoản — đã cân bằng.",
-    "settledWithTransfer": "Đã tạo {count} khoản cần chuyển."
+    "settledWithTransfer": "Đã tạo {count} khoản cần chuyển.",
+    "editExpense": "Sửa chi tiêu",
+    "updated": "Đã cập nhật chi tiêu"
   },
   "splitMethod": {
     "splitEqual": "Chia đều",
@@ -311,5 +313,25 @@
     "yesterday": "Hôm qua",
     "thisWeek": "Tuần này",
     "older": "Cũ hơn"
+  },
+  "archive": {
+    "finish": "Kết thúc & chốt sổ",
+    "finishDesc": "Lưu trữ quỹ này. Không ai thêm hoặc sửa chi tiêu cho đến khi mở lại.",
+    "finishConfirm": "Lưu trữ quỹ này? Chi tiêu sẽ chỉ còn ở chế độ xem.",
+    "unsettledWarning": "Vẫn còn khoản chưa thanh toán. Vẫn lưu trữ?",
+    "reopen": "Mở lại quỹ",
+    "reopenDesc": "Cho phép thêm và sửa chi tiêu trở lại.",
+    "archivedBanner": "Quỹ này đã được lưu trữ và chỉ xem.",
+    "archived": "Đã lưu trữ",
+    "done": "Đã lưu trữ quỹ",
+    "reopened": "Đã mở lại quỹ"
+  },
+  "summary": {
+    "copy": "Sao chép tóm tắt",
+    "copied": "Đã sao chép tóm tắt",
+    "header": "Chốt sổ \"{name}\"",
+    "total": "Tổng chi: {amount}",
+    "nobody": "Mọi người đã thanh toán xong.",
+    "line": "{from} trả {to}: {amount}"
   }
 }

@@ -91,7 +91,9 @@
     "shared": "Shared",
     "personal": "Personal",
     "settledNoTransfer": "All settled — no transfer needed.",
-    "settledWithTransfer": "{count} new transfer(s) created."
+    "settledWithTransfer": "{count} new transfer(s) created.",
+    "editExpense": "Edit expense",
+    "updated": "Expense updated"
   },
   "splitMethod": {
     "splitEqual": "Equal",
@@ -311,5 +313,25 @@
     "yesterday": "Yesterday",
     "thisWeek": "This week",
     "older": "Older"
+  },
+  "archive": {
+    "finish": "Finish & settle",
+    "finishDesc": "Archive this budget. No one can add or change expenses until it is reopened.",
+    "finishConfirm": "Archive this budget? Expenses will become read-only.",
+    "unsettledWarning": "There are still unsettled transfers. Archive anyway?",
+    "reopen": "Reopen budget",
+    "reopenDesc": "Allow adding and editing expenses again.",
+    "archivedBanner": "This budget is archived and read-only.",
+    "archived": "Archived",
+    "done": "Budget archived",
+    "reopened": "Budget reopened"
+  },
+  "summary": {
+    "copy": "Copy summary",
+    "copied": "Summary copied",
+    "header": "Settlement for \"{name}\"",
+    "total": "Total spent: {amount}",
+    "nobody": "Everyone is settled.",
+    "line": "{from} pays {to}: {amount}"
   }
 }
