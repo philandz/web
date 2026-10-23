@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,7 @@ import { formatCurrency, formatIsoDate } from "@/lib/format";
 import { useFundMovementsQuery, useFundSummaryQuery } from "@/modules/portfolio/hooks";
 import { normalizeFundKind } from "@/services/portfolio-service";
 
+import { AddHoldingDialog } from "./add-holding-dialog";
 import { FundTransferDialog } from "./fund-transfer-dialog";
 
 interface FundPanelProps {
@@ -24,6 +25,7 @@ export function FundPanel({ budgetId, canEdit }: FundPanelProps) {
   const summary = useFundSummaryQuery(budgetId);
   const movements = useFundMovementsQuery(budgetId);
   const [dialog, setDialog] = useState<"deposit" | "withdraw" | null>(null);
+  const [addHolding, setAddHolding] = useState(false);
 
   if (summary.isLoading) return <Skeleton className="h-40 w-full" />;
   const s = summary.data;
@@ -45,6 +47,10 @@ export function FundPanel({ budgetId, canEdit }: FundPanelProps) {
               <Button size="sm" variant="outline" onClick={() => setDialog("withdraw")}>
                 <ArrowUpFromLine className="mr-1.5 h-4 w-4" />
                 {t("withdraw")}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setAddHolding(true)} data-testid="add-holding">
+                <Plus className="mr-1.5 h-4 w-4" />
+                {t("holding.add")}
               </Button>
             </div>
           ) : null}
@@ -110,6 +116,10 @@ export function FundPanel({ budgetId, canEdit }: FundPanelProps) {
           )}
         </CardContent>
       </Card>
+
+      {addHolding ? (
+        <AddHoldingDialog open fundBudgetId={budgetId} currency={s.currency} onClose={() => setAddHolding(false)} />
+      ) : null}
 
       {dialog ? (
         <FundTransferDialog open fundBudgetId={budgetId} direction={dialog} onClose={() => setDialog(null)} />

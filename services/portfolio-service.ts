@@ -295,7 +295,7 @@ export type FundCashMovementKind =
 export interface FundCashMovement {
   id: string;
   budgetId: string;
-  kind: string;
+  kind: string | number;
   amountMinor: number;
   refType?: string;
   refId?: string;
@@ -347,12 +347,14 @@ export interface FundTransferResult {
 }
 
 /** Normalises "FUND_CASH_MOVEMENT_KIND_TRANSFER_IN" / "TRANSFER_IN" / "transfer_in" to the short upper-case form. */
-export function normalizeFundKind(kind: string | undefined): FundCashMovementKind {
-  const k = (kind ?? "").replace(/^FUND_CASH_MOVEMENT_KIND_/i, "").toUpperCase();
+export function normalizeFundKind(kind: string | number | undefined): FundCashMovementKind {
   const known: FundCashMovementKind[] = [
     "OPENING_BALANCE", "TRANSFER_IN", "TRANSFER_OUT", "ASSET_PURCHASE",
     "ASSET_REDEMPTION", "INTEREST_PAYOUT", "FEE", "ADJUSTMENT",
   ];
+  // The gateway serialises protobuf enums as numbers (1 = OPENING_BALANCE ... 8 = ADJUSTMENT).
+  if (typeof kind === "number") return known[kind - 1] ?? "UNSPECIFIED";
+  const k = (kind ?? "").replace(/^FUND_CASH_MOVEMENT_KIND_/i, "").toUpperCase();
   return (known as string[]).includes(k) ? (k as FundCashMovementKind) : "UNSPECIFIED";
 }
 
@@ -398,6 +400,18 @@ export const portfolioService = {
     return apiClient.post<PortfolioAsset>(
       `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/archive`,
       {},
+    );
+  },
+
+  /** Creates a holding from an already wire-shaped body (see lib/portfolio/holding-body). */
+  createHolding(
+    budgetId: string,
+    kind: "fixed-deposit" | "savings-account" | "gold-lot",
+    wireBody: Record<string, unknown>,
+  ) {
+    return apiClient.post<PortfolioAsset>(
+      `${BASE}/budgets/${budgetId}/portfolio/assets/${kind}`,
+      wireBody,
     );
   },
 

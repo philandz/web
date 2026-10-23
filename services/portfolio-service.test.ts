@@ -10,6 +10,10 @@ describe("normalizeFundKind", () => {
   });
   it("falls back to UNSPECIFIED", () => {
     expect(normalizeFundKind(undefined)).toBe("UNSPECIFIED");
+    expect(normalizeFundKind(2)).toBe("TRANSFER_IN");
+    expect(normalizeFundKind(4)).toBe("ASSET_PURCHASE");
+    expect(normalizeFundKind(0)).toBe("UNSPECIFIED");
+    expect(normalizeFundKind(99)).toBe("UNSPECIFIED");
     expect(normalizeFundKind("nope")).toBe("UNSPECIFIED");
   });
 });

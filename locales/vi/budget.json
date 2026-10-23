@@ -22,6 +22,11 @@
     "emptySubtitle": "Tạo ngân sách đầu tiên để bắt đầu theo dõi tài chính",
     "noOrg": "Chọn tổ chức để xem ngân sách",
     "count": "{count, plural, =0 {Không có ngân sách} other {# ngân sách}}",
+    "groupKpi": {
+      "spent": "Đã chi tháng này: {amount}",
+      "value": "Tổng giá trị: {amount}",
+      "count": "{count, plural, other {# ngân sách}}"
+    },
     "refresh": "Làm mới"
   },
   "card": {
@@ -95,6 +100,9 @@
     "loading": "Đang tải ngân sách...",
     "notFound": "Không tìm thấy ngân sách hoặc bạn không có quyền truy cập.",
     "backToBudgets": "Quay lại ngân sách",
+    "menu": "Thêm thao tác",
+    "edit": "Sửa ngân sách",
+    "delete": "Xóa ngân sách",
     "addTransaction": "Thêm giao dịch",
     "addCategory": "Thêm danh mục",
     "inviteMember": "Mời thành viên",
@@ -698,6 +706,40 @@
     "transferOut": "Chuyển đi"
   },
   "fund": {
+    "holding": {
+      "add": "Thêm khoản đầu tư",
+      "title": "Thêm khoản đầu tư",
+      "kind": "Loại",
+      "kinds": { "fixed-deposit": "Tiền gửi có kỳ hạn", "savings-account": "Tài khoản tiết kiệm", "gold-lot": "Vàng" },
+      "name": "Tên",
+      "provider": "Ngân hàng / đơn vị",
+      "principal": "Số tiền gốc",
+      "balance": "Số dư",
+      "pricePerUnit": "Giá mỗi đơn vị",
+      "quantity": "Số lượng",
+      "unit": "Đơn vị",
+      "units": { "chi": "Chỉ", "luong": "Lượng", "gram": "Gram" },
+      "rate": "Lãi suất (% / năm)",
+      "date": "Ngày",
+      "maturity": "Ngày đáo hạn",
+      "funding": "Nguồn tiền",
+      "fundingOptions": { "cash-pocket": "Tiền mặt trong quỹ", "external": "Từ bên ngoài quỹ" },
+      "fundingHints": {
+        "cash-pocket": "Dùng tiền mặt đang có trong quỹ; số dư tiền mặt sẽ giảm.",
+        "external": "Đã trả từ nơi khác; không ảnh hưởng tiền mặt trong quỹ."
+      },
+      "invalid": {
+        "name": "Nhập tên",
+        "amount": "Nhập số tiền lớn hơn 0",
+        "maturity": "Ngày đáo hạn phải sau ngày bắt đầu",
+        "quantity": "Nhập số lượng và giá"
+      },
+      "cancel": "Hủy",
+      "submit": "Thêm",
+      "success": "Đã thêm khoản đầu tư",
+      "error": "Không thể thêm khoản đầu tư",
+      "errorInsufficient": "Tiền mặt trong quỹ không đủ"
+    },
     "title": "Quỹ",
     "totalValue": "Tổng giá trị",
     "cash": "Tiền mặt trong quỹ",

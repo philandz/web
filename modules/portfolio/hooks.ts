@@ -197,3 +197,18 @@ export function useFundTransferMutation(budgetId: string, direction: "deposit" |
     },
   });
 }
+
+export function useCreateHoldingMutation(budgetId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      kind: "fixed-deposit" | "savings-account" | "gold-lot";
+      body: Record<string, unknown>;
+    }) => portfolioService.createHolding(budgetId, input.kind, input.body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: portfolioKeys.lists() });
+      void qc.invalidateQueries({ queryKey: portfolioKeys.fund(budgetId) });
+      void qc.invalidateQueries({ queryKey: portfolioKeys.summary(budgetId) });
+    },
+  });
+}
