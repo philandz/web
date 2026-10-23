@@ -25,6 +25,9 @@ export interface Budget {
   createdAt: number;
   updatedAt: number;
   is_private?: boolean;
+  /** 1..28: the day a budget period starts */
+  periodStartDay: number;
+  timezone: string;
 }
 
 export interface BudgetMember {
@@ -144,6 +147,8 @@ interface RawBudget {
   created_at?: number;
   updated_at?: number;
   is_private?: boolean;
+  period_start_day?: number;
+  timezone?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +189,8 @@ function mapBudget(raw: RawBudget): Budget {
     createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
     updatedAt: raw.updated_at ?? raw.base?.updated_at ?? 0,
     is_private: raw.is_private ?? false,
+    periodStartDay: raw.period_start_day || 1,
+    timezone: raw.timezone || "Asia/Ho_Chi_Minh",
   };
 }
 
@@ -288,6 +295,10 @@ export const budgetService = {
     type: BudgetType;
     currency?: string;
     templateId?: string;
+    locale?: string;
+    expectedIncome?: number;
+    periodStartDay?: number;
+    timezone?: string;
   }): Promise<Budget> {
     const raw = await apiClient.post<RawBudget>(`${BASE}/budgets`, {
       org_id: input.orgId,
@@ -295,17 +306,33 @@ export const budgetService = {
       budget_type: input.type,
       currency: input.currency ?? "VND",
       template_id: input.templateId ?? "",
+      locale: input.locale,
+      expected_income: input.expectedIncome,
+      period_start_day: input.periodStartDay,
+      timezone: input.timezone,
     });
     return mapBudget(raw);
   },
 
   async updateBudget(
     budgetId: string,
-    input: { name?: string; type?: BudgetType; is_private?: boolean }
+    input: {
+      name?: string;
+      type?: BudgetType;
+      is_private?: boolean;
+      periodStartDay?: number;
+      timezone?: string;
+    }
   ): Promise<Budget> {
     const raw = await apiClient.patch<RawBudget>(
       `${BASE}/budgets/${budgetId}`,
-      { name: input.name, budget_type: input.type, is_private: input.is_private }
+      {
+        name: input.name,
+        budget_type: input.type,
+        is_private: input.is_private,
+        period_start_day: input.periodStartDay,
+        timezone: input.timezone,
+      }
     );
     return mapBudget(raw);
   },

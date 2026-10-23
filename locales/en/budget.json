@@ -49,7 +49,11 @@
     "create": "Create",
     "creating": "Creating...",
     "success": "Budget created",
-    "error": "Failed to create budget"
+    "error": "Failed to create budget",
+    "periodStartDay": "Budget period starts on day",
+    "periodStartDayHint": "Day of the month your budget resets, e.g. your payday.",
+    "expectedIncome": "Expected monthly income",
+    "expectedIncomeHint": "Used to turn the template percentages into planned amounts."
   },
   "dialogs": {
     "edit": {
@@ -379,7 +383,12 @@
     "typeDebt": "Debt",
     "typeInvest": "Invest",
     "typeSharing": "Sharing",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "periodTitle": "Budget Period",
+    "periodHint": "The day each period starts and the timezone used to place entries in a period.",
+    "periodDay": "Day {day}",
+    "periodSuccess": "Period updated",
+    "periodError": "Could not update the period"
   },
   "invest": {
     "portfolioTitle": "Portfolio Summary",

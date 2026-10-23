@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { isFeatureEnabled } from "@/lib/features";
 import { useRouter } from "@/i18n/navigation";
 import { routes } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,19 @@ function SettingRow({
   );
 }
 
+const TIMEZONES = [
+  "Asia/Ho_Chi_Minh",
+  "Asia/Bangkok",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+  "Europe/London",
+  "Europe/Berlin",
+  "America/New_York",
+  "America/Los_Angeles",
+  "UTC",
+];
+
 // ---------------------------------------------------------------------------
 // Settings tab
 // ---------------------------------------------------------------------------
@@ -62,6 +76,9 @@ export function SettingsTab({ budget, myRole }: SettingsTabProps) {
 
   const [name, setName] = useState(budget.name);
   const [envelopeLimit, setEnvelopeLimit] = useState("");
+  const [periodDay, setPeriodDay] = useState(String(budget.periodStartDay));
+  const [timezone, setTimezone] = useState(budget.timezone);
+  const planning = isFeatureEnabled("periodPlanning") && budget.type === "standard";
   const [rollover, setRollover] = useState<RolloverPolicy>(rolloverPolicy ?? "reset");
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -81,6 +98,14 @@ export function SettingsTab({ budget, myRole }: SettingsTabProps) {
     envelopeMutation.mutate(
       isNaN(val) ? 0 : val,
       { onSuccess: () => toast.success(t("envelopeSuccess")), onError: () => toast.error(t("envelopeError")) },
+    );
+  }
+
+  function handlePeriod(e: React.FormEvent) {
+    e.preventDefault();
+    updateMutation.mutate(
+      { periodStartDay: Number(periodDay), timezone },
+      { onSuccess: () => toast.success(t("periodSuccess")), onError: () => toast.error(t("periodError")) },
     );
   }
 
@@ -181,6 +206,37 @@ export function SettingsTab({ budget, myRole }: SettingsTabProps) {
             </form>
           </SettingRow>
         </div>
+
+        {/* Budget period */}
+        {planning ? (
+          <div className="px-5 py-5 md:px-6">
+            <SettingRow title={t("periodTitle")} description={t("periodHint")}>
+              <form onSubmit={handlePeriod} className="flex flex-wrap gap-2" data-testid="period-form">
+                <SelectNative value={periodDay} onValueChange={setPeriodDay} className="w-28">
+                  {Array.from({ length: 28 }, (_, i) => String(i + 1)).map((d) => (
+                    <option key={d} value={d}>{t("periodDay", { day: d })}</option>
+                  ))}
+                </SelectNative>
+                <SelectNative value={timezone} onValueChange={setTimezone} className="flex-1">
+                  {[...new Set([budget.timezone, ...TIMEZONES])].map((tz) => (
+                    <option key={tz} value={tz}>{tz}</option>
+                  ))}
+                </SelectNative>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={
+                    readOnly ||
+                    updateMutation.isPending ||
+                    (Number(periodDay) === budget.periodStartDay && timezone === budget.timezone)
+                  }
+                >
+                  {t("save")}
+                </Button>
+              </form>
+            </SettingRow>
+          </div>
+        ) : null}
 
         {/* Rollover policy */}
         <div className="px-5 py-5 md:px-6">

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { AmountInput } from "@/components/ui/amount-input";
+import { isFeatureEnabled } from "@/lib/features";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,6 +21,7 @@ interface CreateBudgetDialogProps {
 
 export function CreateBudgetDialog({ open, orgId, onClose }: CreateBudgetDialogProps) {
   const t = useTranslations("budget.create");
+  const locale = useLocale();
   const toast = useToast();
   const mutation = useCreateBudgetMutation();
   const { data: templates = [] } = useTemplatesQuery();
@@ -27,9 +30,13 @@ export function CreateBudgetDialog({ open, orgId, onClose }: CreateBudgetDialogP
   const [type, setType] = useState<BudgetType>("standard");
   const [currency, setCurrency] = useState("VND");
   const [templateId, setTemplateId] = useState("");
+  const [periodStartDay, setPeriodStartDay] = useState("1");
+  const [expectedIncome, setExpectedIncome] = useState("");
+  const planning = isFeatureEnabled("periodPlanning") && type === "standard";
 
   function handleClose() {
     setName(""); setType("standard"); setCurrency("VND"); setTemplateId("");
+    setPeriodStartDay("1"); setExpectedIncome("");
     onClose();
   }
 
@@ -45,7 +52,16 @@ export function CreateBudgetDialog({ open, orgId, onClose }: CreateBudgetDialogP
     e.preventDefault();
     if (!name.trim()) return;
     mutation.mutate(
-      { orgId, name: name.trim(), type, currency, templateId: templateId || undefined },
+      {
+        orgId,
+        name: name.trim(),
+        type,
+        currency,
+        templateId: templateId || undefined,
+        locale,
+        expectedIncome: planning && Number(expectedIncome) > 0 ? Number(expectedIncome) : undefined,
+        periodStartDay: planning && periodStartDay !== "1" ? Number(periodStartDay) : undefined,
+      },
       {
         onSuccess: () => { toast.success(t("success")); handleClose(); },
         onError: () => toast.error(t("error")),
@@ -100,6 +116,27 @@ export function CreateBudgetDialog({ open, orgId, onClose }: CreateBudgetDialogP
                 ))}
               </SelectNative>
             </div>
+          ) : null}
+
+          {planning ? (
+            <>
+              <div className="space-y-1.5">
+                <Label>{t("periodStartDay")}</Label>
+                <SelectNative value={periodStartDay} onValueChange={setPeriodStartDay}>
+                  {Array.from({ length: 28 }, (_, i) => String(i + 1)).map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </SelectNative>
+                <p className="text-xs text-muted-foreground">{t("periodStartDayHint")}</p>
+              </div>
+              {templateId ? (
+                <div className="space-y-1.5">
+                  <Label>{t("expectedIncome")}</Label>
+                  <AmountInput value={expectedIncome} onChange={setExpectedIncome} currency={currency} />
+                  <p className="text-xs text-muted-foreground">{t("expectedIncomeHint")}</p>
+                </div>
+              ) : null}
+            </>
           ) : null}
 
           {mutation.isError ? (

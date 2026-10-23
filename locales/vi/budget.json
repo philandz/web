@@ -49,7 +49,11 @@
     "create": "Tạo",
     "creating": "Đang tạo...",
     "success": "Đã tạo ngân sách",
-    "error": "Không thể tạo ngân sách"
+    "error": "Không thể tạo ngân sách",
+    "periodStartDay": "Kỳ ngân sách bắt đầu ngày",
+    "periodStartDayHint": "Ngày trong tháng ngân sách được làm mới, ví dụ ngày nhận lương.",
+    "expectedIncome": "Thu nhập dự kiến mỗi tháng",
+    "expectedIncomeHint": "Dùng để đổi tỷ lệ của mẫu thành số tiền kế hoạch."
   },
   "dialogs": {
     "edit": {
@@ -379,7 +383,12 @@
     "typeDebt": "Trả nợ",
     "typeInvest": "Đầu tư",
     "typeSharing": "Chia sẻ",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "periodTitle": "Kỳ ngân sách",
+    "periodHint": "Ngày bắt đầu mỗi kỳ và múi giờ dùng để xếp giao dịch vào kỳ.",
+    "periodDay": "Ngày {day}",
+    "periodSuccess": "Đã cập nhật kỳ",
+    "periodError": "Không cập nhật được kỳ"
   },
   "invest": {
     "portfolioTitle": "Tổng quan danh mục",
