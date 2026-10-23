@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { parseVnd } from "@/lib/money/parse-vnd";
 
 type AmountInputProps = {
   value: string | number;
@@ -36,6 +37,8 @@ export function AmountInput({
   });
 
   const inputRef = useRef<HTMLInputElement>(null);
+  // Shorthand being typed ("50k", "1tr5"); converted to digits on blur / Enter.
+  const [shorthand, setShorthand] = useState<string | null>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -54,8 +57,26 @@ export function AmountInput({
     inputRef.current?.focus();
   }
 
+  function commitShorthand() {
+    if (shorthand === null) return;
+    const parsed = parseVnd(shorthand);
+    setShorthand(null);
+    if (parsed !== null) {
+      onChange(String(parsed));
+      setDisplayValue(formatWithSeparators(String(parsed)));
+    }
+  }
+
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(/\D/g, "");
+    const text = e.target.value;
+    if (/[^\d\s.,]/.test(text)) {
+      // letters present: user is typing shorthand like 50k / 1tr5
+      setShorthand(text);
+      setDisplayValue(text);
+      return;
+    }
+    setShorthand(null);
+    const raw = text.replace(/\D/g, "");
     onChange(raw);
     setDisplayValue(formatWithSeparators(raw));
   }
@@ -78,9 +99,14 @@ export function AmountInput({
       {/* Hidden actual number input for accessibility and form behavior */}
       <input
         ref={inputRef}
-        type="number"
-        value={typeof value === "number" ? value : parseInt(rawValue(String(value))) || 0}
+        type="text"
+        inputMode="text"
+        value={shorthand ?? (typeof value === "number" ? value : parseInt(rawValue(String(value))) || 0)}
         onChange={handleInputChange}
+        onBlur={commitShorthand}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commitShorthand();
+        }}
         className="absolute inset-0 w-full h-full opacity-0 cursor-text"
         style={{ zIndex: -1 }}
         aria-label="Amount input"
