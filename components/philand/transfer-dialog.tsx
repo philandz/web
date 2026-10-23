@@ -26,6 +26,28 @@ function today() {
 /** Standard→standard transfer within the same organisation and currency (plan R1). */
 export function TransferDialog({ open, sourceBudgetId, onClose }: TransferDialogProps) {
   const t = useTranslations("budget.transfer");
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("title")}</DialogTitle>
+        </DialogHeader>
+        <TransferForm open={open} sourceBudgetId={sourceBudgetId} onDone={onClose} onCancel={onClose} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface TransferFormProps {
+  open: boolean;
+  sourceBudgetId: string;
+  onDone: () => void;
+  onCancel: () => void;
+}
+
+/** The transfer fields and submit logic, reusable inside the transaction composer. */
+export function TransferForm({ open, sourceBudgetId, onDone, onCancel }: TransferFormProps) {
+  const t = useTranslations("budget.transfer");
   const toast = useToast();
   const { data: source } = useBudgetQuery(open ? sourceBudgetId : null);
   const { data: paged } = useBudgetsQuery({
@@ -71,7 +93,7 @@ export function TransferDialog({ open, sourceBudgetId, onClose }: TransferDialog
       {
         onSuccess: () => {
           toast.success(t("success"));
-          onClose();
+          onDone();
         },
         onError: (err) => {
           const precondition = isApiError(err) && err.status === 412;
@@ -82,65 +104,58 @@ export function TransferDialog({ open, sourceBudgetId, onClose }: TransferDialog
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-2" data-testid="transfer-form">
-          <div className="space-y-1.5">
-            <Label>{t("from")}</Label>
-            <Input value={source?.name ?? ""} readOnly disabled className="cursor-not-allowed opacity-60" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="transfer-destination">{t("to")}</Label>
-            <select
-              id="transfer-destination"
-              required
-              value={destinationId}
-              onChange={(e) => setDestinationId(e.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">{t("toPlaceholder")}</option>
-              {destinations.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            {destinations.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{t("noDestination")}</p>
-            ) : null}
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("amount")}</Label>
-            <AmountInput value={amount} onChange={setAmount} currency={source?.currency} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="transfer-date">{t("date")}</Label>
-            <Input id="transfer-date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="transfer-note">{t("note")}</Label>
-            <Input
-              id="transfer-note"
-              value={description}
-              maxLength={200}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t("notePlaceholder")}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">{t("hint")}</p>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              {t("cancel")}
-            </Button>
-            <Button type="submit" disabled={!canSubmit}>
-              {t("submit")}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <form onSubmit={handleSubmit} className="space-y-4 py-2" data-testid="transfer-form">
+      <div className="space-y-1.5">
+        <Label>{t("from")}</Label>
+        <Input value={source?.name ?? ""} readOnly disabled className="cursor-not-allowed opacity-60" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="transfer-destination">{t("to")}</Label>
+        <select
+          id="transfer-destination"
+          required
+          value={destinationId}
+          onChange={(e) => setDestinationId(e.target.value)}
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="">{t("toPlaceholder")}</option>
+          {destinations.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+        {destinations.length === 0 ? (
+          <p className="text-xs text-muted-foreground">{t("noDestination")}</p>
+        ) : null}
+      </div>
+      <div className="space-y-1.5">
+        <Label>{t("amount")}</Label>
+        <AmountInput value={amount} onChange={setAmount} currency={source?.currency} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="transfer-date">{t("date")}</Label>
+        <Input id="transfer-date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="transfer-note">{t("note")}</Label>
+        <Input
+          id="transfer-note"
+          value={description}
+          maxLength={200}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={t("notePlaceholder")}
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">{t("hint")}</p>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {t("cancel")}
+        </Button>
+        <Button type="submit" disabled={!canSubmit}>
+          {t("submit")}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
