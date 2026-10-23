@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { portfolioKeys } from "@/lib/query-keys";
 import {
   portfolioService,
+  type FundTransferBody,
   type AssetSource,
   type PortfolioAsset,
   type PortfolioSummary,
@@ -163,3 +164,36 @@ export function useRecordStockDisposalMutation(budgetId: string, assetId: string
 // Re-exports for convenience
 // ---------------------------------------------------------------------------
 export type { AssetSource, PortfolioAsset, PortfolioSummary, PriceObservation, ValuatedAsset };
+export function useFundSummaryQuery(budgetId: string | null) {
+  return useQuery({
+    queryKey: portfolioKeys.fund(budgetId ?? ""),
+    queryFn: () => portfolioService.getFundSummary(budgetId!),
+    enabled: Boolean(budgetId),
+  });
+}
+
+export function useFundMovementsQuery(budgetId: string | null, page = 1) {
+  return useQuery({
+    queryKey: portfolioKeys.fundMovements(budgetId ?? "", page),
+    queryFn: () => portfolioService.listFundMovements(budgetId!, { page, pageSize: 20 }),
+    enabled: Boolean(budgetId),
+  });
+}
+
+/** Deposit moves money from a standard budget into the fund; withdraw is the reverse. */
+export function useFundTransferMutation(budgetId: string, direction: "deposit" | "withdraw") {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: FundTransferBody) =>
+      direction === "deposit"
+        ? portfolioService.depositToFund(budgetId, body)
+        : portfolioService.withdrawFromFund(budgetId, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: portfolioKeys.fund(budgetId) });
+      void qc.invalidateQueries({ queryKey: portfolioKeys.summary(budgetId) });
+      // the counterparty budget's transactions and totals changed too
+      void qc.invalidateQueries({ queryKey: ["transactions"] });
+      void qc.invalidateQueries({ queryKey: ["budgets"] });
+    },
+  });
+}

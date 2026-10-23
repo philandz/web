@@ -277,6 +277,85 @@ export interface PortfolioActivity {
 // Service
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Saving fund (cash pocket + holdings) — plan R2
+// ---------------------------------------------------------------------------
+
+export type FundCashMovementKind =
+  | "OPENING_BALANCE"
+  | "TRANSFER_IN"
+  | "TRANSFER_OUT"
+  | "ASSET_PURCHASE"
+  | "ASSET_REDEMPTION"
+  | "INTEREST_PAYOUT"
+  | "FEE"
+  | "ADJUSTMENT"
+  | "UNSPECIFIED";
+
+export interface FundCashMovement {
+  id: string;
+  budgetId: string;
+  kind: string;
+  amountMinor: number;
+  refType?: string;
+  refId?: string;
+  transferGroupId?: string;
+  actorUserId: string;
+  note?: string;
+  occurredOn: string;
+  createdAt: number;
+}
+
+export interface FundAllocationSlice {
+  label: string;
+  value: number;
+  pct: number;
+}
+
+export interface FundUpcomingMaturity {
+  assetId: string;
+  displayName: string;
+  maturityDate: number;
+  expectedAmount: number;
+}
+
+export interface FundSummary {
+  budgetId: string;
+  currency: string;
+  cashBalance: number;
+  holdingsValue: number;
+  totalValue: number;
+  netContributed: number;
+  growth: number;
+  growthPct: number;
+  allocation?: FundAllocationSlice[];
+  upcoming?: FundUpcomingMaturity[];
+}
+
+export interface FundTransferBody {
+  counterpartyBudgetId: string;
+  amountMinor: number;
+  occurredOn: string;
+  note?: string;
+  idempotencyKey: string;
+}
+
+export interface FundTransferResult {
+  movement?: FundCashMovement;
+  cashBalance: number;
+  transferGroupId: string;
+}
+
+/** Normalises "FUND_CASH_MOVEMENT_KIND_TRANSFER_IN" / "TRANSFER_IN" / "transfer_in" to the short upper-case form. */
+export function normalizeFundKind(kind: string | undefined): FundCashMovementKind {
+  const k = (kind ?? "").replace(/^FUND_CASH_MOVEMENT_KIND_/i, "").toUpperCase();
+  const known: FundCashMovementKind[] = [
+    "OPENING_BALANCE", "TRANSFER_IN", "TRANSFER_OUT", "ASSET_PURCHASE",
+    "ASSET_REDEMPTION", "INTEREST_PAYOUT", "FEE", "ADJUSTMENT",
+  ];
+  return (known as string[]).includes(k) ? (k as FundCashMovementKind) : "UNSPECIFIED";
+}
+
 export const portfolioService = {
   listAssets(budgetId: string, opts?: { source?: AssetSource; page?: number; pageSize?: number }) {
     const search = new URLSearchParams();
@@ -513,6 +592,34 @@ export const portfolioService = {
   ) {
     return apiClient.post<PortfolioAsset>(
       `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/stock-disposal`,
+      body,
+    );
+  },
+
+  getFundSummary(budgetId: string) {
+    return apiClient.get<FundSummary>(`${BASE}/budgets/${budgetId}/portfolio/fund`);
+  },
+
+  listFundMovements(budgetId: string, params?: { page?: number; pageSize?: number }) {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.pageSize) search.set("page_size", String(params.pageSize));
+    const qs = search.toString();
+    return apiClient.get<{ movements?: FundCashMovement[]; totalRows: number }>(
+      `${BASE}/budgets/${budgetId}/portfolio/fund/movements${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  depositToFund(budgetId: string, body: FundTransferBody) {
+    return apiClient.post<FundTransferResult>(
+      `${BASE}/budgets/${budgetId}/portfolio/fund/deposit`,
+      body,
+    );
+  },
+
+  withdrawFromFund(budgetId: string, body: FundTransferBody) {
+    return apiClient.post<FundTransferResult>(
+      `${BASE}/budgets/${budgetId}/portfolio/fund/withdraw`,
       body,
     );
   },

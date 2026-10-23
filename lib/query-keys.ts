@@ -47,6 +47,9 @@ export const portfolioKeys = {
     [...portfolioKeys.details(), budgetId, assetId] as const,
   summary: (budgetId: string, source?: string) =>
     [...portfolioKeys.all, "summary", budgetId, source ?? "auto"] as const,
+  fund: (budgetId: string) => [...portfolioKeys.all, "fund", budgetId] as const,
+  fundMovements: (budgetId: string, page = 1) =>
+    [...portfolioKeys.fund(budgetId), "movements", page] as const,
   observations: (budgetId: string, assetId: string) =>
     [...portfolioKeys.detail(budgetId, assetId), "observations"] as const,
   activity: (budgetId: string, assetId: string) =>
