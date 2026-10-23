@@ -61,7 +61,6 @@ export function SettingsTab({ budget, myRole }: SettingsTabProps) {
   const { data: rolloverPolicy } = useRolloverQuery(budget.id);
 
   const [name, setName] = useState(budget.name);
-  const [type, setType] = useState<BudgetType>(budget.type);
   const [envelopeLimit, setEnvelopeLimit] = useState("");
   const [rollover, setRollover] = useState<RolloverPolicy>(rolloverPolicy ?? "reset");
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
@@ -73,15 +72,6 @@ export function SettingsTab({ budget, myRole }: SettingsTabProps) {
     updateMutation.mutate(
       { name: name.trim() },
       { onSuccess: () => toast.success(t("renameSuccess")), onError: () => toast.error(t("renameError")) },
-    );
-  }
-
-  function handleTypeChange(e: React.FormEvent) {
-    e.preventDefault();
-    if (type === budget.type) return;
-    updateMutation.mutate(
-      { type },
-      { onSuccess: () => toast.success(t("typeSuccess")), onError: () => toast.error(t("typeError")) },
     );
   }
 
@@ -110,6 +100,13 @@ export function SettingsTab({ budget, myRole }: SettingsTabProps) {
   }
 
   const readOnly = !isOwner;
+  const typeLabel: Record<BudgetType, string> = {
+    standard: t("typeStandard"),
+    saving: t("typeSaving"),
+    debt: t("typeDebt"),
+    invest: t("typeInvest"),
+    sharing: t("typeSharing"),
+  };
 
   return (
     <div className="space-y-4">
@@ -143,29 +140,15 @@ export function SettingsTab({ budget, myRole }: SettingsTabProps) {
           </SettingRow>
         </div>
 
-        {/* Change type */}
+        {/* Budget type is fixed at creation */}
         <div className="px-5 py-5 md:px-6">
           <SettingRow title={t("typeTitle")} description={t("typeHint")}>
-            <form onSubmit={handleTypeChange} className="flex gap-2">
-              <SelectNative
-                value={type}
-                onValueChange={(v) => setType(v as BudgetType)}
-                className="flex-1"
-              >
-                <option value="standard">{t("typeStandard")}</option>
-                <option value="saving">{t("typeSaving")}</option>
-                <option value="debt">{t("typeDebt")}</option>
-                <option value="invest">{t("typeInvest")}</option>
-                <option value="sharing">{t("typeSharing")}</option>
-              </SelectNative>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={readOnly || updateMutation.isPending || type === budget.type}
-              >
-                {t("save")}
-              </Button>
-            </form>
+            <span
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-muted px-3 text-sm font-medium text-foreground"
+              data-testid="budget-type-readonly"
+            >
+              {typeLabel[budget.type]}
+            </span>
           </SettingRow>
         </div>
       </section>
