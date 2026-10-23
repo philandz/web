@@ -26,6 +26,7 @@ import { useToast } from "@/components/state/toast-provider";
 import { budgetTypeMeta } from "@/lib/budget-types";
 import { isFeatureEnabled } from "@/lib/features";
 import { PeriodOverview } from "./period-overview";
+import { TransactionComposer } from "@/components/transaction-composer/transaction-composer";
 import { PlanTab } from "./plan-tab";
 import type { Budget, BudgetType } from "@/services/budget-service";
 import type { Transaction, TransactionKind, TransactionType, TransactionListParams } from "@/services/transaction-service";
@@ -928,6 +929,14 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
 {activeTab === "members" ? <MembersTab budgetId={budget.id} orgId={budget.orgId} myRole={budget.myRole} /> : null}
         {activeTab === "settings" ? <SettingsTab budget={budget} myRole={budget.myRole} /> : null}
       </div>
+
+      {budget.type === "standard" ? (
+        <TransactionComposer
+          budgetId={budget.id}
+          currency={budget.currency}
+          canWrite={budget.myRole !== "viewer"}
+        />
+      ) : null}
     </div>
   );
 }

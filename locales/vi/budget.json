@@ -474,6 +474,23 @@
     "subtitle": "Giao dịch trên tất cả ngân sách của bạn",
     "allBudgets": "Tất cả ngân sách"
   },
+  "composer": {
+    "title": "Thêm giao dịch",
+    "open": "Thêm giao dịch",
+    "expense": "Chi",
+    "income": "Thu",
+    "transfer": "Chuyển",
+    "description": "Mô tả",
+    "descriptionPlaceholder": "VD: Cơm trưa",
+    "category": "Danh mục",
+    "noCategory": "Không danh mục",
+    "date": "Ngày",
+    "cancel": "Huỷ",
+    "save": "Thêm",
+    "saving": "Đang thêm...",
+    "success": "Đã thêm giao dịch",
+    "error": "Không thể thêm giao dịch"
+  },
   "quickEntry": {
     "title": "Thêm nhanh",
     "amount": "Số tiền",

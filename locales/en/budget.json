@@ -474,6 +474,23 @@
     "subtitle": "Transactions across all your budgets",
     "allBudgets": "All budgets"
   },
+  "composer": {
+    "title": "Add",
+    "open": "Add transaction",
+    "expense": "Expense",
+    "income": "Income",
+    "transfer": "Transfer",
+    "description": "Description",
+    "descriptionPlaceholder": "e.g. Grab lunch",
+    "category": "Category",
+    "noCategory": "No category",
+    "date": "Date",
+    "cancel": "Cancel",
+    "save": "Add",
+    "saving": "Adding...",
+    "success": "Transaction added",
+    "error": "Failed to add transaction"
+  },
   "quickEntry": {
     "title": "Quick Add",
     "amount": "Amount",
