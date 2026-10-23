@@ -7,6 +7,7 @@ import { Wallet } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { OverviewTab } from "@/components/philand/overview-tab";
+import { OrgOverview } from "@/components/philand/org-overview";
 import { EmptyState } from "@/components/state/empty-state";
 import { SelectNative } from "@/components/ui/select";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
@@ -65,6 +66,8 @@ export default function DashboardPage() {
           </SelectNative>
         ) : null}
       />
+
+      {!isLoading && budgets.length > 0 ? <OrgOverview budgets={budgets} /> : null}
 
       {isLoading ? (
         <div className="surface-panel rounded-2xl p-6">

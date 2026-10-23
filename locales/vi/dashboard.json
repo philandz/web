@@ -226,5 +226,14 @@
   "states": {
     "loading": "Đang tải bảng điều khiển...",
     "error": "Đã xảy ra lỗi ở khu vực bảng điều khiển."
+  },
+  "orgOverview": {
+    "title": "Kỳ này trên các ngân sách",
+    "spent": "Đã chi",
+    "remaining": "Còn có thể chi",
+    "available": "Tổng ngân sách",
+    "fund": "Quỹ tiết kiệm",
+    "sharing": "Chia tiền nhóm",
+    "sharingCount": "{count} quỹ đang hoạt động"
   }
 }
