@@ -60,3 +60,10 @@ export const settingsKeys = {
   all: ["settings"] as const,
   resend: () => [...settingsKeys.all, "resend"] as const,
 };
+
+export const planKeys = {
+  all: ["plan"] as const,
+  summary: (budgetId: string, offset: number) => [...planKeys.all, "summary", budgetId, offset] as const,
+  plan: (budgetId: string, offset: number) => [...planKeys.all, "plan", budgetId, offset] as const,
+  budget: (budgetId: string) => [...planKeys.all, budgetId] as const,
+};
