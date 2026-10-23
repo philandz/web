@@ -8,6 +8,9 @@ import { routes } from "@/constants/routes";
 
 import { BudgetDetailHeader } from "@/components/philand/budget-detail-header";
 import { InvestBudgetView } from "@/components/philand/invest-budget-view";
+import { FundPanel } from "@/components/philand/portfolio/fund-panel";
+import { PortfolioView } from "@/components/philand/portfolio/portfolio-view";
+import { isFeatureEnabled } from "@/lib/features";
 import { BudgetDetailWithTabs } from "@/components/philand/budget-detail-with-tabs";
 import { PageErrorState } from "@/components/state/page-error-state";
 import { PageLoadingState } from "@/components/state/page-loading-state";
@@ -92,6 +95,18 @@ export default function BudgetDetailPage() {
       <div className="animate-fade-in-up space-y-4">
         <BudgetDetailHeader budget={budget} members={members} />
         <InvestBudgetView budgetId={budgetId} myRole={budget.myRole} />
+      </div>
+    );
+  }
+
+  // Saving budgets are funds (cash pocket + holdings) once the flag is on
+  if (budget.type === "saving" && isFeatureEnabled("savingFund")) {
+    const canEdit = ["owner", "manager", "contributor"].includes(budget.myRole ?? "");
+    return (
+      <div className="animate-fade-in-up space-y-4">
+        <BudgetDetailHeader budget={budget} members={members} />
+        <FundPanel budgetId={budgetId} canEdit={canEdit} />
+        <PortfolioView budgetId={budgetId} />
       </div>
     );
   }
