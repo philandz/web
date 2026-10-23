@@ -639,5 +639,25 @@
     "formUnitChi": "chi",
     "formUnitLuong": "luong",
     "formUnitGram": "gram"
+  },
+  "transfer": {
+    "title": "Transfer between budgets",
+    "from": "From",
+    "to": "To",
+    "toPlaceholder": "Choose a budget",
+    "noDestination": "No other standard budget with the same currency that you can add entries to.",
+    "amount": "Amount",
+    "date": "Date",
+    "note": "Note",
+    "notePlaceholder": "Optional",
+    "hint": "Transfers move money between budgets. They are not counted as income or spending.",
+    "cancel": "Cancel",
+    "submit": "Transfer",
+    "success": "Transfer created",
+    "error": "Could not create the transfer",
+    "errorIncompatible": "These budgets can't exchange money (different organisation, currency or type)",
+    "button": "Transfer",
+    "transferIn": "Transfer in",
+    "transferOut": "Transfer out"
   }
 }

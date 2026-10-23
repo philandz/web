@@ -639,5 +639,25 @@
     "formUnitChi": "chỉ",
     "formUnitLuong": "lượng",
     "formUnitGram": "gram"
+  },
+  "transfer": {
+    "title": "Chuyển tiền giữa các budget",
+    "from": "Từ",
+    "to": "Đến",
+    "toPlaceholder": "Chọn budget",
+    "noDestination": "Không có budget Standard nào khác cùng loại tiền mà bạn được phép thêm giao dịch.",
+    "amount": "Số tiền",
+    "date": "Ngày",
+    "note": "Ghi chú",
+    "notePlaceholder": "Không bắt buộc",
+    "hint": "Chuyển tiền chỉ di chuyển tiền giữa các budget, không tính là thu nhập hay chi tiêu.",
+    "cancel": "Hủy",
+    "submit": "Chuyển tiền",
+    "success": "Đã tạo giao dịch chuyển tiền",
+    "error": "Không thể tạo giao dịch chuyển tiền",
+    "errorIncompatible": "Hai budget này không thể chuyển tiền cho nhau (khác tổ chức, loại tiền hoặc loại budget)",
+    "button": "Chuyển tiền",
+    "transferIn": "Nhận tiền",
+    "transferOut": "Chuyển đi"
   }
 }

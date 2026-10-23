@@ -7,6 +7,7 @@ import {
   AlertCircle,
   ArrowDownLeft,
   ArrowUpRight,
+  ArrowLeftRight,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -54,6 +55,9 @@ import { DatePreset, getPresetRange } from "@/lib/date-range";
 import type { Transaction, TransactionListParams } from "@/services/transaction-service";
 import { transactionKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
+import { Feature } from "@/components/ui/feature";
+import { TransferDialog } from "./transfer-dialog";
+import { amountSign, amountToneClass, iconToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
 function fmt(amount: number, currency: string) {
@@ -92,6 +96,8 @@ export function TransactionsTab({
 }: TransactionsTabProps) {
   const t = useTranslations("budget.transactions");
   const tBudget = useTranslations("budget.transactions");
+  const tTransfer = useTranslations("budget.transfer");
+  const [transferOpen, setTransferOpen] = useState(false);
   const toast = useToast();
 
   const router = useRouter();
@@ -327,6 +333,14 @@ export function TransactionsTab({
             placeholder={t("searchPlaceholder")}
           />
         </div>
+        {budgetId && (
+          <Feature flag="transfers">
+            <Button size="sm" variant="outline" onClick={() => setTransferOpen(true)} data-testid="open-transfer">
+              <ArrowLeftRight className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{tTransfer("button")}</span>
+            </Button>
+          </Feature>
+        )}
         {budgetId && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
@@ -614,7 +628,7 @@ export function TransactionsTab({
                     <td className="px-4 py-3">
                       <StatusChip
                         value={tx.type}
-                        label={tx.type === "income" ? t("income") : t("expense")}
+                        label={isTransferKind(tx.type) ? (tx.type === "transfer_in" ? "Transfer in" : "Transfer out") : tx.type === "income" ? t("income") : t("expense")}
                       />
                     </td>
                     <td className="max-w-[200px] px-4 py-3 font-medium text-foreground">
@@ -642,12 +656,10 @@ export function TransactionsTab({
                     <td
                       className={cn(
                         "px-4 py-3 text-right font-semibold tabular-nums",
-                        tx.type === "income"
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-red-500",
+                        amountToneClass(tx.type),
                       )}
                     >
-                      {tx.type === "income" ? "+" : "−"}
+                      {amountSign(tx.type)}
                       {fmt(tx.amount, currency)}
                     </td>
                     <td className="px-4 py-3">
@@ -706,12 +718,10 @@ export function TransactionsTab({
                 <div
                   className={cn(
                     "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                    tx.type === "income"
-                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "bg-red-500/10 text-red-500",
+                    iconToneClass(tx.type),
                   )}
                 >
-                  {tx.type === "income" ? (
+                  {isInflow(tx.type) ? (
                     <ArrowUpRight className="h-4 w-4" />
                   ) : (
                     <ArrowDownLeft className="h-4 w-4" />
@@ -745,12 +755,10 @@ export function TransactionsTab({
                 <p
                   className={cn(
                     "shrink-0 text-sm font-semibold tabular-nums",
-                    tx.type === "income"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-red-500",
+                    amountToneClass(tx.type),
                   )}
                 >
-                  {tx.type === "income" ? "+" : "−"}
+                  {amountSign(tx.type)}
                   {fmt(tx.amount, currency)}
                 </p>
               </div>
@@ -798,6 +806,13 @@ export function TransactionsTab({
           currency={currency}
         />
       )}
+      <Feature flag="transfers">
+        <TransferDialog
+          open={transferOpen}
+          sourceBudgetId={budgetId}
+          onClose={() => setTransferOpen(false)}
+        />
+      </Feature>
     </div>
   );
 }
