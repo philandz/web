@@ -67,7 +67,7 @@ async function createInvestBudget(page: Page, opts: { name: string; currency?: s
   });
   expect(resp.status(), `budget create failed: ${await resp.text()}`).toBeLessThan(300);
   const body = (await resp.json()) as { base?: { id?: string }; id?: string };
-  const budgetId = body.base?.id ?? body.id;
+  const budgetId = body.budget?.base?.id ?? body.base?.id ?? body.id;
   expect(budgetId, 'no budget id').toBeTruthy();
   await api.dispose();
   return { budgetId, token };

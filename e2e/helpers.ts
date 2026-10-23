@@ -276,7 +276,7 @@ export async function createBudgetFixture(
   });
   expect(budget.status(), `budget failed: ${await budget.text()}`).toBe(201);
   const budgetBody = await budget.json();
-  const budgetId: string = budgetBody.base?.id || budgetBody.id;
+  const budgetId: string = budgetBody.budget?.base?.id || budgetBody.base?.id || budgetBody.id;
   expect(budgetId, 'no budget_id').toBeTruthy();
 
   await seedAuthState(page, {
