@@ -20,7 +20,7 @@ import { useBudgetMembersQuery, useBudgetQuery } from "@/modules/budget/hooks";
 // Tab config
 // ---------------------------------------------------------------------------
 
-const ALL_TABS = ["overview", "transactions", "categories", "members", "settings", "assets"] as const;
+const ALL_TABS = ["overview", "transactions", "categories", "members", "settings", "assets", "plan"] as const;
 type TabName = (typeof ALL_TABS)[number];
 
 function isValidTab(v: string | null): v is TabName {

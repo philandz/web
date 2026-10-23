@@ -98,7 +98,8 @@
     "overBudget": "vượt ngân sách",
     "currentBalance": "Số dư hiện tại",
     "totalIncome": "Thu nhập",
-    "totalExpense": "Chi tiêu"
+    "totalExpense": "Chi tiêu",
+    "tabPlan": "Kế hoạch"
   },
   "header": {
     "menu": "Menu",
@@ -701,5 +702,44 @@
       "UNSPECIFIED": "Khác"
     },
     "hint": "Quỹ thay đổi qua chuyển tiền và đầu tư, không qua thu hoặc chi."
+  },
+  "period": {
+    "previous": "Kỳ trước",
+    "next": "Kỳ sau",
+    "current": "hiện tại",
+    "backToCurrent": "Về kỳ hiện tại",
+    "loadError": "Không tải được kỳ này",
+    "daysLeft": "Còn {count} ngày",
+    "carryForwardOn": "Số dư chưa dùng được chuyển sang kỳ sau",
+    "income": "Thu nhập",
+    "spent": "Đã chi",
+    "remaining": "Còn lại",
+    "noPlan": "Chưa có kế hoạch",
+    "ofAvailable": "trên {amount} khả dụng",
+    "safeDaily": "Có thể chi mỗi ngày",
+    "usedPct": "Đã dùng",
+    "projected": "Đang đi theo {pct}% kế hoạch",
+    "transfersNote": "Chuyển tiền (không tính là thu hay chi): ra {out}, vào {in}",
+    "byCategory": "Kế hoạch so với đã chi",
+    "editPlan": "Sửa kế hoạch",
+    "noCategories": "Kỳ này chưa có danh mục nào",
+    "unallocated": "Chưa phân bổ",
+    "carryIn": "Chuyển từ kỳ trước",
+    "dailySpending": "Chi tiêu theo ngày"
+  },
+  "plan": {
+    "category": "Danh mục",
+    "everyPeriod": "Mọi kỳ",
+    "thisPeriod": "Chỉ kỳ này",
+    "overridden": "tùy chỉnh",
+    "unallocated": "Chưa phân bổ",
+    "unallocatedHint": "Khoản dự chi không thuộc danh mục nào",
+    "total": "Tổng kế hoạch",
+    "save": "Lưu kế hoạch",
+    "discard": "Hủy thay đổi",
+    "saved": "Đã lưu kế hoạch",
+    "saveError": "Không lưu được kế hoạch",
+    "readOnly": "Chỉ chủ sở hữu và quản lý mới sửa được kế hoạch.",
+    "noCategories": "Chưa có danh mục chi tiêu"
   }
 }

@@ -24,6 +24,9 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
 
 import { budgetTypeMeta } from "@/lib/budget-types";
+import { isFeatureEnabled } from "@/lib/features";
+import { PeriodOverview } from "./period-overview";
+import { PlanTab } from "./plan-tab";
 import type { Budget, BudgetType } from "@/services/budget-service";
 import type { Transaction, TransactionKind, TransactionType, TransactionListParams } from "@/services/transaction-service";
 import { amountSign, amountToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
@@ -788,6 +791,7 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
 // ---------------------------------------------------------------------------
 
 export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budget; activeTab: string; onTab: (t: string) => void }) {
+  const planningEnabled = isFeatureEnabled("periodPlanning") && budget.type === "standard";
   const tDetail = useTranslations("budget.detail");
   const tShell = useTranslations("dashboard.shell");
 
@@ -882,6 +886,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
             {([
               { id: "overview", label: tDetail("tabOverview") },
               { id: "transactions", label: tDetail("tabTransactions") },
+              ...(planningEnabled ? [{ id: "plan", label: tDetail("tabPlan") }] : []),
               { id: "categories", label: tDetail("tabCategories") },
               { id: "members", label: tDetail("tabMembers") },
               { id: "settings", label: tDetail("tabSettings") },
@@ -908,7 +913,16 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
       </Panel>
 
       <div className="mt-4">
-        {activeTab === "overview" ? <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} /> : null}
+        {activeTab === "overview" ? (
+          planningEnabled ? (
+            <PeriodOverview budgetId={budget.id} currency={budget.currency} onEditPlan={() => onTab("plan")} />
+          ) : (
+            <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} />
+          )
+        ) : null}
+        {activeTab === "plan" && planningEnabled ? (
+          <PlanTab budgetId={budget.id} currency={budget.currency} myRole={budget.myRole} />
+        ) : null}
         {activeTab === "transactions" ? <TransactionsTab budgetId={budget.id} currency={budget.currency} /> : null}
         {activeTab === "categories" ? <CategoriesTab budgetId={budget.id} currency={budget.currency} myRole={budget.myRole} /> : null}
 {activeTab === "members" ? <MembersTab budgetId={budget.id} orgId={budget.orgId} myRole={budget.myRole} /> : null}

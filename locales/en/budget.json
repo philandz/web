@@ -98,7 +98,8 @@
     "overBudget": "over budget",
     "currentBalance": "Current balance",
     "totalIncome": "Income",
-    "totalExpense": "Expense"
+    "totalExpense": "Expense",
+    "tabPlan": "Plan"
   },
   "header": {
     "menu": "Menu",
@@ -701,5 +702,44 @@
       "UNSPECIFIED": "Other"
     },
     "hint": "Funds change through transfers and investments, not income or expense entries."
+  },
+  "period": {
+    "previous": "Previous period",
+    "next": "Next period",
+    "current": "current",
+    "backToCurrent": "Back to the current period",
+    "loadError": "Could not load this period",
+    "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+    "carryForwardOn": "Unspent amounts carry over",
+    "income": "Income",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "noPlan": "No plan yet",
+    "ofAvailable": "of {amount} available",
+    "safeDaily": "Safe to spend per day",
+    "usedPct": "Used",
+    "projected": "On pace for {pct}% of plan",
+    "transfersNote": "Transfers (not counted as income or spending): out {out}, in {in}",
+    "byCategory": "Plan vs. spent",
+    "editPlan": "Edit plan",
+    "noCategories": "No categories to show for this period",
+    "unallocated": "Unallocated",
+    "carryIn": "Carried over",
+    "dailySpending": "Daily spending"
+  },
+  "plan": {
+    "category": "Category",
+    "everyPeriod": "Every period",
+    "thisPeriod": "This period only",
+    "overridden": "custom",
+    "unallocated": "Unallocated",
+    "unallocatedHint": "Planned spending without a category",
+    "total": "Total planned",
+    "save": "Save plan",
+    "discard": "Discard",
+    "saved": "Plan saved",
+    "saveError": "Could not save the plan",
+    "readOnly": "Only owners and managers can change the plan.",
+    "noCategories": "No expense categories yet"
   }
 }
