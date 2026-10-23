@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
 
+import { budgetTypeMeta } from "@/lib/budget-types";
 import type { Budget, BudgetType } from "@/services/budget-service";
 import type { Transaction, TransactionType, TransactionListParams } from "@/services/transaction-service";
 
@@ -63,18 +64,13 @@ function fmtDateFull(dateStr: string) {
   }).format(new Date(dateStr));
 }
 
-type TypeCfg = { label: string; stripe: string; iconBg: string; iconFg: string; icon: string };
-
-const TYPE_CFG: Record<BudgetType, TypeCfg> = {
-  standard: { label: "Standard", stripe: "#38bdf8", iconBg: "#e0f2fe", iconFg: "#0369a1", icon: "⊞" },
-  saving: { label: "Saving", stripe: "#22c984", iconBg: "#dcfce7", iconFg: "#15803d", icon: "🐷" },
-  debt: { label: "Debt", stripe: "#f05c6e", iconBg: "#fee2e2", iconFg: "#b91c1c", icon: "💳" },
-  invest: { label: "Invest", stripe: "#9d74f5", iconBg: "#ede9fe", iconFg: "#6d28d9", icon: "📈" },
-  sharing: { label: "Sharing", stripe: "#f59e0b", iconBg: "#fef3c7", iconFg: "#b45309", icon: "🤝" },
-};
+function typeCfg(type: BudgetType) {
+  const m = budgetTypeMeta(type);
+  return { label: m.label, icon: m.emoji, ...m.hex };
+}
 
 function TypeIcon({ type }: { type: BudgetType }) {
-  const cfg = TYPE_CFG[type] ?? TYPE_CFG.standard;
+  const cfg = typeCfg(type);
   return (
     <div
       className="grid h-11 w-11 place-items-center rounded-[12px]"
@@ -791,7 +787,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
   const { data: envelope } = useBurnRateQuery(budget.id);
   const summary = useEntrySummaryQuery(budget.id);
 
-  const cfg = TYPE_CFG[budget.type] ?? TYPE_CFG.standard;
+  const cfg = typeCfg(budget.type);
   const spendPct = envelope?.monthlyLimit ? Math.min(100, (envelope.currentSpend / envelope.monthlyLimit) * 100) : null;
   const barColor = spendPct == null ? "hsl(var(--border))" : spendPct >= 100 ? "hsl(var(--expense))" : spendPct >= 80 ? "hsl(38 85% 50%)" : "hsl(var(--primary))";
 

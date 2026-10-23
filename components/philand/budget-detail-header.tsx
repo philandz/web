@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  ArrowLeft, BarChart2, CreditCard, LayoutGrid,
-  Pencil, PiggyBank, Settings, Share2, Trash2, Users,
+  ArrowLeft,
+  Pencil, Settings, Trash2, Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -25,55 +25,11 @@ import { cn } from "@/lib/utils";
 import { BudgetEditDialog } from "./budget-edit-dialog";
 import { BudgetDeleteDialog } from "./budget-delete-dialog";
 import type { Budget, BudgetMember, BudgetType } from "@/services/budget-service";
-import type { LucideIcon } from "lucide-react";
+import { budgetTypeMeta } from "@/lib/budget-types";
 
 // ---------------------------------------------------------------------------
 // Per-type config
 // ---------------------------------------------------------------------------
-
-const TYPE_CONFIG: Record<BudgetType, {
-  Icon: LucideIcon;
-  iconBg: string;
-  badge: string;
-  label: string;
-  stripe: string;
-}> = {
-  standard: {
-    Icon: LayoutGrid,
-    iconBg: "bg-sky-500/12 text-sky-600 dark:text-sky-400",
-    badge:  "border-sky-200 bg-sky-500/10 text-sky-600 dark:border-sky-800 dark:text-sky-400",
-    label:  "Standard",
-    stripe: "bg-sky-500",
-  },
-  saving: {
-    Icon: PiggyBank,
-    iconBg: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400",
-    badge:  "border-emerald-200 bg-emerald-500/10 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400",
-    label:  "Saving",
-    stripe: "bg-emerald-500",
-  },
-  debt: {
-    Icon: CreditCard,
-    iconBg: "bg-red-500/12 text-red-600 dark:text-red-400",
-    badge:  "border-red-200 bg-red-500/10 text-red-600 dark:border-red-800 dark:text-red-400",
-    label:  "Debt",
-    stripe: "bg-red-500",
-  },
-  invest: {
-    Icon: BarChart2,
-    iconBg: "bg-violet-500/12 text-violet-600 dark:text-violet-400",
-    badge:  "border-violet-200 bg-violet-500/10 text-violet-600 dark:border-violet-800 dark:text-violet-400",
-    label:  "Invest",
-    stripe: "bg-violet-500",
-  },
-  sharing: {
-    Icon: Share2,
-    iconBg: "bg-amber-500/12 text-amber-600 dark:text-amber-400",
-    badge:  "border-amber-200 bg-amber-500/10 text-amber-600 dark:border-amber-800 dark:text-amber-400",
-    label:  "Sharing",
-    stripe: "bg-amber-500",
-  },
-};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -102,7 +58,7 @@ export function BudgetDetailHeader({
   // budgets where orgRole may not reflect budget-level ownership.
   const isOwner = budget.myRole === "owner" || orgRole === "owner";
 
-  const { Icon, iconBg, badge, label, stripe } = TYPE_CONFIG[budget.type];
+  const { Icon, iconBg, badge, label, stripe } = budgetTypeMeta(budget.type);
   const visibleMembers = members.slice(0, 4);
   const overflow = members.length - visibleMembers.length;
 

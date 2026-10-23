@@ -1,28 +1,16 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { BarChart2, CreditCard, LayoutGrid, PiggyBank, Share2, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { budgetTypeMeta } from "@/lib/budget-types";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Budget, BudgetType, BudgetRole } from "@/services/budget-service";
-import type { LucideIcon } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Per-type visual config
 // ---------------------------------------------------------------------------
 
-const TYPE_CONFIG: Record<BudgetType, {
-  Icon: LucideIcon;
-  iconBg: string;
-  stripe: string;
-  label: string;
-}> = {
-  standard: { Icon: LayoutGrid, iconBg: "bg-sky-500/12 text-sky-600 dark:text-sky-400",         stripe: "bg-sky-500",     label: "Standard" },
-  saving:   { Icon: PiggyBank,  iconBg: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400", stripe: "bg-emerald-500", label: "Saving"   },
-  debt:     { Icon: CreditCard, iconBg: "bg-red-500/12 text-red-600 dark:text-red-400",           stripe: "bg-red-500",     label: "Debt"     },
-  invest:   { Icon: BarChart2,  iconBg: "bg-violet-500/12 text-violet-600 dark:text-violet-400",  stripe: "bg-violet-500",  label: "Invest"   },
-  sharing:  { Icon: Share2,     iconBg: "bg-amber-500/12 text-amber-600 dark:text-amber-400",     stripe: "bg-amber-500",   label: "Sharing"  },
-};
 
 const ROLE_STYLES: Record<BudgetRole, string> = {
   owner:       "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
@@ -50,7 +38,7 @@ interface BudgetCardProps {
 
 export function BudgetCard({ budget, onClick }: BudgetCardProps) {
   const t = useTranslations("budget.card");
-  const { Icon, iconBg, stripe, label } = TYPE_CONFIG[budget.type];
+  const { Icon, iconBg, stripe, label } = budgetTypeMeta(budget.type);
 
   // Prefer computed pct from limit, fall back to API-provided burnRatePct
   const spendPct =
