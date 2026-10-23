@@ -33,6 +33,16 @@
     "members": "thành viên"
   },
   "create": {
+    "pickType": "Bạn muốn tạo gì?",
+    "back": "Quay lại",
+    "sharingCurrencyHint": "Quỹ chia tiền nhóm dùng VND.",
+    "typeDesc": {
+      "standard": "Theo dõi chi tiêu theo kế hoạch hàng tháng. Ví dụ: Gia đình, Cá nhân.",
+      "saving": "Quỹ tiết kiệm gồm tiền mặt và tài sản (sổ tiết kiệm, vàng). Ví dụ: Quỹ khẩn cấp.",
+      "sharing": "Chia tiền với bạn bè và chốt sổ. Ví dụ: Chuyến Đà Lạt.",
+      "invest": "Theo dõi danh mục đầu tư.",
+      "debt": "Theo dõi khoản nợ và cho vay."
+    },
     "title": "Tạo ngân sách",
     "name": "Tên ngân sách",
     "namePlaceholder": "VD: Chi tiêu gia đình",

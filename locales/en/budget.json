@@ -33,6 +33,16 @@
     "members": "members"
   },
   "create": {
+    "pickType": "What do you want to create?",
+    "back": "Back",
+    "sharingCurrencyHint": "Group budgets use VND.",
+    "typeDesc": {
+      "standard": "Track spending against a monthly plan. Example: Household, Personal.",
+      "saving": "A savings fund with cash and assets (deposits, gold). Example: Emergency fund.",
+      "sharing": "Split costs with friends and settle up. Example: Da Lat trip.",
+      "invest": "Track an investment portfolio.",
+      "debt": "Track money you owe or are owed."
+    },
     "title": "Create Budget",
     "name": "Budget name",
     "namePlaceholder": "e.g. Household expenses",
