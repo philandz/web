@@ -7,6 +7,7 @@ import { useBurnRateQuery } from "@/modules/budget/hooks";
 import { useCategoriesQuery } from "@/modules/category/hooks";
 import { useTransactionsQuery } from "@/modules/transaction/hooks";
 import { cn } from "@/lib/utils";
+import { amountSign, amountToneClass, iconToneClass, isInflow } from "@/lib/transaction-kind";
 import type { Budget } from "@/services/budget-service";
 import type { Transaction } from "@/services/transaction-service";
 import { useRef, useState, useMemo } from "react";
@@ -313,14 +314,12 @@ function SpendingChart({ transactions, currency, year, month }: { transactions: 
 // ---------------------------------------------------------------------------
 
 function RecentTxRow({ tx, currency }: { tx: Transaction; currency: string }) {
-  const isIncome = tx.type === "income";
+  const isIncome = isInflow(tx.type);
   return (
     <div className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
       <div className={cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-        isIncome
-          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-          : "bg-red-500/10 text-red-500",
+        iconToneClass(tx.type),
       )}>
         {isIncome
           ? <ArrowUpRight className="h-3.5 w-3.5" />
@@ -336,9 +335,9 @@ function RecentTxRow({ tx, currency }: { tx: Transaction; currency: string }) {
 
       <p className={cn(
         "shrink-0 text-sm font-semibold tabular-nums",
-        isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-red-500",
+        amountToneClass(tx.type),
       )}>
-        {isIncome ? "+" : "−"}{fmt(tx.amount, currency)}
+        {amountSign(tx.type)}{fmt(tx.amount, currency)}
       </p>
     </div>
   );

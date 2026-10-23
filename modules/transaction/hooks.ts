@@ -5,7 +5,7 @@ import {
   type TransactionType,
 } from "@/services/transaction-service";
 import { mediaService } from "@/services/media-service";
-import { transactionKeys } from "@/lib/query-keys";
+import { budgetKeys, transactionKeys } from "@/lib/query-keys";
 
 export function useTransactionsQuery(params: TransactionListParams = {}) {
   return useQuery({
@@ -182,5 +182,39 @@ export function useCreateSplitTransactionMutation() {
   return useMutation({
     mutationFn: transactionService.createSplitTransaction,
     onSuccess: () => qc.invalidateQueries({ queryKey: transactionKeys.lists() }),
+  });
+}
+
+function useInvalidateAfterTransfer() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: transactionKeys.lists() });
+    qc.invalidateQueries({ queryKey: transactionKeys.all });
+    qc.invalidateQueries({ queryKey: budgetKeys.all });
+  };
+}
+
+export function useCreateTransferMutation() {
+  const invalidate = useInvalidateAfterTransfer();
+  return useMutation({
+    mutationFn: transactionService.createTransfer,
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateTransferMutation(groupId: string) {
+  const invalidate = useInvalidateAfterTransfer();
+  return useMutation({
+    mutationFn: (input: { amount?: number; date?: string; description?: string; notes?: string }) =>
+      transactionService.updateTransfer(groupId, input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteTransferMutation() {
+  const invalidate = useInvalidateAfterTransfer();
+  return useMutation({
+    mutationFn: (groupId: string) => transactionService.deleteTransfer(groupId),
+    onSuccess: invalidate,
   });
 }

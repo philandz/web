@@ -25,7 +25,8 @@ import { useToast } from "@/components/state/toast-provider";
 
 import { budgetTypeMeta } from "@/lib/budget-types";
 import type { Budget, BudgetType } from "@/services/budget-service";
-import type { Transaction, TransactionType, TransactionListParams } from "@/services/transaction-service";
+import type { Transaction, TransactionKind, TransactionType, TransactionListParams } from "@/services/transaction-service";
+import { amountSign, amountToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -81,8 +82,15 @@ function TypeIcon({ type }: { type: BudgetType }) {
   );
 }
 
-function TxTypeChip({ type }: { type: TransactionType }) {
+function TxTypeChip({ type }: { type: TransactionKind }) {
   const isIncome = type === "income";
+  if (isTransferKind(type)) {
+    return (
+      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-sky-500/25 bg-sky-500/10 px-2 py-[2px] text-[10px] font-bold text-sky-600 dark:text-sky-400">
+        ⇄ {type === "transfer_in" ? "Transfer in" : "Transfer out"}
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
@@ -338,7 +346,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
         </div>
         <div>
           {recent.map((tx, i) => {
-            const isIncome = tx.type === "income";
+            const isIncome = isInflow(tx.type);
             return (
               <div
                 key={tx.id}
@@ -346,9 +354,9 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
               >
                 <div className={cn(
                   "grid h-[34px] w-[34px] place-items-center rounded-full text-[14px]",
-                  isIncome ? "bg-income/10 text-income" : "bg-expense/10 text-expense",
+                  isTransferKind(tx.type) ? "bg-sky-500/10 text-sky-600 dark:text-sky-400" : isIncome ? "bg-income/10 text-income" : "bg-expense/10 text-expense",
                 )}>
-                  {isIncome ? "↑" : "↓"}
+                  {isTransferKind(tx.type) ? "⇄" : isIncome ? "↑" : "↓"}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-semibold text-foreground">{tx.description}</div>
@@ -356,9 +364,9 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
                 </div>
                 <div className={cn(
                   "text-[14px] font-extrabold tabular-nums",
-                  isIncome ? "text-income" : "text-expense",
+                  isTransferKind(tx.type) ? amountToneClass(tx.type) : isIncome ? "text-income" : "text-expense",
                 )}>
-                  {isIncome ? "+" : "−"}{fmtShort(tx.amount, currency)}
+                  {amountSign(tx.type)}{fmtShort(tx.amount, currency)}
                 </div>
               </div>
             );
@@ -665,7 +673,7 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
               {paged.map((tx) => {
                 const isActive = detailOpen && detailTx?.id === tx.id;
                 const isHover = hoverRow === tx.id;
-                const isIncome = tx.type === "income";
+                const isIncome = isInflow(tx.type);
                 const cat = tx.categoryId ? categoryMap.get(tx.categoryId) : null;
                 return (
                   <tr
@@ -708,9 +716,9 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
                     <td className="px-3 py-[11px] whitespace-nowrap text-right">
                       <span className={cn(
                         "text-[14px] font-extrabold tabular-nums tracking-[-.02em]",
-                        isIncome ? "text-income" : "text-expense",
+                        isTransferKind(tx.type) ? amountToneClass(tx.type) : isIncome ? "text-income" : "text-expense",
                       )}>
-                        {isIncome ? "+" : "−"}{fmtShort(tx.amount, budget.currency)}
+                        {amountSign(tx.type)}{fmtShort(tx.amount, budget.currency)}
                       </span>
                     </td>
                     <td className="px-3 py-[11px]">

@@ -12,7 +12,7 @@ import { Sheet, SheetBody, SheetClose, SheetContent, SheetHeader, SheetTitle } f
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
 import {
-  useDeleteTransactionMutation, useTransactionAttachmentsQuery,
+  useDeleteTransactionMutation, useDeleteTransferMutation, useTransactionAttachmentsQuery,
   useCommentsQuery, useAddCommentMutation, useEditCommentMutation, useDeleteCommentMutation,
 } from "@/modules/transaction/hooks";
 import { useCategoriesQuery } from "@/modules/category/hooks";
@@ -21,6 +21,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
 import type { Transaction } from "@/services/transaction-service";
 import { cn } from "@/lib/utils";
+import { isInflow, isTransferKind } from "@/lib/transaction-kind";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -306,6 +307,7 @@ export function TransactionDetailDrawer({
   const toast = useToast();
   const profile = useAuthStore((s) => s.profile);
   const deleteMutation = useDeleteTransactionMutation();
+  const deleteTransferMutation = useDeleteTransferMutation();
   const { data: categories = [] } = useCategoriesQuery(budgetId);
   const { data: members = [] } = useBudgetMembersQuery(budgetId);
   const [editOpen, setEditOpen] = useState(false);
@@ -313,7 +315,8 @@ export function TransactionDetailDrawer({
 
   if (!transaction) return null;
 
-  const isIncome = transaction.type === "income";
+  const isTransfer = isTransferKind(transaction.type);
+  const isIncome = isInflow(transaction.type);
   const category = categories.find((c) => c.id === transaction.categoryId);
   const creator = transaction.createdBy
     ? members.find((m) => m.userId === transaction.createdBy)
@@ -322,7 +325,9 @@ export function TransactionDetailDrawer({
   const creatorAvatar = creatorIsMe ? (profile?.avatar ?? undefined) : undefined;
 
   function handleDelete() {
-    deleteMutation.mutate(transaction!.id, {
+    const mutation = isTransfer ? deleteTransferMutation : deleteMutation;
+    const target = isTransfer ? (transaction!.transfer?.groupId ?? "") : transaction!.id;
+    mutation.mutate(target, {
       onSuccess: () => {
         toast.success(t("deleteSuccess"));
         setConfirmDelete(false);
@@ -370,7 +375,7 @@ export function TransactionDetailDrawer({
                 {isIncome
                   ? <ArrowUpRight className="h-3 w-3" />
                   : <ArrowDownLeft className="h-3 w-3" />}
-                {isIncome ? t("income") ?? "Income" : t("expense") ?? "Expense"}
+                {isTransfer ? (transaction.type === "transfer_in" ? "Transfer in" : "Transfer out") : isIncome ? t("income") ?? "Income" : t("expense") ?? "Expense"}
               </span>
 
               {/* Amount */}
@@ -494,6 +499,7 @@ export function TransactionDetailDrawer({
 
             {/* ── Actions ── */}
             <div className="flex gap-2 pt-1">
+              {isTransfer ? null : (
               <Button
                 variant="outline"
                 size="sm"
@@ -503,6 +509,7 @@ export function TransactionDetailDrawer({
                 <Pencil className="mr-1.5 h-3.5 w-3.5" />
                 {t("edit")}
               </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

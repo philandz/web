@@ -168,7 +168,9 @@ export function TransactionFormDrawer({
   });
   const allBudgets = pagedBudgets?.items ?? [];
 
-  const [type, setType] = useState<TransactionType>(transaction?.type ?? defaultType);
+  const [type, setType] = useState<TransactionType>(
+    transaction?.type === "income" || transaction?.type === "expense" ? transaction.type : defaultType,
+  );
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
   const [description, setDescription] = useState(transaction?.description ?? "");
   const [date, setDate] = useState(transaction?.date ?? new Date().toISOString().slice(0, 10));
@@ -200,7 +202,7 @@ export function TransactionFormDrawer({
   // Reset form when transaction changes
   useEffect(() => {
     if (transaction) {
-      setType(transaction.type);
+      setType(transaction.type === "income" ? "income" : "expense");
       setAmount(String(transaction.amount));
       setDescription(transaction.description);
       setDate(transaction.date);
