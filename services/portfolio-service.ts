@@ -364,8 +364,10 @@ export function normalizeFundKind(kind: string | number | undefined): FundCashMo
  * the note as optional, so send an empty string rather than dropping the key
  * (the gateway rejects a body with a missing required field).
  */
-function fundTransferBody(body: FundTransferBody): Record<string, unknown> {
-  return camelToSnake({ ...body, note: body.note ?? "" });
+function fundTransferBody(budgetId: string, body: FundTransferBody): Record<string, unknown> {
+  // `budget_id` is required by the proto even though the gateway overwrites it
+  // with the path value — a body without it is rejected with 422.
+  return camelToSnake({ ...body, budget_id: budgetId, note: body.note ?? "" });
 }
 
 export const portfolioService = {
@@ -405,13 +407,19 @@ export const portfolioService = {
     // The proto has no `optional` on these two fields, so the gateway rejects
     // the request when one of them is missing.
     return apiClient
-      .patch<PortfolioAsset>(`${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}`, camelToSnake({ displayName: "", notes: "", ...body }))
+      .patch<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}`,
+        camelToSnake({ budget_id: budgetId, asset_id: assetId, displayName: "", notes: "", ...body }),
+      )
       .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   archive(budgetId: string, assetId: string) {
     return apiClient
-      .post<PortfolioAsset>(`${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/archive`, {})
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/archive`,
+        { budget_id: budgetId, asset_id: assetId },
+      )
       .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
@@ -661,13 +669,13 @@ export const portfolioService = {
 
   depositToFund(budgetId: string, body: FundTransferBody) {
     return apiClient
-      .post<FundTransferResult>(`${BASE}/budgets/${budgetId}/portfolio/fund/deposit`, fundTransferBody(body))
+      .post<FundTransferResult>(`${BASE}/budgets/${budgetId}/portfolio/fund/deposit`, fundTransferBody(budgetId, body))
       .then((raw) => snakeToCamel<FundTransferResult>(raw));
   },
 
   withdrawFromFund(budgetId: string, body: FundTransferBody) {
     return apiClient
-      .post<FundTransferResult>(`${BASE}/budgets/${budgetId}/portfolio/fund/withdraw`, fundTransferBody(body))
+      .post<FundTransferResult>(`${BASE}/budgets/${budgetId}/portfolio/fund/withdraw`, fundTransferBody(budgetId, body))
       .then((raw) => snakeToCamel<FundTransferResult>(raw));
   },
 
