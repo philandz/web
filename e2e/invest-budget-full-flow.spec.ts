@@ -66,8 +66,12 @@ async function createInvestBudget(page: Page, opts: { name: string; currency?: s
     headers: { Authorization: `Bearer ${token}` },
   });
   expect(resp.status(), `budget create failed: ${await resp.text()}`).toBeLessThan(300);
-  const body = (await resp.json()) as { base?: { id?: string }; id?: string };
-  const budgetId = body.budget?.base?.id ?? body.base?.id ?? body.id;
+  const body = (await resp.json()) as {
+    base?: { id?: string };
+    id?: string;
+    budget?: { base?: { id?: string }; id?: string };
+  };
+  const budgetId = body.budget?.base?.id ?? body.budget?.id ?? body.base?.id ?? body.id ?? '';
   expect(budgetId, 'no budget id').toBeTruthy();
   await api.dispose();
   return { budgetId, token };
@@ -103,7 +107,11 @@ async function listInvestAssetsViaApi(token: string, budgetId: string) {
     });
     const status = resp.status();
     const text = await resp.text();
-    return { status, text, body: text ? JSON.parse(text) : null };
+    return {
+      status,
+      text,
+      body: text ? (JSON.parse(text) as { assets?: { name?: string }[] }) : null,
+    };
   } finally {
     await api.dispose();
   }
@@ -161,7 +169,7 @@ test.describe('Invest budget full CRUD', () => {
     // empty-budget test covers the UI mount path.
     const list = await listInvestAssetsViaApi(token, budgetId);
     expect(list.status).toBeLessThan(300);
-    const names = list.body!.assets.map((a) => a.name).sort();
+    const names = (list.body!.assets ?? []).map((a) => a.name).sort();
     expect(names).toEqual(['E2E SJC 9999', 'E2E VCB Savings', 'E2E VNM Holdings']);
 
     // ----- DELETE: archive stock via API + verify list shrinks -----
