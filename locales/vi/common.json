@@ -28,5 +28,8 @@
     "loading": "Đang tải...",
     "redirecting": "Đang chuyển hướng...",
     "somethingWrong": "Đã có lỗi xảy ra. Vui lòng thử lại."
+  },
+  "amountInput": {
+    "invalid": "Nhập số tiền hợp lệ (ví dụ: 50k, 1tr5, 120000)"
   }
 }

@@ -27,6 +27,9 @@
       "value": "Tổng giá trị: {amount}",
       "count": "{count, plural, other {# ngân sách}}"
     },
+    "groupScope": {
+      "pageOnly": "chỉ trang này"
+    },
     "refresh": "Làm mới"
   },
   "card": {

@@ -24,13 +24,15 @@ export function OrgOverview({ budgets }: { budgets: Budget[] }) {
   const t = useTranslations("dashboard.orgOverview");
   const locale = useLocale();
   const planning = isFeatureEnabled("periodPlanning");
+  const savingFund = isFeatureEnabled("savingFund");
+  const sharingV2 = isFeatureEnabled("sharingV2");
 
   const standard = useMemo(
     () => budgets.filter((b) => b.type === "standard").slice(0, MAX_STANDARD),
     [budgets],
   );
-  const sharing = budgets.filter((b) => b.type === "sharing" && b.status !== "archived");
-  const fund = isFeatureEnabled("savingFund") ? sumFundValue(budgets) : null;
+  const sharing = sharingV2 ? budgets.filter((b) => b.type === "sharing" && b.status !== "archived") : [];
+  const fund = savingFund ? sumFundValue(budgets) : null;
 
   const summaries = useQueries({
     queries: standard.map((b) => ({
@@ -45,7 +47,8 @@ export function OrgOverview({ budgets }: { budgets: Budget[] }) {
   const totals = sumPeriodSummaries(items);
   const money = (v: number, currency: string) => formatCurrency(v, currency, locale);
 
-  if (!planning && !fund && sharing.length === 0) return null;
+  // Ship dark: the whole block only exists when a flag is on.
+  if (!planning && !fund && !(sharingV2 && sharing.length > 0)) return null;
 
   return (
     <section className="space-y-3" data-testid="org-overview" aria-label={t("title")}>
@@ -102,7 +105,7 @@ export function OrgOverview({ budgets }: { budgets: Budget[] }) {
             }
           />
         ) : null}
-        {sharing.length > 0 ? (
+        {sharingV2 && sharing.length > 0 ? (
           <StatTile
             label={t("sharing")}
             value={

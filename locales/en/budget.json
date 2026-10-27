@@ -27,6 +27,9 @@
       "value": "{amount} total value",
       "count": "{count, plural, one {1 budget} other {# budgets}}"
     },
+    "groupScope": {
+      "pageOnly": "this page only"
+    },
     "refresh": "Refresh"
   },
   "card": {

@@ -26,6 +26,22 @@ describe("groupBudgetsByType", () => {
     expect(g[0].kpi.currency).toBeNull();
   });
 
+  it("does not sum spent across mixed currencies", () => {
+    const g = groupBudgetsByType([
+      b({ type: "standard", currency: "VND", currentSpend: 100 }),
+      b({ type: "standard", currency: "USD", currentSpend: 50 }),
+    ]);
+    expect(g[0].kpi).toEqual({ kind: "spent", currency: null, amount: 0 });
+  });
+
+  it("does not sum value across mixed currencies", () => {
+    const g = groupBudgetsByType([
+      b({ type: "saving", currency: "VND", totalCurrentValue: 900 }),
+      b({ type: "saving", currency: "USD", totalCurrentValue: 10 }),
+    ]);
+    expect(g[0].kpi).toEqual({ kind: "value", currency: null, amount: 0 });
+  });
+
   it("counts sharing budgets", () => {
     const g = groupBudgetsByType([b({ type: "sharing" }), b({ type: "sharing" })]);
     expect(g[0].kpi).toEqual({ kind: "count", currency: null, amount: 2 });

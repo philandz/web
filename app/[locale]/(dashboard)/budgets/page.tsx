@@ -143,6 +143,9 @@ export default function BudgetsPage() {
   const { data, isLoading, isError, refetch } = useBudgetsQuery(listParams);
   const budgets = data?.items ?? [];
   const meta = data?.meta;
+  // The grouped view renders the current page only, so its numbers are not
+  // org-wide totals — say so instead of passing page-local numbers off as totals.
+  const pageScoped = (meta?.totalPages ?? 0) > 1;
 
   // ── No org selected ──
   if (!orgId) {
@@ -325,30 +328,36 @@ export default function BudgetsPage() {
       ) : (
         activeType === "" ? (
           <div className="space-y-8">
-            {groupBudgetsByType(budgets).map((group) => (
-              <section key={group.type} data-testid={`budget-group-${group.type}`} className="space-y-3">
-                <header className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-sm font-semibold text-foreground">
-                    {t(TYPE_LABEL_KEY[group.type])}
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">
-                      {group.budgets.length}
-                    </span>
-                  </h2>
-                  <p className="text-xs text-muted-foreground" data-testid={`budget-group-kpi-${group.type}`}>
-                    {group.kpi.kind === "count"
-                      ? t("groupKpi.count", { count: group.kpi.amount })
-                      : group.kpi.currency
-                        ? t(`groupKpi.${group.kpi.kind}`, {
-                            amount: formatCurrency(group.kpi.amount, group.kpi.currency, locale),
-                          })
-                        : null}
-                  </p>
-                </header>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {group.budgets.map(renderCard)}
-                </div>
-              </section>
-            ))}
+            {groupBudgetsByType(budgets).map((group) => {
+              const kpiText =
+                group.kpi.kind === "count"
+                  ? t("groupKpi.count", { count: group.kpi.amount })
+                  : group.kpi.currency
+                    ? t(`groupKpi.${group.kpi.kind}`, {
+                        amount: formatCurrency(group.kpi.amount, group.kpi.currency, locale),
+                      })
+                    : null;
+              return (
+                <section key={group.type} data-testid={`budget-group-${group.type}`} className="space-y-3">
+                  <header className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h2 className="text-sm font-semibold text-foreground">
+                      {t(TYPE_LABEL_KEY[group.type])}
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        {group.budgets.length}
+                        {pageScoped ? ` · ${t("groupScope.pageOnly")}` : null}
+                      </span>
+                    </h2>
+                    <p className="text-xs text-muted-foreground" data-testid={`budget-group-kpi-${group.type}`}>
+                      {kpiText}
+                      {kpiText && pageScoped ? ` · ${t("groupScope.pageOnly")}` : null}
+                    </p>
+                  </header>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {group.budgets.map(renderCard)}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
