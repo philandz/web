@@ -61,6 +61,22 @@ export const settingsKeys = {
   resend: () => [...settingsKeys.all, "resend"] as const,
 };
 
+// Sharing keys live here so every sharing query (list, detail, balances)
+// resolves to the same cache entry. Each collection uses its own segment
+// so invalidating one does not nuke the others.
+export const sharingKeys = {
+  all: ["sharing"] as const,
+  expenses: (budgetId: string) => [...sharingKeys.all, "expenses", budgetId] as const,
+  settlement: (budgetId: string) => [...sharingKeys.all, "settlement", budgetId] as const,
+  settlements: (budgetId: string) => [...sharingKeys.all, "settlements", budgetId] as const,
+  participants: (budgetId: string) => [...sharingKeys.all, "participants", budgetId] as const,
+  balances: (budgetId: string) => [...sharingKeys.all, "balances", budgetId] as const,
+  activity: (budgetId: string) => [...sharingKeys.all, "activity", budgetId] as const,
+  comments: (expenseId: string) => [...sharingKeys.all, "comments", expenseId] as const,
+  budget: (budgetId: string) => [...sharingKeys.all, "budget", budgetId] as const,
+  orgMembers: (orgId: string) => [...sharingKeys.all, "orgMembers", orgId] as const,
+};
+
 export const planKeys = {
   all: ["plan"] as const,
   // The budget id comes first so `planKeys.budget(id)` is a prefix of every

@@ -130,12 +130,16 @@ export interface ParticipantInfo {
 // Balance (from GetBalances)
 // ---------------------------------------------------------------------------
 
-export interface Balance {
+export interface ParticipantBalance {
   userId: string;
   displayName: string;
   email: string;
-  netBalance: number; // positive = owed to this person, negative = owes others
+  /** positive = the group owes this participant; negative = this participant owes the group */
+  netBalance: number;
 }
+
+/** @deprecated Use {@link ParticipantBalance}. */
+export type Balance = ParticipantBalance;
 
 // ---------------------------------------------------------------------------
 // Raw response shapes
@@ -269,7 +273,9 @@ interface RawBalance {
   user_id: string;
   display_name: string;
   email: string;
-  net_balance: number;
+  // The gateway sends a JSON number, but some gateways/proxies serialise
+  // 64-bit amounts as strings. Coerce defensively.
+  net_balance: number | string;
 }
 
 // ---------------------------------------------------------------------------
@@ -399,12 +405,13 @@ function mapParticipant(raw: RawParticipant): ParticipantInfo {
   };
 }
 
-function mapBalance(raw: RawBalance): Balance {
+function mapBalance(raw: RawBalance): ParticipantBalance {
+  const net = Number(raw.net_balance);
   return {
     userId: raw.user_id,
     displayName: raw.display_name,
     email: raw.email,
-    netBalance: raw.net_balance,
+    netBalance: Number.isFinite(net) ? net : 0,
   };
 }
 
@@ -695,7 +702,7 @@ export const sharingService = {
 
   // --- Balances ---
 
-  async getBalances(budgetId: string): Promise<Balance[]> {
+  async getBalances(budgetId: string): Promise<ParticipantBalance[]> {
     const raw = await apiClient.get<{ balances: RawBalance[] }>(
       `${BASE}/budgets/${budgetId}/balances`
     );

@@ -1,10 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 
 import { portfolioKeys } from "@/lib/query-keys";
 import {
   portfolioService,
   type FundTransferBody,
   type AssetSource,
+  type FundSummary,
   type PortfolioAsset,
   type PortfolioSummary,
   type PriceObservation,
@@ -163,13 +164,47 @@ export function useRecordStockDisposalMutation(budgetId: string, assetId: string
 // ---------------------------------------------------------------------------
 // Re-exports for convenience
 // ---------------------------------------------------------------------------
-export type { AssetSource, PortfolioAsset, PortfolioSummary, PriceObservation, ValuatedAsset };
+export type {
+  AssetSource,
+  FundSummary,
+  PortfolioAsset,
+  PortfolioSummary,
+  PriceObservation,
+  ValuatedAsset,
+};
 export function useFundSummaryQuery(budgetId: string | null) {
   return useQuery({
     queryKey: portfolioKeys.fund(budgetId ?? ""),
     queryFn: () => portfolioService.getFundSummary(budgetId!),
     enabled: Boolean(budgetId),
   });
+}
+
+/**
+ * Fund summaries for several saving budgets at once (one request per budget, in parallel).
+ *
+ * Reuses `portfolioKeys.fund(budgetId)` so the budget list and
+ * `components/philand/portfolio/fund-panel.tsx` share the same cache entry.
+ * Budgets whose summary has not loaded (or that errored) are absent from the
+ * map — the card renders its own fallback for those.
+ */
+export function useFundSummaries(budgetIds: string[]): Map<string, FundSummary> {
+  const ids = Array.from(new Set(budgetIds.filter((id) => Boolean(id))));
+
+  const queries = useQueries({
+    queries: ids.map((budgetId) => ({
+      queryKey: portfolioKeys.fund(budgetId),
+      queryFn: () => portfolioService.getFundSummary(budgetId),
+    })),
+  });
+
+  const summaries = new Map<string, FundSummary>();
+  ids.forEach((budgetId, index) => {
+    const query = queries[index];
+    if (!query?.isSuccess || !query.data) return;
+    summaries.set(budgetId, query.data);
+  });
+  return summaries;
 }
 
 export function useFundMovementsQuery(budgetId: string | null, page = 1) {
