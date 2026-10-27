@@ -63,7 +63,9 @@ export const settingsKeys = {
 
 export const planKeys = {
   all: ["plan"] as const,
-  summary: (budgetId: string, offset: number) => [...planKeys.all, "summary", budgetId, offset] as const,
-  plan: (budgetId: string, offset: number) => [...planKeys.all, "plan", budgetId, offset] as const,
+  // The budget id comes first so `planKeys.budget(id)` is a prefix of every
+  // per-budget key and invalidating it actually refreshes plan + summary.
+  summary: (budgetId: string, offset: number) => [...planKeys.all, budgetId, "summary", offset] as const,
+  plan: (budgetId: string, offset: number) => [...planKeys.all, budgetId, "plan", offset] as const,
   budget: (budgetId: string) => [...planKeys.all, budgetId] as const,
 };
