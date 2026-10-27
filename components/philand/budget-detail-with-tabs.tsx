@@ -71,7 +71,7 @@ function fmtDateFull(dateStr: string) {
 
 function typeCfg(type: BudgetType) {
   const m = budgetTypeMeta(type);
-  return { label: m.label, icon: m.emoji, ...m.hex };
+  return { labelKey: m.labelKey, icon: m.emoji, ...m.hex };
 }
 
 function TypeIcon({ type }: { type: BudgetType }) {
@@ -801,6 +801,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
   const summary = useEntrySummaryQuery(budget.id);
 
   const cfg = typeCfg(budget.type);
+  const tRoot = useTranslations();
   const spendPct = envelope?.monthlyLimit ? Math.min(100, (envelope.currentSpend / envelope.monthlyLimit) * 100) : null;
   const barColor = spendPct == null ? "hsl(var(--border))" : spendPct >= 100 ? "hsl(var(--expense))" : spendPct >= 80 ? "hsl(38 85% 50%)" : "hsl(var(--primary))";
 
@@ -828,7 +829,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                   className="rounded-full border px-2.5 py-1 text-[11px] font-bold"
                   style={{ background: cfg.iconBg, color: cfg.iconFg, borderColor: `${cfg.stripe}33` }}
                 >
-                  {cfg.label}
+                  {tRoot(cfg.labelKey)}
                 </span>
                 <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-bold capitalize text-muted-foreground">
                   {budget.myRole}

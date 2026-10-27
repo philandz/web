@@ -9,11 +9,11 @@
     "sortDefault": "Sắp xếp",
     "sortName": "Tên",
     "sortUpdated": "Cập nhật gần nhất",
-    "typeStandard": "Tiêu chuẩn",
-    "typeSaving": "Tiết kiệm",
-    "typeDebt": "Trả nợ",
+    "typeStandard": "Ngân sách chi tiêu",
+    "typeSaving": "Quỹ tiết kiệm",
+    "typeDebt": "Nợ",
     "typeInvest": "Đầu tư",
-    "typeSharing": "Chia sẻ",
+    "typeSharing": "Chia tiền nhóm",
     "roleOwner": "Chủ sở hữu",
     "roleManager": "Quản lý",
     "roleContributor": "Đóng góp",
@@ -22,14 +22,6 @@
     "emptySubtitle": "Tạo ngân sách đầu tiên để bắt đầu theo dõi tài chính",
     "noOrg": "Chọn tổ chức để xem ngân sách",
     "count": "{count, plural, =0 {Không có ngân sách} other {# ngân sách}}",
-    "groupKpi": {
-      "spent": "Đã chi tháng này: {amount}",
-      "value": "Tổng giá trị: {amount}",
-      "count": "{count, plural, other {# ngân sách}}"
-    },
-    "groupScope": {
-      "pageOnly": "chỉ trang này"
-    },
     "refresh": "Làm mới"
   },
   "card": {
@@ -38,7 +30,12 @@
     "expense": "Chi tiêu",
     "spent": "Đã chi",
     "noLimit": "Không giới hạn",
-    "members": "thành viên"
+    "members": "thành viên",
+    "fundValue": "Giá trị quỹ",
+    "fundGrowth": "Tăng trưởng",
+    "myBalance": "Số dư của tôi",
+    "totalSpent": "Tổng đã chi",
+    "memberCount": "{count, plural, other {# thành viên}}"
   },
   "create": {
     "pickType": "Bạn muốn tạo gì?",

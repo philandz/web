@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ArrowUpDown,
   BarChart2, CreditCard, LayoutGrid,
@@ -18,8 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select";
 import { routes } from "@/constants/routes";
-import { formatCurrency } from "@/lib/format";
-import { groupBudgetsByType } from "@/lib/budget/group";
 import {
   changeBudgetFilter,
   DEFAULT_PAGE,
@@ -31,6 +29,8 @@ import {
   type BudgetFilters,
 } from "@/lib/query-params/budgets";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
+import { useFundSummaries } from "@/modules/portfolio/hooks";
+import { useSharingBudgetSummaries } from "@/modules/sharing/hooks";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import type { BudgetListParams, BudgetRole, BudgetType } from "@/services/budget-service";
 import { cn } from "@/lib/utils";
@@ -47,14 +47,6 @@ const TYPE_CHIPS: { value: BudgetType | ""; Icon?: React.ElementType; labelKey: 
   { value: "invest",    Icon: BarChart2,  labelKey: "typeInvest"   },
   { value: "sharing",   Icon: Share2,     labelKey: "typeSharing"  },
 ];
-
-const TYPE_LABEL_KEY: Record<BudgetType, string> = {
-  standard: "typeStandard",
-  saving: "typeSaving",
-  debt: "typeDebt",
-  invest: "typeInvest",
-  sharing: "typeSharing",
-};
 
 // ---------------------------------------------------------------------------
 // Skeleton card (same visual structure as BudgetCard)
@@ -102,7 +94,6 @@ function SkeletonCard() {
 
 export default function BudgetsPage() {
   const t = useTranslations("budget.list");
-  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -141,11 +132,21 @@ export default function BudgetsPage() {
   };
 
   const { data, isLoading, isError, refetch } = useBudgetsQuery(listParams);
-  const budgets = data?.items ?? [];
+  const budgets = useMemo(() => data?.items ?? [], [data]);
   const meta = data?.meta;
-  // The grouped view renders the current page only, so its numbers are not
-  // org-wide totals — say so instead of passing page-local numbers off as totals.
-  const pageScoped = (meta?.totalPages ?? 0) > 1;
+
+  // Enrichment for the card metrics: a saving card shows its fund value,
+  // a sharing card shows my balance + the total spent.
+  const savingIds = useMemo(
+    () => budgets.filter((b) => b.type === "saving").map((b) => b.id),
+    [budgets],
+  );
+  const sharingIds = useMemo(
+    () => budgets.filter((b) => b.type === "sharing").map((b) => b.id),
+    [budgets],
+  );
+  const funds = useFundSummaries(savingIds);
+  const sharing = useSharingBudgetSummaries(sharingIds);
 
   // ── No org selected ──
   if (!orgId) {
@@ -160,6 +161,8 @@ export default function BudgetsPage() {
     <BudgetCard
       key={budget.id}
       budget={budget}
+      fund={funds.get(budget.id)}
+      sharingSummary={sharing.get(budget.id)}
       onClick={() =>
         router.push(
           budget.type === "sharing"
@@ -326,44 +329,9 @@ export default function BudgetsPage() {
           )}
         />
       ) : (
-        activeType === "" ? (
-          <div className="space-y-8">
-            {groupBudgetsByType(budgets).map((group) => {
-              const kpiText =
-                group.kpi.kind === "count"
-                  ? t("groupKpi.count", { count: group.kpi.amount })
-                  : group.kpi.currency
-                    ? t(`groupKpi.${group.kpi.kind}`, {
-                        amount: formatCurrency(group.kpi.amount, group.kpi.currency, locale),
-                      })
-                    : null;
-              return (
-                <section key={group.type} data-testid={`budget-group-${group.type}`} className="space-y-3">
-                  <header className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h2 className="text-sm font-semibold text-foreground">
-                      {t(TYPE_LABEL_KEY[group.type])}
-                      <span className="ml-2 text-xs font-normal text-muted-foreground">
-                        {group.budgets.length}
-                        {pageScoped ? ` · ${t("groupScope.pageOnly")}` : null}
-                      </span>
-                    </h2>
-                    <p className="text-xs text-muted-foreground" data-testid={`budget-group-kpi-${group.type}`}>
-                      {kpiText}
-                      {kpiText && pageScoped ? ` · ${t("groupScope.pageOnly")}` : null}
-                    </p>
-                  </header>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    {group.budgets.map(renderCard)}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {budgets.map(renderCard)}
-          </div>
-        )
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {budgets.map(renderCard)}
+        </div>
       )}
 
       {/* ── Pagination ── */}

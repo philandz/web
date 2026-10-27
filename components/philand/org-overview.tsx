@@ -14,6 +14,7 @@ import { isFeatureEnabled } from "@/lib/features";
 import { formatCurrency } from "@/lib/format";
 import { planKeys } from "@/lib/query-keys";
 import { sumFundValue, sumPeriodSummaries } from "@/lib/budget/org-totals";
+import { useFundSummaries } from "@/modules/portfolio/hooks";
 import { planService } from "@/services/plan-service";
 import type { Budget } from "@/services/budget-service";
 
@@ -32,7 +33,15 @@ export function OrgOverview({ budgets }: { budgets: Budget[] }) {
     [budgets],
   );
   const sharing = sharingV2 ? budgets.filter((b) => b.type === "sharing" && b.status !== "archived") : [];
-  const fund = savingFund ? sumFundValue(budgets) : null;
+
+  // The list API reports `totalCurrentValue` as 0 for saving budgets, so the
+  // fund totals have to come from the loaded fund summaries.
+  const savingIds = useMemo(
+    () => (savingFund ? budgets.filter((b) => b.type === "saving").map((b) => b.id) : []),
+    [budgets, savingFund],
+  );
+  const funds = useFundSummaries(savingIds);
+  const fund = savingFund ? sumFundValue(budgets, funds) : null;
 
   const summaries = useQueries({
     queries: standard.map((b) => ({

@@ -58,7 +58,8 @@ export function BudgetDetailHeader({
   // budgets where orgRole may not reflect budget-level ownership.
   const isOwner = budget.myRole === "owner" || orgRole === "owner";
 
-  const { Icon, iconBg, badge, label, stripe } = budgetTypeMeta(budget.type);
+  const { Icon, iconBg, badge, labelKey, stripe } = budgetTypeMeta(budget.type);
+  const tRoot = useTranslations();
   const visibleMembers = members.slice(0, 4);
   const overflow = members.length - visibleMembers.length;
 
@@ -110,7 +111,7 @@ export function BudgetDetailHeader({
                 {budget.name}
               </h1>
               <Badge variant="outline" className={cn(badge, "text-[10px] sm:text-xs")}>
-                {label}
+                {tRoot(labelKey)}
               </Badge>
             </div>
             <div className="mt-0.5 flex items-center gap-1.5">

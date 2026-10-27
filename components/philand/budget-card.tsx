@@ -1,11 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Users } from "lucide-react";
+import { TrendingDown, TrendingUp, Users } from "lucide-react";
 import { budgetTypeMeta } from "@/lib/budget-types";
+import { cardMetricFor } from "@/lib/budget/card-metrics";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Budget, BudgetType, BudgetRole } from "@/services/budget-service";
+import type { Budget, BudgetRole } from "@/services/budget-service";
+import type { FundSummary } from "@/services/portfolio-service";
+import type { SharingBudgetSummary } from "@/modules/sharing/hooks";
 
 // ---------------------------------------------------------------------------
 // Per-type visual config
@@ -27,6 +30,11 @@ function formatCurrency(amount: number, currency: string) {
   }).format(amount);
 }
 
+/** Signed money so a negative balance reads as "I owe". */
+function formatSigned(amount: number, currency: string) {
+  return `${amount > 0 ? "+" : ""}${formatCurrency(amount, currency)}`;
+}
+
 // ---------------------------------------------------------------------------
 // BudgetCard
 // ---------------------------------------------------------------------------
@@ -34,17 +42,21 @@ function formatCurrency(amount: number, currency: string) {
 interface BudgetCardProps {
   budget: Budget;
   onClick: () => void;
+  /** Loaded fund summary — only for saving budgets. */
+  fund?: FundSummary;
+  /** Loaded settlement summary — only for sharing budgets. */
+  sharingSummary?: SharingBudgetSummary;
 }
 
-export function BudgetCard({ budget, onClick }: BudgetCardProps) {
+export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCardProps) {
   const t = useTranslations("budget.card");
-  const { Icon, iconBg, stripe, label } = budgetTypeMeta(budget.type);
+  const tRoot = useTranslations();
+  const { Icon, iconBg, stripe, labelKey } = budgetTypeMeta(budget.type);
+
+  const metric = cardMetricFor(budget, { fund, sharing: sharingSummary });
 
   // Prefer computed pct from limit, fall back to API-provided burnRatePct
-  const spendPct =
-    budget.envelopeLimit && budget.envelopeLimit > 0
-      ? Math.min(100, ((budget.currentSpend ?? 0) / budget.envelopeLimit) * 100)
-      : (budget.burnRatePct ?? null);
+  const spendPct = metric.kind === "spend" ? metric.pct : null;
 
   const barColor =
     spendPct == null  ? "" :
@@ -58,8 +70,18 @@ export function BudgetCard({ budget, onClick }: BudgetCardProps) {
     spendPct >= 80    ? "text-amber-600 dark:text-amber-400" :
     "text-muted-foreground";
 
+  // A fund without a loaded summary and without a known value shows "—",
+  // not a misleading "0".
+  const fundKnown = fund != null || (budget.totalCurrentValue ?? 0) > 0;
+  const growthPct = metric.kind === "fund" ? metric.growthPct : null;
+  const growthText =
+    growthPct == null
+      ? "—"
+      : `${growthPct >= 0 ? "+" : ""}${(growthPct * 100).toFixed(1)}%`;
+
   return (
     <Card
+      data-testid="budget-card"
       className={cn(
         "group h-full cursor-pointer overflow-hidden transition-all duration-200",
         "hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm"
@@ -81,7 +103,7 @@ export function BudgetCard({ budget, onClick }: BudgetCardProps) {
                 {budget.name}
               </p>
               <p className="mt-0.5 text-[11px] leading-none text-muted-foreground">
-                {label}&nbsp;·&nbsp;{budget.currency}
+                {tRoot(labelKey)}&nbsp;·&nbsp;{budget.currency}
               </p>
             </div>
           </div>
@@ -95,53 +117,108 @@ export function BudgetCard({ budget, onClick }: BudgetCardProps) {
           </span>
         </div>
 
-        {/* ── Row 2: Primary spend metric ── */}
+        {/* ── Row 2: Primary metric — spend / fund value / my balance ── */}
         <div className="mt-4">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            {t("spent")}
+            {metric.kind === "spend" && t("spent")}
+            {metric.kind === "fund" && t("fundValue")}
+            {metric.kind === "sharing" && t("myBalance")}
           </p>
-          <p className="mt-1 text-[22px] font-bold tabular-nums leading-none tracking-tight text-foreground">
-            {formatCurrency(budget.currentSpend ?? 0, budget.currency)}
+          <p
+            data-testid={
+              metric.kind === "fund"
+                ? "budget-card-fund-value"
+                : metric.kind === "sharing"
+                  ? "budget-card-my-balance"
+                  : "budget-card-spend-amount"
+            }
+            className={cn(
+              "mt-1 text-[22px] font-bold tabular-nums leading-none tracking-tight text-foreground",
+              metric.kind === "sharing" && metric.myBalance < 0 && "text-expense",
+            )}
+          >
+            {metric.kind === "spend" && formatCurrency(metric.amount, budget.currency)}
+            {metric.kind === "fund" &&
+              (fundKnown ? formatCurrency(metric.amount, metric.currency) : "—")}
+            {metric.kind === "sharing" &&
+              formatSigned(metric.myBalance, metric.currency)}
           </p>
         </div>
 
-        {/* ── Row 3: Progress bar — always rendered, filled only when limit exists ── */}
-        <div className="mt-4">
-          {/* Label row — always takes same vertical space */}
-          <div className="flex h-4 items-center justify-between">
-            {spendPct != null ? (
-              <>
-                <span className="text-[11px] text-muted-foreground">
-                  {budget.envelopeLimit && budget.envelopeLimit > 0
-                    ? `${t("spent")} / ${formatCurrency(budget.envelopeLimit, budget.currency)}`
-                    : t("spent")}
-                </span>
-                <span className={cn("text-[11px] font-semibold tabular-nums", pctColor)}>
-                  {Math.round(spendPct)}%
-                </span>
-              </>
-            ) : (
-              <span className="text-[11px] text-muted-foreground">{t("noLimit")}</span>
-            )}
-          </div>
+        {/* ── Row 3: Progress bar — spending budgets only ── */}
+        {metric.kind === "spend" && (
+          <div className="mt-4" data-testid="budget-card-spend-bar">
+            {/* Label row — always takes same vertical space */}
+            <div className="flex h-4 items-center justify-between">
+              {spendPct != null ? (
+                <>
+                  <span className="text-[11px] text-muted-foreground">
+                    {metric.limit != null
+                      ? `${t("spent")} / ${formatCurrency(metric.limit, budget.currency)}`
+                      : t("spent")}
+                  </span>
+                  <span className={cn("text-[11px] font-semibold tabular-nums", pctColor)}>
+                    {Math.round(spendPct)}%
+                  </span>
+                </>
+              ) : (
+                <span className="text-[11px] text-muted-foreground">{t("noLimit")}</span>
+              )}
+            </div>
 
-          {/* Track — always rendered */}
-          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            {spendPct != null && (
-              <div
-                className={cn("h-full rounded-full transition-all duration-500", barColor)}
-                style={{ width: `${Math.min(spendPct, 100)}%` }}
-              />
-            )}
+            {/* Track — always rendered */}
+            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              {spendPct != null && (
+                <div
+                  className={cn("h-full rounded-full transition-all duration-500", barColor)}
+                  style={{ width: `${Math.min(spendPct, 100)}%` }}
+                />
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Row 4: Footer ── */}
         <div className="mt-4 flex items-center gap-1.5 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
-          <Users className="h-3 w-3 shrink-0" />
-          <span>
-            {budget.memberCount ?? 1}&nbsp;{t("members")}
-          </span>
+          {metric.kind === "fund" ? (
+            /* A fund has no members — the growth takes the footer's place. */
+            <>
+              {growthPct == null ? (
+                <TrendingUp className="h-3 w-3 shrink-0" />
+              ) : growthPct < 0 ? (
+                <TrendingDown className="h-3 w-3 shrink-0 text-expense" />
+              ) : (
+                <TrendingUp className="h-3 w-3 shrink-0 text-income" />
+              )}
+              <span
+                className={cn(
+                  "tabular-nums font-medium",
+                  growthPct == null && "font-normal",
+                  growthPct != null && (growthPct < 0 ? "text-expense" : "text-income"),
+                )}
+              >
+                {t("fundGrowth")}&nbsp;{growthText}
+              </span>
+            </>
+          ) : metric.kind === "sharing" ? (
+            <>
+              <span className="truncate">
+                {t("totalSpent")}&nbsp;{formatCurrency(metric.totalSpent, metric.currency)}
+              </span>
+              <span aria-hidden>·</span>
+              <Users className="h-3 w-3 shrink-0" />
+              <span className="shrink-0">
+                {t("memberCount", { count: budget.memberCount ?? 1 })}
+              </span>
+            </>
+          ) : (
+            <>
+              <Users className="h-3 w-3 shrink-0" />
+              <span>
+                {budget.memberCount ?? 1}&nbsp;{t("members")}
+              </span>
+            </>
+          )}
           <span
             className="ml-auto font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100"
             aria-hidden
