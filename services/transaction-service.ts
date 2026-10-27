@@ -1,3 +1,4 @@
+import { normalizeEnumLabel, type EnumLabelSpec } from "@/lib/enum-label";
 import { apiClient } from "@/lib/http/client";
 
 const BASE = "/api/entry";
@@ -172,9 +173,15 @@ const KIND_MAP: Record<number, TransactionKind> = {
   4: "transfer_in",
 };
 
+const KIND_SPEC: EnumLabelSpec<TransactionKind> = {
+  numeric: KIND_MAP,
+  labels: ["expense", "income", "transfer_out", "transfer_in"],
+  fallback: "expense",
+};
+
+/** Accepts numeric codes, canonical labels, Rust variant names and protobuf enum names. */
 export function toKind(v: number | string): TransactionKind {
-  if (typeof v === "number") return KIND_MAP[v] ?? "expense";
-  return (v as TransactionKind) || "expense";
+  return normalizeEnumLabel(v, KIND_SPEC);
 }
 
 function mapEntry(raw: RawEntry): Transaction {

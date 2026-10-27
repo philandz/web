@@ -1,3 +1,4 @@
+import { normalizeEnumLabel, type EnumLabelSpec } from "@/lib/enum-label";
 import { apiClient } from "@/lib/http/client";
 import { writeSharingSession } from "@/lib/sharing/session";
 
@@ -291,8 +292,19 @@ const SPLIT_METHOD_TO_NUM: Record<SplitMethod, number> = {
   by_item: 5,
 };
 
-function toSplitMethod(v: number): SplitMethod {
-  return SPLIT_METHOD_MAP[v] ?? "equal";
+const SPLIT_METHOD_SPEC: EnumLabelSpec<SplitMethod> = {
+  numeric: SPLIT_METHOD_MAP,
+  labels: ["equal", "custom", "weighted", "percentage", "by_item"],
+  fallback: "equal",
+};
+
+/**
+ * Accepts numeric codes, canonical labels, Rust variant names and protobuf
+ * enum names. The gateway emits the canonical lowercase label; older builds
+ * emitted the numeric code, so both must work.
+ */
+export function toSplitMethod(v: number | string): SplitMethod {
+  return normalizeEnumLabel(v, SPLIT_METHOD_SPEC);
 }
 
 function mapExpense(raw: RawExpense): Expense {

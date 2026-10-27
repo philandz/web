@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/http/client";
+import { normalizeEnumLabel, type EnumLabelSpec } from "@/lib/enum-label";
 
 const BASE = "/api/budget";
 
@@ -158,21 +159,37 @@ interface RawBudget {
 // Converters
 // ---------------------------------------------------------------------------
 
-const BUDGET_TYPE_MAP: Record<number, BudgetType> = {
-  1: "standard", 2: "saving", 3: "debt", 4: "invest", 5: "sharing",
-};
-const BUDGET_ROLE_MAP: Record<number, BudgetRole> = {
-  1: "owner", 2: "manager", 3: "contributor", 4: "viewer",
+const ROLLOVER_POLICY_SPEC: EnumLabelSpec<RolloverPolicy> = {
+  numeric: { 1: "reset", 2: "carry_forward" },
+  labels: ["reset", "carry_forward"],
+  fallback: "reset",
 };
 
-function toBudgetType(v: number | string): BudgetType {
-  if (typeof v === "number") return BUDGET_TYPE_MAP[v] ?? "standard";
-  return (v as BudgetType) || "standard";
+/** Accepts numeric codes, canonical labels, Rust variant names and protobuf enum names. */
+export function toRolloverPolicy(v: number | string): RolloverPolicy {
+  return normalizeEnumLabel(v, ROLLOVER_POLICY_SPEC);
 }
 
-function toBudgetRole(v: number | string): BudgetRole {
-  if (typeof v === "number") return BUDGET_ROLE_MAP[v] ?? "viewer";
-  return (v as BudgetRole) || "viewer";
+const BUDGET_TYPE_SPEC: EnumLabelSpec<BudgetType> = {
+  numeric: { 1: "standard", 2: "saving", 3: "debt", 4: "invest", 5: "sharing" },
+  labels: ["standard", "saving", "debt", "invest", "sharing"],
+  fallback: "standard",
+};
+
+const BUDGET_ROLE_SPEC: EnumLabelSpec<BudgetRole> = {
+  numeric: { 1: "owner", 2: "manager", 3: "contributor", 4: "viewer" },
+  labels: ["owner", "manager", "contributor", "viewer"],
+  fallback: "viewer",
+};
+
+/** Accepts numeric codes, canonical labels, Rust variant names and protobuf enum names. */
+export function toBudgetType(v: number | string): BudgetType {
+  return normalizeEnumLabel(v, BUDGET_TYPE_SPEC);
+}
+
+/** Accepts numeric codes, canonical labels, Rust variant names and protobuf enum names. */
+export function toBudgetRole(v: number | string): BudgetRole {
+  return normalizeEnumLabel(v, BUDGET_ROLE_SPEC);
 }
 
 function mapBudget(raw: RawBudget): Budget {
@@ -418,9 +435,7 @@ export const budgetService = {
     const raw = await apiClient.get<{ policy: number | string }>(
       `${BASE}/budgets/${budgetId}/rollover`
     );
-    const v = raw.policy;
-    if (typeof v === "number") return v === 2 ? "carry_forward" : "reset";
-    return (v as RolloverPolicy) || "reset";
+    return normalizeEnumLabel(raw.policy, ROLLOVER_POLICY_SPEC);
   },
 
   // Templates
