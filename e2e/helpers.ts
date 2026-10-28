@@ -208,12 +208,31 @@ export async function seedAuthState(
     },
     version: 0,
   };
-  await page.goto('/');
-  await page.evaluate(
-    (s) => localStorage.setItem('philandz-web-auth', s),
+  // Seed BEFORE the app boots. Writing localStorage after `page.goto()` is
+  // racy: the app that is already running persists its own (empty) state and
+  // clobbers the seed before the reload reads it back — the session is then
+  // gone and every authenticated page bounces to /login.
+  //
+  // The init script re-seeds whenever the stored session has no token, so the
+  // race cannot lose. The app's own writes still win once a token is there
+  // (a real logout is unaffected — this helper is only used by
+  // `createBudgetFixture`).
+  await page.addInitScript(
+    (s) => {
+      let hasToken = false;
+      try {
+        const raw = window.localStorage.getItem('philandz-web-auth');
+        hasToken = Boolean(raw && (JSON.parse(raw) as { state?: { token?: string } })?.state?.token);
+      } catch {
+        hasToken = false;
+      }
+      if (!hasToken) {
+        window.localStorage.setItem('philandz-web-auth', s);
+      }
+    },
     JSON.stringify(persisted),
   );
-  await page.reload();
+  await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 }
 
