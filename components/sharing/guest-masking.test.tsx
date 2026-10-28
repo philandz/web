@@ -68,9 +68,6 @@ vi.mock("@/components/sharing/add-shared-expense-drawer", () => ({
   AddSharedExpenseDrawer: () => null,
 }));
 
-vi.mock("@/components/sharing/sharing-mobile-tabs", () => ({
-  SharingMobileTabs: () => <div data-testid="mobile-tabs" />,
-}));
 
 // ---------------------------------------------------------------------------
 // Mock state

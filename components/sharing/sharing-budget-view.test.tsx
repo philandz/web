@@ -55,9 +55,6 @@ vi.mock("@/components/sharing/sharing-settlement-card", () => ({
   },
 }));
 
-vi.mock("@/components/sharing/sharing-mobile-tabs", () => ({
-  SharingMobileTabs: () => <div data-testid="mobile-tabs" />,
-}));
 
 vi.mock("@/components/sharing/sharing-bottom-bar", () => ({
   SharingBottomBar: () => <div data-testid="bottom-bar" />,
@@ -95,17 +92,34 @@ let hooksState: {
   budget: { data: undefined, isLoading: false },
 };
 
-vi.mock("@/modules/sharing/hooks", () => ({
-  useExpensesQuery: () => hooksState.expenses,
-  useParticipantsQuery: () => hooksState.participants,
-  useSettlementQuery: () => hooksState.settlement,
-  useDeleteExpenseMutation: () => ({ mutate: vi.fn(), isPending: false }),
-  useRevokeParticipantMutation: () => ({ mutate: vi.fn(), isPending: false }),
-  sharingKeys: {
-    all: ["sharing"],
-    budget: (id: string) => ["sharing", "budget", id],
-  },
-}));
+vi.mock("@/modules/sharing/hooks", () => {
+  // A Proxy so a hook the component starts using later resolves to a harmless
+  // no-op instead of blowing up the whole test file.
+  const known: Record<string, unknown> = {
+    useExpensesQuery: () => hooksState.expenses,
+    useParticipantsQuery: () => hooksState.participants,
+    useSettlementQuery: () => hooksState.settlement,
+    useSettlementsQuery: () => ({ data: undefined, isLoading: false }),
+    useBudgetOrgId: () => undefined,
+    useActivityQuery: () => ({ data: undefined, isLoading: false }),
+    useBatchIdentityNames: () => new Map<string, string>(),
+    useDeleteExpenseMutation: () => ({ mutate: vi.fn(), isPending: false }),
+    useRevokeParticipantMutation: () => ({ mutate: vi.fn(), isPending: false }),
+    sharingKeys: {
+      all: ["sharing"],
+      budget: (id: string) => ["sharing", "budget", id],
+    },
+  };
+  return new Proxy(known, {
+    get(target, prop: string | symbol) {
+      // `then` must stay undefined: a thenable module object makes vitest's
+      // module resolution await forever.
+      if (typeof prop === "symbol" || prop === "then") return undefined;
+      if (prop in target) return target[prop as string];
+      return () => undefined;
+    },
+  });
+});
 
 function setHooks(expenses: any, participants: any, settlement: any = { data: undefined }, budget: any = { data: undefined }) {
   hooksState = { expenses, participants, settlement, budget };
@@ -130,21 +144,22 @@ describe("SharingBudgetView", () => {
   it("renders the tab bar with all 5 sub-tabs", () => {
     renderWithIntl(<SharingBudgetView budgetId="b1" />);
     // All 5 tabs are present (use getAllBy since strict mode renders twice)
-    expect(screen.getAllByRole("tab", { name: /overview/i })[0]).toBeInTheDocument();
-    expect(screen.getAllByRole("tab", { name: /members/i })[0]).toBeInTheDocument();
+    // Plan §8.3: Chi tiêu / Số dư & thanh toán / Hoạt động / Thành viên / Cài đặt
+    expect(screen.getAllByRole("tab", { name: /expenses/i })[0]).toBeInTheDocument();
     expect(screen.getAllByRole("tab", { name: /balances/i })[0]).toBeInTheDocument();
-    expect(screen.getAllByRole("tab", { name: /settle/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("tab", { name: /activity/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("tab", { name: /members/i })[0]).toBeInTheDocument();
     expect(screen.getAllByRole("tab", { name: /settings/i })[0]).toBeInTheDocument();
   });
 
-  it("renders expenses list on the overview tab (default)", () => {
+  it("renders expenses list on the expenses tab (default)", () => {
     renderWithIntl(<SharingBudgetView budgetId="b1" />);
     expect(screen.getAllByTestId("expenses-list")[0]).toBeInTheDocument();
   });
 
-  it("renders the settlement card when the Settle tab is active", () => {
+  it("renders the settlement card on the balances tab", () => {
     renderWithIntl(<SharingBudgetView budgetId="b1" />);
-    fireEvent.click(screen.getAllByRole("tab", { name: /settle/i })[0]);
+    fireEvent.click(screen.getAllByRole("tab", { name: /balances/i })[0]);
     expect(screen.getByTestId("settlement-card-1")).toBeInTheDocument();
   });
 
