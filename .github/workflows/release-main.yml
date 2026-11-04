@@ -153,6 +153,11 @@ jobs:
           docker build \
             --build-arg NEXT_PUBLIC_API_URL=https://v2.philand.io.vn \
             --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+            --build-arg NEXT_PUBLIC_FEATURE_TRANSFERS=${{ vars.NEXT_PUBLIC_FEATURE_TRANSFERS || '0' }} \
+            --build-arg NEXT_PUBLIC_FEATURE_SAVING_FUND=${{ vars.NEXT_PUBLIC_FEATURE_SAVING_FUND || '0' }} \
+            --build-arg NEXT_PUBLIC_FEATURE_PERIOD_PLANNING=${{ vars.NEXT_PUBLIC_FEATURE_PERIOD_PLANNING || '0' }} \
+            --build-arg NEXT_PUBLIC_FEATURE_SHARING_V2=${{ vars.NEXT_PUBLIC_FEATURE_SHARING_V2 || '0' }} \
+            --build-arg NEXT_PUBLIC_FEATURE_UI_REFRESH=${{ vars.NEXT_PUBLIC_FEATURE_UI_REFRESH || '0' }} \
             -t "$image" .
           docker push "$image"
 
