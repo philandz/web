@@ -85,6 +85,8 @@ interface TransactionsTabProps {
   currency?: string;
   showBudgetFilter?: boolean;
   persistFiltersInUrl?: boolean;
+  /** Hide add / transfer / edit / delete — e.g. a Saving fund's legacy history. */
+  readOnly?: boolean;
 }
 
 export function TransactionsTab({
@@ -93,6 +95,7 @@ export function TransactionsTab({
   currency = "VND",
   showBudgetFilter = false,
   persistFiltersInUrl = true,
+  readOnly = false,
 }: TransactionsTabProps) {
   const t = useTranslations("budget.transactions");
   const tBudget = useTranslations("budget.transactions");
@@ -333,7 +336,7 @@ export function TransactionsTab({
             placeholder={t("searchPlaceholder")}
           />
         </div>
-        {budgetId && (
+        {budgetId && !readOnly && (
           <Feature flag="transfers">
             <Button size="sm" variant="outline" onClick={() => setTransferOpen(true)} data-testid="open-transfer">
               <ArrowLeftRight className="h-3.5 w-3.5 sm:mr-1.5" />
@@ -341,8 +344,8 @@ export function TransactionsTab({
             </Button>
           </Feature>
         )}
-        {budgetId && (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
+        {budgetId && !readOnly && (
+          <Button size="sm" onClick={() => setCreateOpen(true)} data-testid="add-transaction">
             <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
             <span className="hidden sm:inline">{t("addTransaction")}</span>
           </Button>
@@ -790,6 +793,7 @@ export function TransactionsTab({
         transaction={detailTx}
         budgetId={budgetId}
         currency={currency}
+        readOnly={readOnly}
       />
 
       <TransactionFormDrawer

@@ -19,6 +19,7 @@ import {
   useCreateSplitTransactionMutation,
 } from "@/modules/transaction/hooks";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
+import { acceptsManualEntries } from "@/lib/budget-types";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { useCategoriesQuery } from "@/modules/category/hooks";
 import { mediaService } from "@/services/media-service";
@@ -166,7 +167,9 @@ export function TransactionFormDrawer({
     orgId: tenant.selectedOrgId ?? "",
     pageSize: 100,
   });
-  const allBudgets = pagedBudgets?.items ?? [];
+  // Split legs can only land on budgets that take manual entries (not Sharing,
+  // not a Saving fund).
+  const allBudgets = (pagedBudgets?.items ?? []).filter((b) => acceptsManualEntries(b.type));
 
   const [type, setType] = useState<TransactionType>(
     transaction?.type === "income" || transaction?.type === "expense" ? transaction.type : defaultType,

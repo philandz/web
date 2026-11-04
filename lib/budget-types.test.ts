@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUDGET_TYPE_META, budgetTypeMeta } from "./budget-types";
+import { acceptsManualEntries, BUDGET_TYPE_META, budgetTypeMeta } from "./budget-types";
 
 describe("budget type registry", () => {
   it("covers every budget type with a label, stripe and icon", () => {
@@ -13,5 +13,20 @@ describe("budget type registry", () => {
   it("falls back to standard for unknown types", () => {
     expect(budgetTypeMeta("weird")).toBe(BUDGET_TYPE_META.standard);
     expect(budgetTypeMeta(undefined)).toBe(BUDGET_TYPE_META.standard);
+  });
+});
+
+
+describe("acceptsManualEntries", () => {
+  it("never accepts sharing", () => {
+    expect(acceptsManualEntries("sharing", false)).toBe(false);
+    expect(acceptsManualEntries("sharing", true)).toBe(false);
+  });
+  it("accepts saving only while it is not a fund", () => {
+    expect(acceptsManualEntries("saving", false)).toBe(true);
+    expect(acceptsManualEntries("saving", true)).toBe(false);
+  });
+  it("accepts the ledger types", () => {
+    for (const t of ["standard", "debt", "invest"]) expect(acceptsManualEntries(t, true)).toBe(true);
   });
 });

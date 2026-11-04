@@ -7,6 +7,7 @@ import { ArrowLeftRight } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { TransactionsTab } from "@/components/philand/transactions-tab";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
+import { acceptsManualEntries } from "@/lib/budget-types";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { SelectNative } from "@/components/ui/select";
 
@@ -16,8 +17,10 @@ export default function TransactionsPage() {
   const orgId = tenant.selectedOrgId ?? "";
 
   const { data: pagedBudgets } = useBudgetsQuery({ orgId });
-  const budgets = pagedBudgets?.items ?? [];
+  // Sharing budgets keep their own expenses and are not part of the personal ledger.
+  const budgets = (pagedBudgets?.items ?? []).filter((b) => b.type !== "sharing");
   const [budgetId, setBudgetId] = useState<string>("");
+  const selected = budgets.find((b) => b.id === budgetId);
 
   return (
     <div className="space-y-5 animate-fade-in-up">
@@ -42,6 +45,7 @@ export default function TransactionsPage() {
       <TransactionsTab
         budgetId={budgetId}
         budgetIds={budgets.map((b) => b.id)}
+        readOnly={selected ? !acceptsManualEntries(selected.type) : false}
       />
     </div>
   );

@@ -294,6 +294,8 @@ interface TransactionDetailDrawerProps {
   transaction: Transaction | null;
   budgetId: string;
   currency?: string;
+  /** Hide edit / delete (legacy history of a Saving fund). */
+  readOnly?: boolean;
 }
 
 export function TransactionDetailDrawer({
@@ -302,6 +304,7 @@ export function TransactionDetailDrawer({
   transaction,
   budgetId,
   currency = "VND",
+  readOnly = false,
 }: TransactionDetailDrawerProps) {
   const t = useTranslations("budget.txDetail");
   const toast = useToast();
@@ -498,6 +501,7 @@ export function TransactionDetailDrawer({
             <CommentThread entryId={transaction.id} members={members} />
 
             {/* ── Actions ── */}
+            {readOnly ? null : (
             <div className="flex gap-2 pt-1">
               {isTransfer ? null : (
               <Button
@@ -520,6 +524,7 @@ export function TransactionDetailDrawer({
                 {t("delete")}
               </Button>
             </div>
+            )}
 
           </SheetBody>
         </SheetContent>

@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { BarChart2, CreditCard, LayoutGrid, PiggyBank, Share2 } from "lucide-react";
 import type { BudgetType } from "@/services/budget-service";
+import { isFeatureEnabled } from "@/lib/features";
 
 /**
  * Single source of truth for per-budget-type visuals (plan T0.5). Class strings are
@@ -63,4 +64,19 @@ export const BUDGET_TYPE_META: Record<BudgetType, BudgetTypeMeta> = {
 
 export function budgetTypeMeta(type: BudgetType | string | undefined): BudgetTypeMeta {
   return BUDGET_TYPE_META[type as BudgetType] ?? BUDGET_TYPE_META.standard;
+}
+
+/**
+ * Whether income/expense entries can be added by hand to a budget of this type.
+ * Sharing budgets keep their own expenses (split + settle) and are not part of the
+ * personal ledger; a Saving budget becomes a fund once the savingFund flag is on and
+ * then only changes through fund transfers and investments.
+ */
+export function acceptsManualEntries(
+  type: BudgetType | string | undefined,
+  savingFundOn: boolean = isFeatureEnabled("savingFund"),
+): boolean {
+  if (type === "sharing") return false;
+  if (type === "saving") return !savingFundOn;
+  return true;
 }
