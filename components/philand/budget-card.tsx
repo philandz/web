@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { TrendingDown, TrendingUp, Users } from "lucide-react";
 import { budgetTypeMeta } from "@/lib/budget-types";
 import { cardMetricFor } from "@/lib/budget/card-metrics";
+import { isFeatureEnabled } from "@/lib/features";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Budget, BudgetRole } from "@/services/budget-service";
@@ -53,7 +54,11 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
   const tRoot = useTranslations();
   const { Icon, iconBg, stripe, labelKey } = budgetTypeMeta(budget.type);
 
-  const metric = cardMetricFor(budget, { fund, sharing: sharingSummary });
+  const metric = cardMetricFor(budget, {
+    fund,
+    sharing: sharingSummary,
+    savingFundOn: isFeatureEnabled("savingFund"),
+  });
 
   // Prefer computed pct from limit, fall back to API-provided burnRatePct
   const spendPct = metric.kind === "spend" ? metric.pct : null;

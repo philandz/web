@@ -157,3 +157,14 @@ describe("cardMetricFor — sharing", () => {
     });
   });
 });
+
+describe("cardMetricFor — saving while the fund flag is off", () => {
+  it("shows spend like the ledger its detail page shows", () => {
+    const m = cardMetricFor(b({ type: "saving", currentSpend: 500 }), { savingFundOn: false });
+    expect(m).toMatchObject({ kind: "spend", amount: 500 });
+  });
+  it("shows the fund when the flag is on", () => {
+    const m = cardMetricFor(b({ type: "saving" }), { savingFundOn: true, fund: fund({ totalValue: 9 }) });
+    expect(m).toMatchObject({ kind: "fund", amount: 9 });
+  });
+});

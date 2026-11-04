@@ -30,6 +30,7 @@ import {
 } from "@/lib/query-params/budgets";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
 import { useFundSummaries } from "@/modules/portfolio/hooks";
+import { isFeatureEnabled } from "@/lib/features";
 import { useSharingBudgetSummaries } from "@/modules/sharing/hooks";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import type { BudgetListParams, BudgetRole, BudgetType } from "@/services/budget-service";
@@ -137,10 +138,13 @@ export default function BudgetsPage() {
 
   // Enrichment for the card metrics: a saving card shows its fund value,
   // a sharing card shows my balance + the total spent.
+  // Only funds have a fund summary; with the flag off a Saving budget is a ledger.
+  const savingFundOn = isFeatureEnabled("savingFund");
   const savingIds = useMemo(
-    () => budgets.filter((b) => b.type === "saving").map((b) => b.id),
-    [budgets],
+    () => (savingFundOn ? budgets.filter((b) => b.type === "saving").map((b) => b.id) : []),
+    [budgets, savingFundOn],
   );
+
   const sharingIds = useMemo(
     () => budgets.filter((b) => b.type === "sharing").map((b) => b.id),
     [budgets],

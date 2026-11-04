@@ -21,6 +21,12 @@ export interface CardMetricData {
   fund?: FundSummary;
   /** Loaded settlement summary of a sharing budget. */
   sharing?: SharingBudgetSummary;
+  /**
+   * Whether Saving budgets are funds (savingFund flag). While it is off a Saving
+   * budget still works as a ledger, so its card shows spend like a Standard one —
+   * the same thing its detail page shows.
+   */
+  savingFundOn?: boolean;
 }
 
 /**
@@ -28,7 +34,7 @@ export interface CardMetricData {
  * so the mapping can be unit-tested on its own.
  */
 export function cardMetricFor(budget: Budget, data: CardMetricData): CardMetric {
-  if (budget.type === "saving") {
+  if (budget.type === "saving" && data.savingFundOn !== false) {
     const fund = data.fund;
     return {
       kind: "fund",
