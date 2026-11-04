@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { TrendingDown, TrendingUp, Users } from "lucide-react";
 import { budgetTypeMeta } from "@/lib/budget-types";
 import { cardMetricFor } from "@/lib/budget/card-metrics";
+import { useDebtSummaryQuery } from "@/modules/debt/hooks";
 import { isFeatureEnabled } from "@/lib/features";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +54,10 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
   const t = useTranslations("budget.card");
   const tRoot = useTranslations();
   const { Icon, iconBg, stripe, labelKey } = budgetTypeMeta(budget.type);
+
+  // A debt book shows what is owed instead of spend against a limit.
+  const isDebtBook = budget.type === "debt" && isFeatureEnabled("debtV2");
+  const debtSummary = useDebtSummaryQuery(isDebtBook ? budget.id : null);
 
   const metric = cardMetricFor(budget, {
     fund,
@@ -125,7 +130,7 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
         {/* ── Row 2: Primary metric — spend / fund value / my balance ── */}
         <div className="mt-4">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            {metric.kind === "spend" && t("spent")}
+            {metric.kind === "spend" && (isDebtBook ? t("debtOwed") : t("spent"))}
             {metric.kind === "fund" && t("fundValue")}
             {metric.kind === "sharing" && t("myBalance")}
           </p>
@@ -142,7 +147,12 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
               metric.kind === "sharing" && metric.myBalance < 0 && "text-expense",
             )}
           >
-            {metric.kind === "spend" && formatCurrency(metric.amount, budget.currency)}
+            {metric.kind === "spend" &&
+              (isDebtBook
+                ? debtSummary.data
+                  ? formatCurrency(debtSummary.data.totalOutstandingMinor, budget.currency)
+                  : "—"
+                : formatCurrency(metric.amount, budget.currency))}
             {metric.kind === "fund" &&
               (fundKnown ? formatCurrency(metric.amount, metric.currency) : "—")}
             {metric.kind === "sharing" &&
@@ -151,7 +161,7 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
         </div>
 
         {/* ── Row 3: Progress bar — spending budgets only ── */}
-        {metric.kind === "spend" && (
+        {metric.kind === "spend" && !isDebtBook && (
           <div className="mt-4" data-testid="budget-card-spend-bar">
             {/* Label row — always takes same vertical space */}
             <div className="flex h-4 items-center justify-between">

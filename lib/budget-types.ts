@@ -70,13 +70,16 @@ export function budgetTypeMeta(type: BudgetType | string | undefined): BudgetTyp
  * Whether income/expense entries can be added by hand to a budget of this type.
  * Sharing budgets keep their own expenses (split + settle) and are not part of the
  * personal ledger; a Saving budget becomes a fund once the savingFund flag is on and
- * then only changes through fund transfers and investments.
+ * then only changes through fund transfers and investments. A Debt budget becomes a debt
+ * book once the debtV2 flag is on and then only changes through recorded debt payments.
  */
 export function acceptsManualEntries(
   type: BudgetType | string | undefined,
   savingFundOn: boolean = isFeatureEnabled("savingFund"),
+  debtV2On: boolean = isFeatureEnabled("debtV2"),
 ): boolean {
   if (type === "sharing") return false;
   if (type === "saving") return !savingFundOn;
+  if (type === "debt") return !debtV2On;
   return true;
 }

@@ -26,7 +26,11 @@ describe("acceptsManualEntries", () => {
     expect(acceptsManualEntries("saving", false)).toBe(true);
     expect(acceptsManualEntries("saving", true)).toBe(false);
   });
+  it("accepts debt only while it is not a debt book", () => {
+    expect(acceptsManualEntries("debt", true, false)).toBe(true);
+    expect(acceptsManualEntries("debt", true, true)).toBe(false);
+  });
   it("accepts the ledger types", () => {
-    for (const t of ["standard", "debt", "invest"]) expect(acceptsManualEntries(t, true)).toBe(true);
+    for (const t of ["standard", "invest"]) expect(acceptsManualEntries(t, true)).toBe(true);
   });
 });

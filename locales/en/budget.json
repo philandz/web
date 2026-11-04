@@ -35,7 +35,8 @@
     "fundGrowth": "Growth",
     "myBalance": "My balance",
     "totalSpent": "Total spent",
-    "memberCount": "{count, plural, one {# member} other {# members}}"
+    "memberCount": "{count, plural, one {# member} other {# members}}",
+    "debtOwed": "Owed"
   },
   "create": {
     "pickType": "What do you want to create?",
@@ -717,7 +718,11 @@
       "add": "Add investment",
       "title": "Add an investment",
       "kind": "Type",
-      "kinds": { "fixed-deposit": "Fixed deposit", "savings-account": "Savings account", "gold-lot": "Gold" },
+      "kinds": {
+        "fixed-deposit": "Fixed deposit",
+        "savings-account": "Savings account",
+        "gold-lot": "Gold"
+      },
       "name": "Name",
       "provider": "Bank / provider",
       "principal": "Principal",
@@ -725,12 +730,19 @@
       "pricePerUnit": "Price per unit",
       "quantity": "Quantity",
       "unit": "Unit",
-      "units": { "chi": "Chỉ", "luong": "Lượng", "gram": "Gram" },
+      "units": {
+        "chi": "Chỉ",
+        "luong": "Lượng",
+        "gram": "Gram"
+      },
       "rate": "Interest rate (% / year)",
       "date": "Date",
       "maturity": "Maturity date",
       "funding": "Paid from",
-      "fundingOptions": { "cash-pocket": "Fund cash pocket", "external": "Outside this fund" },
+      "fundingOptions": {
+        "cash-pocket": "Fund cash pocket",
+        "external": "Outside this fund"
+      },
       "fundingHints": {
         "cash-pocket": "Uses cash already in this fund; the pocket goes down.",
         "external": "Already paid elsewhere; the cash pocket is not touched."
@@ -826,5 +838,189 @@
     "saveError": "Could not save the plan",
     "readOnly": "Only owners and managers can change the plan.",
     "noCategories": "No expense categories yet"
+  },
+  "debt": {
+    "tabs": {
+      "debts": "Debts",
+      "history": "Old history",
+      "members": "Members",
+      "settings": "Settings"
+    },
+    "historyHint": "Income and expense entries recorded before this budget became a debt book. Read-only: debts now change through recorded payments.",
+    "accountsTitle": "Debt accounts",
+    "addAccount": "Add debt",
+    "empty": "No debts yet. Add a loan to track its schedule and payments.",
+    "nextDueLine": "Next: {date} · {amount}",
+    "noSchedule": "No fixed schedule",
+    "overdue": "Overdue",
+    "summary": {
+      "outstanding": "Total owed",
+      "dueThisMonth": "Due this month",
+      "nextDue": "Next payment",
+      "cost": "Interest & fees paid"
+    },
+    "status": {
+      "active": "Active",
+      "settled": "Paid off",
+      "closed": "Closed"
+    },
+    "kind": {
+      "consumer": "Consumer loan",
+      "mortgage": "Mortgage",
+      "car": "Car loan",
+      "installment": "Instalment plan",
+      "personal": "Personal loan",
+      "other": "Other"
+    },
+    "method": {
+      "annuity": "Equal payments (annuity)",
+      "equal_principal": "Equal principal",
+      "interest_only": "Interest only",
+      "fixed_installments": "Fixed instalments",
+      "no_schedule": "No schedule"
+    },
+    "rateType": {
+      "fixed": "Fixed",
+      "floating": "Floating"
+    },
+    "payKind": {
+      "scheduled": "Scheduled payment",
+      "prepayment": "Prepayment",
+      "settlement": "Settlement"
+    },
+    "event": {
+      "created": "Created",
+      "payment": "Payment",
+      "adjusted": "Balance adjusted",
+      "rate_set": "Rate set",
+      "rate_deleted": "Rate removed",
+      "rule_set": "Prepay rule set",
+      "rule_deleted": "Prepay rule removed",
+      "closed": "Closed",
+      "reopened": "Reopened",
+      "settled": "Paid off",
+      "updated": "Updated"
+    },
+    "create": {
+      "title": "Add a debt",
+      "name": "Name",
+      "lender": "Lender",
+      "kind": "Type",
+      "method": "Repayment method",
+      "outstanding": "Current outstanding",
+      "outstandingHint": "What you owe today — tracking starts from this balance.",
+      "start": "Tracking from",
+      "dueDay": "Due day of month",
+      "dueDayHint": "31 = last day of the month.",
+      "periods": "Remaining periods",
+      "maturity": "Maturity date",
+      "useMaturity": "Use date",
+      "usePeriods": "Use periods",
+      "rates": "Interest rate",
+      "rate": "Rate (% / year)",
+      "rateType": "Rate type",
+      "floatFrom": "Floating from (optional)",
+      "floatRate": "Floating rate (% / year)",
+      "ratesHint": "You can add or change rate periods later when the lender updates the rate.",
+      "prepayRule": "Early repayment",
+      "allowance": "Free per month",
+      "feePct": "Fee on the excess (%)",
+      "payFrom": "Usually paid from",
+      "payFromAny": "Choose when paying",
+      "periodicFee": "Fee per instalment",
+      "cancel": "Cancel",
+      "submit": "Add debt",
+      "success": "Debt added",
+      "error": "Could not add the debt"
+    },
+    "pay": {
+      "title": {
+        "scheduled": "Pay instalment — {name}",
+        "prepayment": "Prepay — {name}",
+        "settlement": "Settle — {name}"
+      },
+      "from": "Pay from (Standard budget)",
+      "noSource": "No Standard budget in this currency you can spend from.",
+      "date": "Payment date",
+      "prepayAmount": "Prepayment amount",
+      "effect": "After prepaying",
+      "effectTerm": "Shorten the term",
+      "effectInstallment": "Lower the instalment",
+      "allowance": "Free allowance this month: used {used}, left {left}",
+      "dueOn": "Instalment due {date}",
+      "interestDays": "Interest {days} days ({from} → {to}) at {rate}%",
+      "estimated": "estimate",
+      "principal": "Principal",
+      "interest": "Interest",
+      "fee": "Fee",
+      "feeOverridden": "Differs from the suggested fee {suggested}",
+      "total": "Total",
+      "category": "Category for interest & fee",
+      "categoryPlaceholder": "Choose a category",
+      "createCategory": "Create \"Loan interest & fees\"",
+      "defaultCategory": "Loan interest & fees",
+      "note": "Note",
+      "cancel": "Cancel",
+      "submit": "Record payment",
+      "success": "Payment recorded",
+      "successPaidOff": "Payment recorded — this debt is paid off",
+      "error": "Could not record the payment",
+      "errorInsufficient": "The paying budget does not have enough balance"
+    },
+    "adjust": {
+      "title": "Adjust balance — {name}",
+      "hint": "Use this when the lender's balance differs from yours. The change is kept in the history.",
+      "newOutstanding": "Outstanding according to the lender",
+      "date": "As of",
+      "reason": "Reason",
+      "cancel": "Cancel",
+      "submit": "Adjust",
+      "success": "Balance adjusted",
+      "error": "Could not adjust the balance"
+    },
+    "terms": {
+      "ratesTitle": "Interest rate periods",
+      "rulesTitle": "Early repayment rules",
+      "noRules": "No rules: prepayment is free.",
+      "effectiveFrom": "From",
+      "rate": "% / year",
+      "addRate": "Add rate",
+      "validFrom": "From",
+      "allowance": "Free per month",
+      "feePct": "Fee %",
+      "addRule": "Add rule",
+      "ruleSummary": "free {allowance}/month, then {pct}% fee",
+      "delete": "Delete",
+      "error": "Could not save the change"
+    },
+    "detail": {
+      "back": "All debts",
+      "outstanding": "Outstanding",
+      "paidPrincipal": "Principal repaid",
+      "totalCost": "Interest & fees paid",
+      "payoff": "Estimated payoff",
+      "nextDue": "Next payment",
+      "paySchedule": "Pay next instalment",
+      "prepay": "Prepay",
+      "settle": "Pay off",
+      "adjust": "Adjust balance",
+      "close": "Close",
+      "reopen": "Reopen",
+      "scheduleTitle": "Repayment schedule",
+      "scheduleHint": "An estimate from the rate and terms you entered. Your recorded payments are the truth.",
+      "colDate": "Due",
+      "colPrincipal": "Principal",
+      "colInterest": "Interest",
+      "colTotal": "Total",
+      "colBalance": "Balance",
+      "showAll": "Show all {count} rows",
+      "showLess": "Show fewer",
+      "projection": "Projected payoff {date}, interest {interest}",
+      "paymentsTitle": "Payments",
+      "noPayments": "No payments recorded yet.",
+      "paymentSplit": "principal {principal} · interest {interest} · fee {fee}",
+      "historyTitle": "History",
+      "error": "Action failed"
+    }
   }
 }

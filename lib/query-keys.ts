@@ -56,6 +56,19 @@ export const portfolioKeys = {
     [...portfolioKeys.detail(budgetId, assetId), "activity"] as const,
 };
 
+export const debtKeys = {
+  all: ["debt"] as const,
+  book: (budgetId: string) => [...debtKeys.all, budgetId] as const,
+  summary: (budgetId: string) => [...debtKeys.book(budgetId), "summary"] as const,
+  accounts: (budgetId: string) => [...debtKeys.book(budgetId), "accounts"] as const,
+  schedule: (budgetId: string, accountId: string) =>
+    [...debtKeys.book(budgetId), "schedule", accountId] as const,
+  payments: (budgetId: string, accountId: string) =>
+    [...debtKeys.book(budgetId), "payments", accountId || "all"] as const,
+  events: (budgetId: string, accountId: string) =>
+    [...debtKeys.book(budgetId), "events", accountId || "all"] as const,
+};
+
 export const settingsKeys = {
   all: ["settings"] as const,
   resend: () => [...settingsKeys.all, "resend"] as const,

@@ -35,7 +35,8 @@
     "fundGrowth": "Tăng trưởng",
     "myBalance": "Số dư của tôi",
     "totalSpent": "Tổng đã chi",
-    "memberCount": "{count, plural, other {# thành viên}}"
+    "memberCount": "{count, plural, other {# thành viên}}",
+    "debtOwed": "Dư nợ"
   },
   "create": {
     "pickType": "Bạn muốn tạo gì?",
@@ -717,7 +718,11 @@
       "add": "Thêm khoản đầu tư",
       "title": "Thêm khoản đầu tư",
       "kind": "Loại",
-      "kinds": { "fixed-deposit": "Tiền gửi có kỳ hạn", "savings-account": "Tài khoản tiết kiệm", "gold-lot": "Vàng" },
+      "kinds": {
+        "fixed-deposit": "Tiền gửi có kỳ hạn",
+        "savings-account": "Tài khoản tiết kiệm",
+        "gold-lot": "Vàng"
+      },
       "name": "Tên",
       "provider": "Ngân hàng / đơn vị",
       "principal": "Số tiền gốc",
@@ -725,12 +730,19 @@
       "pricePerUnit": "Giá mỗi đơn vị",
       "quantity": "Số lượng",
       "unit": "Đơn vị",
-      "units": { "chi": "Chỉ", "luong": "Lượng", "gram": "Gram" },
+      "units": {
+        "chi": "Chỉ",
+        "luong": "Lượng",
+        "gram": "Gram"
+      },
       "rate": "Lãi suất (% / năm)",
       "date": "Ngày",
       "maturity": "Ngày đáo hạn",
       "funding": "Nguồn tiền",
-      "fundingOptions": { "cash-pocket": "Tiền mặt trong quỹ", "external": "Từ bên ngoài quỹ" },
+      "fundingOptions": {
+        "cash-pocket": "Tiền mặt trong quỹ",
+        "external": "Từ bên ngoài quỹ"
+      },
       "fundingHints": {
         "cash-pocket": "Dùng tiền mặt đang có trong quỹ; số dư tiền mặt sẽ giảm.",
         "external": "Đã trả từ nơi khác; không ảnh hưởng tiền mặt trong quỹ."
@@ -826,5 +838,189 @@
     "saveError": "Không lưu được kế hoạch",
     "readOnly": "Chỉ chủ sở hữu và quản lý mới sửa được kế hoạch.",
     "noCategories": "Chưa có danh mục chi tiêu"
+  },
+  "debt": {
+    "tabs": {
+      "debts": "Khoản nợ",
+      "history": "Lịch sử cũ",
+      "members": "Thành viên",
+      "settings": "Cài đặt"
+    },
+    "historyHint": "Các giao dịch thu/chi được ghi trước khi ngân sách này trở thành sổ nợ. Chỉ xem: khoản nợ nay thay đổi qua các lần trả nợ đã ghi.",
+    "accountsTitle": "Các khoản nợ",
+    "addAccount": "Thêm khoản nợ",
+    "empty": "Chưa có khoản nợ nào. Thêm một khoản vay để theo dõi lịch trả và các lần thanh toán.",
+    "nextDueLine": "Kỳ tới: {date} · {amount}",
+    "noSchedule": "Không có lịch cố định",
+    "overdue": "Quá hạn",
+    "summary": {
+      "outstanding": "Tổng dư nợ",
+      "dueThisMonth": "Phải trả tháng này",
+      "nextDue": "Kỳ trả tới",
+      "cost": "Lãi & phí đã trả"
+    },
+    "status": {
+      "active": "Đang vay",
+      "settled": "Đã tất toán",
+      "closed": "Đã đóng"
+    },
+    "kind": {
+      "consumer": "Vay tiêu dùng",
+      "mortgage": "Vay mua nhà",
+      "car": "Vay mua xe",
+      "installment": "Trả góp",
+      "personal": "Vay cá nhân",
+      "other": "Khác"
+    },
+    "method": {
+      "annuity": "Trả đều gốc + lãi (niên kim)",
+      "equal_principal": "Gốc đều",
+      "interest_only": "Chỉ trả lãi",
+      "fixed_installments": "Trả góp cố định",
+      "no_schedule": "Không có lịch"
+    },
+    "rateType": {
+      "fixed": "Cố định",
+      "floating": "Thả nổi"
+    },
+    "payKind": {
+      "scheduled": "Trả theo kỳ",
+      "prepayment": "Trả trước hạn",
+      "settlement": "Tất toán"
+    },
+    "event": {
+      "created": "Tạo khoản nợ",
+      "payment": "Thanh toán",
+      "adjusted": "Điều chỉnh dư nợ",
+      "rate_set": "Đặt lãi suất",
+      "rate_deleted": "Xoá lãi suất",
+      "rule_set": "Đặt quy tắc trả trước",
+      "rule_deleted": "Xoá quy tắc trả trước",
+      "closed": "Đóng",
+      "reopened": "Mở lại",
+      "settled": "Tất toán",
+      "updated": "Cập nhật"
+    },
+    "create": {
+      "title": "Thêm khoản nợ",
+      "name": "Tên",
+      "lender": "Bên cho vay",
+      "kind": "Loại",
+      "method": "Cách trả nợ",
+      "outstanding": "Dư nợ hiện tại",
+      "outstandingHint": "Số bạn còn nợ hôm nay — theo dõi bắt đầu từ số dư này.",
+      "start": "Theo dõi từ ngày",
+      "dueDay": "Ngày trả hằng tháng",
+      "dueDayHint": "31 = ngày cuối tháng.",
+      "periods": "Số kỳ còn lại",
+      "maturity": "Ngày đáo hạn",
+      "useMaturity": "Dùng ngày",
+      "usePeriods": "Dùng số kỳ",
+      "rates": "Lãi suất",
+      "rate": "Lãi suất (%/năm)",
+      "rateType": "Loại lãi suất",
+      "floatFrom": "Thả nổi từ ngày (tuỳ chọn)",
+      "floatRate": "Lãi thả nổi (%/năm)",
+      "ratesHint": "Bạn có thể thêm hoặc đổi kỳ lãi suất sau khi bên cho vay điều chỉnh.",
+      "prepayRule": "Trả nợ trước hạn",
+      "allowance": "Miễn phí mỗi tháng",
+      "feePct": "Phí trên phần vượt (%)",
+      "payFrom": "Thường trả từ",
+      "payFromAny": "Chọn khi trả",
+      "periodicFee": "Phí mỗi kỳ",
+      "cancel": "Huỷ",
+      "submit": "Thêm khoản nợ",
+      "success": "Đã thêm khoản nợ",
+      "error": "Không thể thêm khoản nợ"
+    },
+    "pay": {
+      "title": {
+        "scheduled": "Trả kỳ — {name}",
+        "prepayment": "Trả trước — {name}",
+        "settlement": "Tất toán — {name}"
+      },
+      "from": "Trả từ (ngân sách Standard)",
+      "noSource": "Không có ngân sách Standard cùng tiền tệ mà bạn được chi.",
+      "date": "Ngày trả",
+      "prepayAmount": "Số tiền trả trước",
+      "effect": "Sau khi trả trước",
+      "effectTerm": "Rút ngắn thời hạn",
+      "effectInstallment": "Giảm số tiền mỗi kỳ",
+      "allowance": "Hạn mức miễn phí tháng này: đã dùng {used}, còn {left}",
+      "dueOn": "Kỳ đến hạn {date}",
+      "interestDays": "Lãi {days} ngày ({from} → {to}) mức {rate}%",
+      "estimated": "ước tính",
+      "principal": "Gốc",
+      "interest": "Lãi",
+      "fee": "Phí",
+      "feeOverridden": "Khác mức phí gợi ý {suggested}",
+      "total": "Tổng",
+      "category": "Danh mục cho lãi & phí",
+      "categoryPlaceholder": "Chọn danh mục",
+      "createCategory": "Tạo \"Lãi vay & phí\"",
+      "defaultCategory": "Lãi vay & phí",
+      "note": "Ghi chú",
+      "cancel": "Huỷ",
+      "submit": "Ghi nhận thanh toán",
+      "success": "Đã ghi nhận thanh toán",
+      "successPaidOff": "Đã ghi nhận — khoản nợ này đã trả hết",
+      "error": "Không thể ghi nhận thanh toán",
+      "errorInsufficient": "Ngân sách trả không đủ số dư"
+    },
+    "adjust": {
+      "title": "Điều chỉnh dư nợ — {name}",
+      "hint": "Dùng khi dư nợ của bên cho vay khác với bạn. Thay đổi được lưu trong lịch sử.",
+      "newOutstanding": "Dư nợ theo bên cho vay",
+      "date": "Tại ngày",
+      "reason": "Lý do",
+      "cancel": "Huỷ",
+      "submit": "Điều chỉnh",
+      "success": "Đã điều chỉnh dư nợ",
+      "error": "Không thể điều chỉnh dư nợ"
+    },
+    "terms": {
+      "ratesTitle": "Các kỳ lãi suất",
+      "rulesTitle": "Quy tắc trả nợ trước hạn",
+      "noRules": "Chưa có quy tắc: trả trước miễn phí.",
+      "effectiveFrom": "Từ ngày",
+      "rate": "%/năm",
+      "addRate": "Thêm lãi suất",
+      "validFrom": "Từ ngày",
+      "allowance": "Miễn phí mỗi tháng",
+      "feePct": "Phí %",
+      "addRule": "Thêm quy tắc",
+      "ruleSummary": "miễn phí {allowance}/tháng, vượt thì phí {pct}%",
+      "delete": "Xoá",
+      "error": "Không thể lưu thay đổi"
+    },
+    "detail": {
+      "back": "Tất cả khoản nợ",
+      "outstanding": "Dư nợ",
+      "paidPrincipal": "Gốc đã trả",
+      "totalCost": "Lãi & phí đã trả",
+      "payoff": "Dự kiến tất toán",
+      "nextDue": "Kỳ trả tới",
+      "paySchedule": "Trả kỳ tới",
+      "prepay": "Trả trước",
+      "settle": "Tất toán",
+      "adjust": "Điều chỉnh dư nợ",
+      "close": "Đóng",
+      "reopen": "Mở lại",
+      "scheduleTitle": "Lịch trả nợ",
+      "scheduleHint": "Là số ước tính từ lãi suất và điều khoản bạn nhập. Các lần trả đã ghi mới là số thật.",
+      "colDate": "Đến hạn",
+      "colPrincipal": "Gốc",
+      "colInterest": "Lãi",
+      "colTotal": "Tổng",
+      "colBalance": "Dư nợ",
+      "showAll": "Xem cả {count} kỳ",
+      "showLess": "Thu gọn",
+      "projection": "Dự kiến tất toán {date}, tổng lãi {interest}",
+      "paymentsTitle": "Các lần thanh toán",
+      "noPayments": "Chưa có thanh toán nào.",
+      "paymentSplit": "gốc {principal} · lãi {interest} · phí {fee}",
+      "historyTitle": "Lịch sử",
+      "error": "Thao tác thất bại"
+    }
   }
 }

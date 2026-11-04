@@ -8,6 +8,7 @@ import { routes } from "@/constants/routes";
 
 import { BudgetDetailHeader } from "@/components/philand/budget-detail-header";
 import { InvestBudgetView } from "@/components/philand/invest-budget-view";
+import { DebtBudgetView, toDebtTab } from "@/components/philand/debt/debt-budget-view";
 import { FundBudgetView, toFundTab } from "@/components/philand/portfolio/fund-budget-view";
 import { isFeatureEnabled } from "@/lib/features";
 import { BudgetDetailWithTabs } from "@/components/philand/budget-detail-with-tabs";
@@ -95,6 +96,18 @@ export default function BudgetDetailPage() {
         <BudgetDetailHeader budget={budget} members={members} />
         <InvestBudgetView budgetId={budgetId} myRole={budget.myRole} />
       </div>
+    );
+  }
+
+  // Debt budgets are debt books (many loans + schedules) once the flag is on
+  if (budget.type === "debt" && isFeatureEnabled("debtV2")) {
+    return (
+      <DebtBudgetView
+        budget={budget}
+        members={members}
+        activeTab={toDebtTab(rawTab)}
+        onTab={(tab) => handleTabChange(tab)}
+      />
     );
   }
 

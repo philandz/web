@@ -27,6 +27,7 @@ import { BudgetDeleteDialog } from "./budget-delete-dialog";
 import type { Budget, BudgetMember, BudgetType } from "@/services/budget-service";
 import { budgetTypeMeta } from "@/lib/budget-types";
 import { isFeatureEnabled } from "@/lib/features";
+import { useDebtSummaryQuery } from "@/modules/debt/hooks";
 import { useFundSummaryQuery } from "@/modules/portfolio/hooks";
 
 // ---------------------------------------------------------------------------
@@ -52,8 +53,12 @@ export function BudgetDetailHeader({
   // A Saving budget is a fund once the flag is on: no income/expense ledger and no
   // spending limit, so the header shows the fund's value instead.
   const isFund = budget.type === "saving" && isFeatureEnabled("savingFund");
-  const { data: envelope } = useBurnRateQuery(isFund ? null : budget.id);
-  const summary = useEntrySummaryQuery(isFund ? null : budget.id);
+  // A Debt budget is a debt book once its flag is on: the header shows what is owed.
+  const isDebt = budget.type === "debt" && isFeatureEnabled("debtV2");
+  const tDebt = useTranslations("budget.debt.summary");
+  const debt = useDebtSummaryQuery(isDebt ? budget.id : null);
+  const { data: envelope } = useBurnRateQuery(isFund || isDebt ? null : budget.id);
+  const summary = useEntrySummaryQuery(isFund || isDebt ? null : budget.id);
   const fund = useFundSummaryQuery(isFund ? budget.id : null);
   const { orgRole } = useTenantContext();
 
@@ -134,8 +139,21 @@ export function BudgetDetailHeader({
             </div>
           </div>
 
-          {/* Right: fund value (Saving fund) */}
-          {isFund ? (
+          {/* Right: what is owed (Debt book) */}
+          {isDebt ? (
+          <div className="flex shrink-0 flex-col items-end gap-0.5" data-testid="debt-header">
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">{tDebt("outstanding")}</p>
+              <p className="text-sm font-bold tabular-nums text-foreground sm:text-base">
+                {debt.data ? fmt(debt.data.totalOutstandingMinor) : "—"}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-muted-foreground sm:text-xs">{tDebt("dueThisMonth")}</p>
+              <p className="text-xs tabular-nums text-foreground">{debt.data ? fmt(debt.data.dueThisMonthMinor) : "—"}</p>
+            </div>
+          </div>
+          ) : isFund ? (
           <div className="flex shrink-0 flex-col items-end gap-0.5" data-testid="fund-header">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">

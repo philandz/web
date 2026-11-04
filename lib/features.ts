@@ -8,6 +8,7 @@ export type FeatureFlag =
   | "savingFund"
   | "periodPlanning"
   | "sharingV2"
+  | "debtV2"
   | "uiRefresh";
 
 // Literal `process.env.X` accesses are required so Next can inline them.
@@ -16,6 +17,7 @@ const RAW: Record<FeatureFlag, string | undefined> = {
   savingFund: process.env.NEXT_PUBLIC_FEATURE_SAVING_FUND,
   periodPlanning: process.env.NEXT_PUBLIC_FEATURE_PERIOD_PLANNING,
   sharingV2: process.env.NEXT_PUBLIC_FEATURE_SHARING_V2,
+  debtV2: process.env.NEXT_PUBLIC_FEATURE_DEBT_V2,
   uiRefresh: process.env.NEXT_PUBLIC_FEATURE_UI_REFRESH,
 };
 
