@@ -26,6 +26,8 @@ import { CryptoLotCard } from "./crypto-lot-card";
 interface PortfolioViewProps {
   budgetId: string;
   source?: AssetSource;
+  /** Hide the P&L summary card — a Saving fund shows its own value panel. */
+  hideSummary?: boolean;
 }
 
 /**
@@ -33,7 +35,7 @@ interface PortfolioViewProps {
  * and one card per asset class. Replaces the legacy InvestBudgetView
  * for Investment Budgets.
  */
-export function PortfolioView({ budgetId, source }: PortfolioViewProps) {
+export function PortfolioView({ budgetId, source, hideSummary = false }: PortfolioViewProps) {
   const summary = usePortfolioSummaryQuery(budgetId, source);
   const assets = usePortfolioAssetsQuery(budgetId, source);
 
@@ -46,7 +48,7 @@ export function PortfolioView({ budgetId, source }: PortfolioViewProps) {
 
   return (
     <div className="space-y-6">
-      <PortfolioSummaryCard summary={summaryData} />
+      {hideSummary ? null : <PortfolioSummaryCard summary={summaryData} />}
       {assetsData.length === 0 ? (
         <EmptyState />
       ) : (

@@ -26,6 +26,8 @@ import { BudgetEditDialog } from "./budget-edit-dialog";
 import { BudgetDeleteDialog } from "./budget-delete-dialog";
 import type { Budget, BudgetMember, BudgetType } from "@/services/budget-service";
 import { budgetTypeMeta } from "@/lib/budget-types";
+import { isFeatureEnabled } from "@/lib/features";
+import { useFundSummaryQuery } from "@/modules/portfolio/hooks";
 
 // ---------------------------------------------------------------------------
 // Per-type config
@@ -45,9 +47,14 @@ export function BudgetDetailHeader({
   members,
 }: BudgetDetailHeaderProps) {
   const t = useTranslations("budget.detail");
+  const tFund = useTranslations("budget.fund");
   const profile = useAuthStore((s) => s.profile);
-  const { data: envelope } = useBurnRateQuery(budget.id);
-  const summary = useEntrySummaryQuery(budget.id);
+  // A Saving budget is a fund once the flag is on: no income/expense ledger and no
+  // spending limit, so the header shows the fund's value instead.
+  const isFund = budget.type === "saving" && isFeatureEnabled("savingFund");
+  const { data: envelope } = useBurnRateQuery(isFund ? null : budget.id);
+  const summary = useEntrySummaryQuery(isFund ? null : budget.id);
+  const fund = useFundSummaryQuery(isFund ? budget.id : null);
   const { orgRole } = useTenantContext();
 
   const [editOpen, setEditOpen] = useState(false);
@@ -127,7 +134,38 @@ export function BudgetDetailHeader({
             </div>
           </div>
 
-          {/* Right: all-time balance summary */}
+          {/* Right: fund value (Saving fund) */}
+          {isFund ? (
+          <div className="flex shrink-0 flex-col items-end gap-0.5" data-testid="fund-header">
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">
+                {tFund("totalValue")}
+              </p>
+              <p className="text-sm font-bold tabular-nums text-foreground sm:text-base">
+                {fund.data ? fmt(fund.data.totalValue) : "—"}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">{tFund("cash")}</p>
+                <p className="text-xs tabular-nums text-foreground">
+                  {fund.data ? fmt(fund.data.cashBalance) : "—"}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">{tFund("growth")}</p>
+                <p className={cn(
+                  "text-xs tabular-nums",
+                  (fund.data?.growth ?? 0) > 0 ? "text-emerald-600 dark:text-emerald-400" :
+                  (fund.data?.growth ?? 0) < 0 ? "text-red-500" : "text-foreground",
+                )}>
+                  {fund.data ? `${fund.data.growth > 0 ? "+" : ""}${fmt(fund.data.growth)}` : "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+          ) : (
+          /* Right: all-time balance summary */
           <div className="flex shrink-0 flex-col items-end gap-0.5">
             {/* Current balance — primary metric */}
             <div className="text-right">
@@ -167,6 +205,7 @@ export function BudgetDetailHeader({
               </div>
             </div>
           </div>
+          )}
 
           {/* Owner-only overflow menu */}
           {isOwner && (
@@ -198,7 +237,7 @@ export function BudgetDetailHeader({
         </div>
 
         {/* ── Envelope burn-rate bar ── */}
-        {spendPct != null && envelope && (
+        {spendPct != null && envelope && envelope.monthlyLimit > 0 && (
           <div className="mt-3 rounded-xl bg-muted/40 px-3 py-2.5 sm:mt-4 sm:px-4 sm:py-3">
             {/* Spend / limit row */}
             <div className="mb-1.5 flex items-center justify-between gap-2">

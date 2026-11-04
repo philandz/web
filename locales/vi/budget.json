@@ -706,6 +706,13 @@
     "transferOut": "Chuyển đi"
   },
   "fund": {
+    "tabs": {
+      "fund": "Quỹ",
+      "history": "Lịch sử cũ",
+      "members": "Thành viên",
+      "settings": "Cài đặt",
+      "historyHint": "Các khoản thu/chi ghi trước khi ngân sách này chuyển thành quỹ. Chỉ xem: quỹ giờ thay đổi qua nạp, rút và đầu tư."
+    },
     "holding": {
       "add": "Thêm khoản đầu tư",
       "title": "Thêm khoản đầu tư",

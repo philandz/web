@@ -706,6 +706,13 @@
     "transferOut": "Transfer out"
   },
   "fund": {
+    "tabs": {
+      "fund": "Fund",
+      "history": "Old history",
+      "members": "Members",
+      "settings": "Settings",
+      "historyHint": "Income and expense entries recorded before this budget became a fund. Read-only: the fund now changes through deposits, withdrawals and investments."
+    },
     "holding": {
       "add": "Add investment",
       "title": "Add an investment",
