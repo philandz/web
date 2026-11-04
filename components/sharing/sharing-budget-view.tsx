@@ -106,7 +106,7 @@ export function SharingBudgetView({
       </div>
       <SharingPageHeader
         budgetId={budgetId}
-        budgetName={budgetName}
+        budgetName={budget?.name || budgetName}
         currency="VND"
         totalSpent={totalSpent}
         participants={(participants ?? []).map((p) => ({
@@ -181,7 +181,7 @@ export function SharingBudgetView({
 
       <InviteMemberDialog
         budgetId={budgetId}
-        budgetName={budgetName}
+        budgetName={budget?.name || budgetName}
         open={inviteOpen}
         onOpenChange={setInviteOpen}
       />
