@@ -11,7 +11,10 @@ export function formatCurrency(
   currency: string,
   locale: AppLocale | string,
 ): string {
-  return new Intl.NumberFormat(localeToBCP47(locale), {
+  // VND is always written the Vietnamese way (3.000.000 ₫) so amounts read the
+  // same in every screen; other currencies follow the active locale.
+  const tag = currency === "VND" ? "vi-VN" : localeToBCP47(locale);
+  return new Intl.NumberFormat(tag, {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
