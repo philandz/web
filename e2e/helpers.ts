@@ -27,6 +27,20 @@ function parseJwtSub(token: string): string {
 }
 
 export const TEST_PASSWORD = 'Aa@123456';
+/**
+ * Absolute URL of a gateway API path.
+ *
+ * The specs used to call `page.request.get('/api/...')` — a relative path,
+ * which Playwright resolves against the *web* baseURL. The web serves no
+ * /api route, so those calls returned the Next.js 404 page (HTML) and every
+ * spec that used them failed. The API lives on the gateway, which is a
+ * different origin in dev and in production.
+ */
+export function apiUrl(path: string): string {
+  const base = process.env.PW_API_URL || 'http://127.0.0.1:3000';
+  return `${base}${path}`;
+}
+
 
 /**
  * Navigates to /login and submits the form. Returns the response body
@@ -87,6 +101,32 @@ export async function registerAndLogin(
   }
   await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 10_000 });
   return creds;
+}
+
+/**
+ * Asserts that the page is showing an error toast / inline error.
+ * Generic enough to cover form validation, 401/403 from API calls, etc.
+ */
+/**
+ * The bearer token the app stored after logging in.
+ *
+ * The session lives in localStorage (zustand persist), not in a cookie, so
+ * `page.request` — a raw HTTP request without the app's interceptor — does
+ * NOT send it. Specs that call the API through the page have to add the
+ * header themselves.
+ */
+export async function getAuthToken(page: Page): Promise<string> {
+  const token = await page.evaluate(() => {
+    const raw = window.localStorage.getItem('philandz-web-auth');
+    if (!raw) return '';
+    try {
+      return (JSON.parse(raw) as { state?: { token?: string } })?.state?.token ?? '';
+    } catch {
+      return '';
+    }
+  });
+  if (!token) throw new Error('no auth token in localStorage — log in first');
+  return token;
 }
 
 /**
