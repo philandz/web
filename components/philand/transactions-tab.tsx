@@ -456,13 +456,13 @@ export function TransactionsTab({
             <FilterBadge
               label={applied.dateTo ? `${formatIsoDate(applied.dateFrom)} – ${formatIsoDate(applied.dateTo)}` : `≥ ${formatIsoDate(applied.dateFrom)}`}
               onClear={() =>
-                applySearchWithDraft({ ...draft, dateFrom: "" })
+                applySearchWithDraft({ ...draft, dateFrom: "", dateTo: "" })
               }
             />
           )}
-          {applied.dateTo && (
+          {applied.dateTo && !applied.dateFrom && (
             <FilterBadge
-              label={`To ${applied.dateTo}`}
+              label={`≤ ${formatIsoDate(applied.dateTo)}`}
               onClear={() =>
                 applySearchWithDraft({ ...draft, dateTo: "" })
               }

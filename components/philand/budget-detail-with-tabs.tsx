@@ -831,12 +831,14 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                 >
                   {tRoot(cfg.labelKey)}
                 </span>
-                <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-bold capitalize text-muted-foreground">
-                  {budget.myRole}
-                </span>
+                {budget.myRole !== "owner" ? (
+                  <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-bold capitalize text-muted-foreground">
+                    {budget.myRole}
+                  </span>
+                ) : null}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {budget.currency} · {members.length || budget.memberCount || 1} members
+                {budget.currency} · {tRoot("budget.card.memberCount", { count: members.length || budget.memberCount || 1 })}
               </div>
             </div>
 
@@ -860,7 +862,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                 <span className="text-sm font-bold text-foreground tabular-nums">
                   {fmtShort(envelope?.currentSpend ?? 0, budget.currency)}
                 </span>
-                <span> / {fmtShort(envelope?.monthlyLimit ?? 0, budget.currency)}</span>
+                {envelope?.monthlyLimit ? <span> / {fmtShort(envelope.monthlyLimit, budget.currency)}</span> : null}
               </span>
               {spendPct != null ? (
                 <span className={cn(
@@ -871,9 +873,11 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                 </span>
               ) : null}
             </div>
-            <div className="h-[6px] w-full overflow-hidden rounded-full bg-border">
-              <div className="h-full rounded-full transition-all duration-500 ease-smooth" style={{ width: `${spendPct ?? 0}%`, background: barColor }} />
-            </div>
+            {envelope?.monthlyLimit ? (
+              <div className="h-[6px] w-full overflow-hidden rounded-full bg-border">
+                <div className="h-full rounded-full transition-all duration-500 ease-smooth" style={{ width: `${spendPct ?? 0}%`, background: barColor }} />
+              </div>
+            ) : null}
             <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
               <span>Spent this month</span>
               {envelope?.monthlyLimit ? (

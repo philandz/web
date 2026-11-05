@@ -60,9 +60,12 @@ export function cardMetricFor(budget: Budget, data: CardMetricData): CardMetric 
   // standard | debt | invest — spend against an envelope limit.
   const amount = budget.currentSpend ?? 0;
   const limit = budget.envelopeLimit > 0 ? budget.envelopeLimit : null;
+  // Without a limit a server-side rate is still shown, but a "0%" bar against nothing is misleading: treat 0 as unknown.
   const pct =
     limit != null
       ? Math.min(100, (amount / limit) * 100)
-      : (budget.burnRatePct ?? null);
+      : budget.burnRatePct != null && budget.burnRatePct > 0
+        ? budget.burnRatePct
+        : null;
   return { kind: "spend", amount, limit, pct };
 }

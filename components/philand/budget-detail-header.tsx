@@ -163,7 +163,8 @@ export function BudgetDetailHeader({
                 {fund.data ? fmt(fund.data.totalValue) : "—"}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            {/* Cash/growth repeat the fund panel right below: keep them for wide screens only. */}
+            <div className="hidden items-center gap-3 sm:flex">
               <div className="text-right">
                 <p className="text-[10px] text-muted-foreground sm:text-xs">{tFund("cash")}</p>
                 <p className="text-xs tabular-nums text-foreground">

@@ -36,10 +36,10 @@ export function FundPanel({ budgetId, canEdit }: FundPanelProps) {
   return (
     <div className="space-y-4" data-testid="fund-panel">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardHeader className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
           <CardTitle className="text-sm font-medium text-muted-foreground">{t("totalValue")}</CardTitle>
           {canEdit ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => setDialog("deposit")}>
                 <ArrowDownToLine className="mr-1.5 h-4 w-4" />
                 {t("deposit")}

@@ -413,7 +413,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
   return (
     <div className="space-y-4">
       {/* ── KPI cards ── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-4">
+      <div className={cn("grid grid-cols-2 gap-3", remaining != null && spendRate != null ? "md:grid-cols-4" : "md:grid-cols-2")}>
         <SummaryCard
           label={t("income")}
           value={fmt(income, budget.currency)}
@@ -426,15 +426,18 @@ export function OverviewTab({ budget }: OverviewTabProps) {
           icon={TrendingDown}
           tone="expense"
         />
+        {/* Remaining / rate only mean something against a limit. */}
+        {remaining != null && spendRate != null ? (
+          <>
         <SummaryCard
           label={t("remaining")}
-          value={remaining != null ? fmt(remaining, budget.currency) : t("noLimit")}
+          value={fmt(remaining ?? 0, budget.currency)}
           icon={Wallet}
           tone={remaining != null && remaining < 0 ? "expense" : "neutral"}
         />
         <SummaryCard
           label={t("spendRate")}
-          value={spendRate != null ? `${spendRate}%` : t("noLimit")}
+          value={`${spendRate ?? 0}%`}
           icon={Zap}
           tone={
             spendRate != null && spendRate >= 100 ? "expense" :
@@ -445,6 +448,8 @@ export function OverviewTab({ budget }: OverviewTabProps) {
             ? `${t("ofLimit")} ${fmt(limit, budget.currency)}`
             : undefined}
         />
+          </>
+        ) : null}
       </div>
 
       {hasData ? (

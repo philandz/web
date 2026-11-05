@@ -78,12 +78,12 @@ describe("cardMetricFor — spend", () => {
     });
   });
 
-  it("keeps a zero burn rate as a zero percentage", () => {
+  it("treats a zero burn rate without a limit as unknown, not 0%", () => {
     expect(cardMetricFor(b({ type: "standard", currentSpend: 0, envelopeLimit: 0, burnRatePct: 0 }), {})).toEqual({
       kind: "spend",
       amount: 0,
       limit: null,
-      pct: 0,
+      pct: null,
     });
   });
 
