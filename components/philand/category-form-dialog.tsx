@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectNative } from "@/components/ui/select";
 import { useToast } from "@/components/state/toast-provider";
-import { useCreateCategoryMutation, useUpdateCategoryMutation } from "@/modules/category/hooks";
+import { sameCategoryName } from "@/lib/category-icon";
+import { useCategoriesQuery, useCreateCategoryMutation, useUpdateCategoryMutation } from "@/modules/category/hooks";
 import type { Category, CategoryType } from "@/services/category-service";
 
 const ICON_OPTIONS = ["📦","🍔","🚗","🏠","💊","✈️","🛒","💡","📱","🎮","👕","🎓","💰","🏋️","🎵","🐾","🌿","🔧","💼","🎁"];
@@ -46,10 +47,14 @@ export function CategoryFormDialog({ open, onClose, budgetId, category, defaultT
   }, [category, defaultType]);
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const { data: existing = [] } = useCategoriesQuery(open ? budgetId : null);
+  const duplicate = existing.some(
+    (c) => c.id !== category?.id && !c.archived && c.type === type && sameCategoryName(c.name, name),
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || duplicate) return;
     const payload = { name: name.trim(), icon, color, plannedAmount: planned ? parseFloat(planned) : undefined };
 
     if (isEdit) {
@@ -88,7 +93,8 @@ export function CategoryFormDialog({ open, onClose, budgetId, category, defaultT
           {/* Name */}
           <div className="space-y-1.5">
             <Label>{t("name")}</Label>
-            <Input required value={name} onChange={(e) => setName(e.target.value)} placeholder={t("namePlaceholder")} />
+            <Input required value={name} onChange={(e) => setName(e.target.value)} placeholder={t("namePlaceholder")} aria-invalid={duplicate} />
+            {duplicate ? <p className="text-xs text-destructive" role="alert">{t("duplicate")}</p> : null}
           </div>
 
           {/* Icon picker */}
@@ -124,7 +130,7 @@ export function CategoryFormDialog({ open, onClose, budgetId, category, defaultT
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
-            <Button type="submit" disabled={isPending}>{isPending ? t("saving") : isEdit ? t("save") : t("create")}</Button>
+            <Button type="submit" disabled={isPending || duplicate}>{isPending ? t("saving") : isEdit ? t("save") : t("create")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

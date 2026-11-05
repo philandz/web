@@ -234,6 +234,8 @@
     "available": "Tổng ngân sách",
     "fund": "Quỹ tiết kiệm",
     "sharing": "Chia tiền nhóm",
-    "sharingCount": "{count} quỹ đang hoạt động"
+    "sharingCount": "{count} quỹ đang hoạt động",
+    "debt": "Dư nợ",
+    "debtNext": "Kỳ tới {date} · {amount}"
   }
 }

@@ -15,6 +15,7 @@ import { Loader2, Trash2, Edit, MessageCircle } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { safeDisplayName } from "@/lib/safe-display-name";
+import { formatIsoDate } from "@/lib/format";
 
 type ExpenseDetailSheetProps = {
   expense: Expense | null;
@@ -41,12 +42,7 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("vi-VN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return formatIsoDate(dateStr);
 }
 
 export function ExpenseDetailSheet({

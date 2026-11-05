@@ -37,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useBulkTransactionMutation, useTransactionsQuery } from "@/modules/transaction/hooks";
-import { useCategoriesQuery } from "@/modules/category/hooks";
+import { useCategoriesForBudgets } from "@/modules/category/hooks";
 import { useBudgetMembersQuery } from "@/modules/budget/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import type { TransactionApplied, TransactionDraft } from "@/lib/types/transaction-search";
@@ -58,6 +58,7 @@ import { cn } from "@/lib/utils";
 import { Feature } from "@/components/ui/feature";
 import { TransferDialog } from "./transfer-dialog";
 import { amountSign, amountToneClass, iconToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
+import { formatIsoDate, formatShortDate } from "@/lib/format";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
 function fmt(amount: number, currency: string) {
@@ -69,9 +70,7 @@ function fmt(amount: number, currency: string) {
 }
 
 function fmtDate(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-    new Date(dateStr),
-  );
+  return formatShortDate(dateStr);
 }
 
 
@@ -153,7 +152,7 @@ export function TransactionsTab({
 
   const { data, isLoading, isError } = useTransactionsQuery(queryParams);
 
-  const { data: categories = [] } = useCategoriesQuery(budgetId || null);
+  const categories = useCategoriesForBudgets(budgetId ? [budgetId] : (budgetIds ?? []));
   const { data: members = [] } = useBudgetMembersQuery(budgetId || null);
   const profile = useAuthStore((s) => s.profile);
   const bulkMutation = useBulkTransactionMutation();
@@ -413,63 +412,65 @@ export function TransactionsTab({
           <span className="hidden sm:inline ml-1.5">{t("search")}</span>
         </Button>
 
-        {/* Filter chips — inside expanded panel */}
-        {filtersOpen && (
-          <div className="flex flex-wrap gap-1.5 w-full">
-            {applied.type && applied.type !== "all" && (
-              <FilterBadge
-                label={applied.type}
-                onClear={() =>
-                  applySearchWithDraft({ ...draft, type: "all" })
-                }
-              />
-            )}
-            {applied.categoryIds.map((id) => (
+      </FilterPanel>
+
+      {/* Applied filters — always visible, so a hidden filter can never explain "missing" rows */}
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5" data-testid="applied-filters">
+          {applied.type && applied.type !== "all" && (
+            <FilterBadge
+              label={applied.type}
+              onClear={() =>
+                applySearchWithDraft({ ...draft, type: "all" })
+              }
+            />
+          )}
+          {applied.categoryIds.map((id) => (
+            <FilterBadge
+              key={id}
+              label={categoryMap.get(id)?.name ?? id}
+              onClear={() =>
+                applySearchWithDraft({
+                  ...draft,
+                  categoryIds: applied.categoryIds.filter((c) => c !== id),
+                })
+              }
+            />
+          ))}
+          {applied.memberIds.map((id) => {
+            const member = memberMap.get(id);
+            return (
               <FilterBadge
                 key={id}
-                label={categoryMap.get(id)?.name ?? id}
+                label={member?.displayName ?? id}
                 onClear={() =>
                   applySearchWithDraft({
                     ...draft,
-                    categoryIds: applied.categoryIds.filter((c) => c !== id),
+                    memberIds: applied.memberIds.filter((m) => m !== id),
                   })
                 }
               />
-            ))}
-            {applied.memberIds.map((id) => {
-              const member = memberMap.get(id);
-              return (
-                <FilterBadge
-                  key={id}
-                  label={member?.displayName ?? id}
-                  onClear={() =>
-                    applySearchWithDraft({
-                      ...draft,
-                      memberIds: applied.memberIds.filter((m) => m !== id),
-                    })
-                  }
-                />
-              );
-            })}
-            {applied.dateFrom && (
-              <FilterBadge
-                label={`From ${applied.dateFrom}`}
-                onClear={() =>
-                  applySearchWithDraft({ ...draft, dateFrom: "" })
-                }
-              />
-            )}
-            {applied.dateTo && (
-              <FilterBadge
-                label={`To ${applied.dateTo}`}
-                onClear={() =>
-                  applySearchWithDraft({ ...draft, dateTo: "" })
-                }
-              />
-            )}
-          </div>
-        )}
-      </FilterPanel>
+            );
+          })}
+          {applied.dateFrom && (
+            <FilterBadge
+              label={applied.dateTo ? `${formatIsoDate(applied.dateFrom)} – ${formatIsoDate(applied.dateTo)}` : `≥ ${formatIsoDate(applied.dateFrom)}`}
+              onClear={() =>
+                applySearchWithDraft({ ...draft, dateFrom: "" })
+              }
+            />
+          )}
+          {applied.dateTo && (
+            <FilterBadge
+              label={`To ${applied.dateTo}`}
+              onClear={() =>
+                applySearchWithDraft({ ...draft, dateTo: "" })
+              }
+            />
+          )}
+        </div>
+      )}
+
 
       {/* Sticky SummaryStrip — above table */}
       {transactions.length > 0 && (

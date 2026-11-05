@@ -22,6 +22,8 @@ import { TransactionFormDrawer } from "@/components/philand/transaction-form-dra
 import type { Transaction } from "@/services/transaction-service";
 import { cn } from "@/lib/utils";
 import { isInflow, isTransferKind } from "@/lib/transaction-kind";
+import { getActiveLocale } from "@/lib/active-locale";
+import { localeToBCP47 } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -36,7 +38,7 @@ function fmt(amount: number, currency?: string) {
 }
 
 function fmtDate(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -46,7 +48,7 @@ function fmtDate(dateStr: string) {
 
 function fmtTs(ts: number) {
   if (!ts) return "—";
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(ts < 1e12 ? ts * 1000 : ts));
@@ -177,7 +179,7 @@ function CommentThread({ entryId, members }: {
 
   function fmtTs(ts: number) {
     if (!ts) return "";
-    return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+    return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
       .format(new Date(ts < 1e12 ? ts * 1000 : ts));
   }
 

@@ -125,6 +125,21 @@ export interface PaymentQuote {
   annualRate: string;
   outstandingAfterMinor: number;
   estimated: boolean;
+  allowanceBeforeMinor: number;
+  taxableMinor: number;
+  hasRule: boolean;
+  feePct: string;
+  payoffDateBefore: string;
+  totalInterestBeforeMinor: number;
+  outcomes?: PrepayOutcome[];
+}
+
+export interface PrepayOutcome {
+  effect: PrepayEffect;
+  payoffDate: string;
+  installmentMinor: number;
+  totalInterestMinor: number;
+  periods: number;
 }
 
 export interface RecordPaymentBody {

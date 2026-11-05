@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AmountInput } from "@/components/ui/amount-input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/state/toast-provider";
@@ -35,6 +36,7 @@ export function TermsEditor({ budgetId, account, canManage }: Props) {
   const [allowance, setAllowance] = useState("");
   const [feePct, setFeePct] = useState("");
   const [ruleFrom, setRuleFrom] = useState(todayIso());
+  const [pendingDelete, setPendingDelete] = useState<{ kind: "rate" | "rule"; id: string } | null>(null);
 
   const rates = [...account.ratePeriods].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
 
@@ -53,7 +55,7 @@ export function TermsEditor({ budgetId, account, canManage }: Props) {
                   type="button"
                   aria-label={t("delete")}
                   className="text-muted-foreground hover:text-destructive"
-                  onClick={() => r.id && terms.deleteRate.mutate(r.id, { onError: fail })}
+                  onClick={() => r.id && setPendingDelete({ kind: "rate", id: r.id })}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -115,7 +117,7 @@ export function TermsEditor({ budgetId, account, canManage }: Props) {
                   type="button"
                   aria-label={t("delete")}
                   className="text-muted-foreground hover:text-destructive"
-                  onClick={() => r.id && terms.deleteRule.mutate(r.id, { onError: fail })}
+                  onClick={() => r.id && setPendingDelete({ kind: "rule", id: r.id })}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -140,7 +142,7 @@ export function TermsEditor({ budgetId, account, canManage }: Props) {
             </div>
             <div className="space-y-1">
               <Label className="text-xs">{t("allowance")}</Label>
-              <AmountInput value={allowance} onChange={setAllowance} currency="VND" />
+              <AmountInput variant="field" value={allowance} onChange={setAllowance} currency="VND" ariaLabel={t("allowance")} className="w-48" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">{t("feePct")}</Label>
@@ -152,6 +154,21 @@ export function TermsEditor({ budgetId, account, canManage }: Props) {
           </form>
         ) : null}
       </section>
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(o) => !o && setPendingDelete(null)}
+        title={t("confirmDeleteTitle")}
+        description={pendingDelete?.kind === "rate" ? t("confirmDeleteRate") : t("confirmDeleteRule")}
+        destructive
+        confirmLabel={t("delete")}
+        cancelLabel={t("cancel")}
+        onConfirm={() => {
+          const d = pendingDelete;
+          if (!d) return;
+          const m = d.kind === "rate" ? terms.deleteRate : terms.deleteRule;
+          m.mutate(d.id, { onSuccess: () => setPendingDelete(null), onError: fail });
+        }}
+      />
     </div>
   );
 }

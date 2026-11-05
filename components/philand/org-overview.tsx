@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueries } from "@tanstack/react-query";
-import { PiggyBank, Share2 } from "lucide-react";
+import { CreditCard, PiggyBank, Share2 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -11,9 +11,10 @@ import { StatTile } from "@/components/ui/stat-tile";
 import { Link } from "@/i18n/navigation";
 import { routes } from "@/constants/routes";
 import { isFeatureEnabled } from "@/lib/features";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatShortDate } from "@/lib/format";
 import { planKeys } from "@/lib/query-keys";
 import { sumFundValue, sumPeriodSummaries } from "@/lib/budget/org-totals";
+import { useDebtSummaries } from "@/modules/debt/hooks";
 import { useFundSummaries } from "@/modules/portfolio/hooks";
 import { planService } from "@/services/plan-service";
 import type { Budget } from "@/services/budget-service";
@@ -41,6 +42,20 @@ export function OrgOverview({ budgets }: { budgets: Budget[] }) {
     [budgets, savingFund],
   );
   const funds = useFundSummaries(savingIds);
+
+  // Debt books: total owed + the soonest payment across all of them.
+  const debtV2 = isFeatureEnabled("debtV2");
+  const debtBooks = useMemo(
+    () => (debtV2 ? budgets.filter((b) => b.type === "debt" && b.status !== "archived") : []),
+    [budgets, debtV2],
+  );
+  const debtSummaries = useDebtSummaries(debtBooks.map((b) => b.id));
+  const debtData = debtSummaries.map((q) => q.data).filter((d): d is NonNullable<typeof d> => Boolean(d));
+  const debtTotal = debtData.reduce((sum, d) => sum + d.totalOutstandingMinor, 0);
+  const debtNext = debtData
+    .filter((d) => d.nextDueDate)
+    .sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate))[0];
+  const debtCurrency = debtBooks[0]?.currency ?? "VND";
   const fund = savingFund ? sumFundValue(budgets, funds) : null;
 
   const summaries = useQueries({
@@ -57,7 +72,7 @@ export function OrgOverview({ budgets }: { budgets: Budget[] }) {
   const money = (v: number, currency: string) => formatCurrency(v, currency, locale);
 
   // Ship dark: the whole block only exists when a flag is on.
-  if (!planning && !fund && !(sharingV2 && sharing.length > 0)) return null;
+  if (!planning && !fund && !(sharingV2 && sharing.length > 0) && debtBooks.length === 0) return null;
 
   return (
     <section className="space-y-3" data-testid="org-overview" aria-label={t("title")}>
@@ -111,6 +126,22 @@ export function OrgOverview({ budgets }: { budgets: Budget[] }) {
                 <PiggyBank className="h-5 w-5 text-emerald-500" aria-hidden />
                 {money(fund.value, fund.currency)}
               </span>
+            }
+          />
+        ) : null}
+        {debtBooks.length > 0 ? (
+          <StatTile
+            label={t("debt")}
+            value={
+              <span className="inline-flex items-center gap-2" data-testid="org-debt-total">
+                <CreditCard className="h-5 w-5 text-red-500" aria-hidden />
+                {debtSummaries.some((q) => q.isLoading) ? "…" : money(debtTotal, debtCurrency)}
+              </span>
+            }
+            hint={
+              debtNext
+                ? t("debtNext", { date: formatShortDate(debtNext.nextDueDate, locale), amount: money(debtNext.nextDueMinor, debtCurrency) })
+                : undefined
             }
           />
         ) : null}

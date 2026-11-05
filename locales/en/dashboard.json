@@ -234,6 +234,8 @@
     "available": "Available",
     "fund": "Savings fund",
     "sharing": "Shared budgets",
-    "sharingCount": "{count, plural, one {# active budget} other {# active budgets}}"
+    "sharingCount": "{count, plural, one {# active budget} other {# active budgets}}",
+    "debt": "Debt",
+    "debtNext": "Next {date} · {amount}"
   }
 }

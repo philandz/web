@@ -20,3 +20,21 @@ describe("debt format helpers", () => {
     expect(repaidPct({ openingOutstandingMinor: 0, outstandingMinor: 0 })).toBe(0);
   });
 });
+
+import { balancePath, parsePayload, rateChangeAt } from "./debt-format";
+
+describe("schedule helpers", () => {
+  it("detects where the rate changes", () => {
+    const rows = [{ annualRate: "8.9" }, { annualRate: "8.9" }, { annualRate: "11.5" }];
+    expect([0, 1, 2].map((i) => rateChangeAt(rows, i))).toEqual([false, false, true]);
+  });
+  it("draws a falling balance line", () => {
+    const d = balancePath([100, 50, 0], 100, 50, 0);
+    expect(d).toBe("M0.0,0.0 L50.0,25.0 L100.0,50.0");
+    expect(balancePath([5], 100, 50)).toBe("");
+  });
+  it("tolerates broken event payloads", () => {
+    expect(parsePayload("{bad")).toEqual({});
+    expect(parsePayload('{"a":1}')).toEqual({ a: 1 });
+  });
+});

@@ -14,6 +14,7 @@ import { useArchiveCategoryMutation, useCategoriesQuery, useDeleteCategoryMutati
 import type { BudgetRole } from "@/services/budget-service";
 import type { Category, CategoryType } from "@/services/category-service";
 import { cn } from "@/lib/utils";
+import { categoryIcon } from "@/lib/category-icon";
 
 function fmt(amount: number, currency: string) {
   return new Intl.NumberFormat("vi-VN", {
@@ -57,7 +58,7 @@ function CategoryRow({ category, currency, onEdit, onDetail, onArchive, onDelete
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg"
         style={{ background: `${category.color}22`, border: `1.5px solid ${category.color}55` }}
       >
-        {category.icon}
+        {categoryIcon(category.icon, category.name)}
       </div>
 
       {/* Name + mobile spend summary */}
@@ -414,7 +415,7 @@ export function CategoriesTab({
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-base"
                     style={{ background: `${c.color}22` }}
                   >
-                    {c.icon}
+                    {categoryIcon(c.icon, c.name)}
                   </div>
                   <p className="flex-1 text-sm text-muted-foreground line-through">{c.name}</p>
                   <p className="text-xs tabular-nums text-muted-foreground">

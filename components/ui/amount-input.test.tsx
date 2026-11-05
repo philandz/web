@@ -49,3 +49,23 @@ describe("AmountInput shorthand", () => {
     expect(onChange).toHaveBeenLastCalledWith("1000");
   });
 });
+
+describe("AmountInput field variant", () => {
+  it("shows the grouped value in a visible input and does not steal focus", () => {
+    const onChange = vi.fn();
+    render(<AmountInput variant="field" value="" onChange={onChange} ariaLabel="Interest" />);
+    const input = screen.getByLabelText("Interest");
+    expect(document.activeElement).not.toBe(input);
+    fireEvent.change(input, { target: { value: "1500000" } });
+    expect(onChange).toHaveBeenCalledWith("1500000");
+    expect(input).toHaveValue("1.500.000");
+  });
+  it("accepts shorthand like the hero variant", () => {
+    const onChange = vi.fn();
+    render(<AmountInput variant="field" value="" onChange={onChange} ariaLabel="Fee" />);
+    const input = screen.getByLabelText("Fee");
+    fireEvent.change(input, { target: { value: "1tr5" } });
+    fireEvent.blur(input);
+    expect(onChange).toHaveBeenLastCalledWith("1500000");
+  });
+});

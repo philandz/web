@@ -315,7 +315,8 @@
     "createSuccess": "Category added",
     "createError": "Failed to add category",
     "updateSuccess": "Category updated",
-    "updateError": "Failed to update category"
+    "updateError": "Failed to update category",
+    "duplicate": "A category with this name already exists"
   },
   "catDetail": {
     "planned": "Planned",
@@ -899,7 +900,10 @@
       "closed": "Closed",
       "reopened": "Reopened",
       "settled": "Paid off",
-      "updated": "Updated"
+      "updated": "Updated",
+      "adjustment": "Balance adjusted",
+      "rate_change": "Rate change",
+      "prepay_rule_change": "Prepayment rule change"
     },
     "create": {
       "title": "Add a debt",
@@ -965,7 +969,18 @@
       "success": "Payment recorded",
       "successPaidOff": "Payment recorded — this debt is paid off",
       "error": "Could not record the payment",
-      "errorInsufficient": "The paying budget does not have enough balance"
+      "errorInsufficient": "The paying budget does not have enough balance",
+      "allowanceOver": "Free allowance left {left}; {taxable} is charged {pct}% = {fee}",
+      "allowanceFree": "Within the free allowance ({left} left) — no fee",
+      "noPrepayFee": "No prepayment fee rule — free",
+      "outcomeTerm": "Shorten the term: paid off {date}, save {saved} interest",
+      "outcomeInstallment": "Lower the instalment to {amount}, save {saved} interest",
+      "sourceBalance": "Balance available: {balance}",
+      "sourceShort": "Not enough: only {balance} available",
+      "overdueBy": "Overdue by {days} days",
+      "editAmounts": "Edit amounts",
+      "hideEdit": "Hide",
+      "createCategoryHint": "Create \"{name}\""
     },
     "adjust": {
       "title": "Adjust balance — {name}",
@@ -991,7 +1006,11 @@
       "addRule": "Add rule",
       "ruleSummary": "free {allowance}/month, then {pct}% fee",
       "delete": "Delete",
-      "error": "Could not save the change"
+      "error": "Could not save the change",
+      "confirmDeleteTitle": "Delete this entry?",
+      "confirmDeleteRate": "The rate period will be removed and the schedule recalculated.",
+      "confirmDeleteRule": "The prepayment rule will be removed; future prepayments follow the previous rule.",
+      "cancel": "Cancel"
     },
     "detail": {
       "back": "All debts",
@@ -1020,7 +1039,40 @@
       "noPayments": "No payments recorded yet.",
       "paymentSplit": "principal {principal} · interest {interest} · fee {fee}",
       "historyTitle": "History",
-      "error": "Action failed"
+      "error": "Action failed",
+      "more": "More actions",
+      "payNow": "Record a payment",
+      "repaidPct": "{pct}% repaid of {opening}",
+      "overdueBy": "Overdue by {days} days",
+      "dueToday": "Due today",
+      "dueIn": "Due in {days} days",
+      "interestLeft": "Interest still to pay",
+      "estimated": "estimate",
+      "costShare": "{pct}% of everything paid",
+      "balanceChart": "Balance until payoff",
+      "sections": {
+        "overview": "Overview",
+        "schedule": "Schedule",
+        "payments": "Payments",
+        "terms": "Terms",
+        "history": "History"
+      },
+      "colRate": "Rate",
+      "paymentSplitShort": "principal {principal} · interest {interest}",
+      "rateChanged": "rate changed",
+      "payStatus": {
+        "requested": "Pending",
+        "failed": "Failed",
+        "voided": "Voided",
+        "completed": "Done"
+      },
+      "closeTitle": "Close \"{name}\"?",
+      "closeBody": "A closed debt stops generating due dates. You can reopen it later.",
+      "cancel": "Cancel",
+      "evRate": "{rate}% ({type}) from {date}",
+      "evRateDeleted": "Rate period removed",
+      "evRule": "free {allowance}/month, then {pct}% fee",
+      "evAdjust": "{from} → {to} {reason}"
     }
   }
 }

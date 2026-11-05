@@ -27,7 +27,7 @@ test.describe('Debt book', () => {
     const form = page.getByTestId('debt-create-form');
     await form.locator('#d-name').fill('Consumer loan');
     await form.locator('#d-lender').fill('Bank X');
-    await form.getByLabel('Amount input').first().fill('500000000');
+    await form.getByTestId('debt-outstanding-input').fill('500000000');
     await form.locator('#d-day').fill('15');
     await form.locator('#d-term').fill('120');
     await form.locator('#d-rate').fill('8.9');
@@ -35,7 +35,7 @@ test.describe('Debt book', () => {
     next.setFullYear(next.getFullYear() + 1);
     await form.locator('#d-float-from').fill(next.toISOString().slice(0, 10));
     await form.locator('#d-float-rate').fill('11.5');
-    await form.getByLabel('Amount input').nth(1).fill('100000000');
+    await form.getByTestId('debt-allowance-input').fill('100000000');
     await form.locator('#d-fee-pct').fill('3');
     await page.getByTestId('debt-create-submit').click();
 
@@ -44,6 +44,7 @@ test.describe('Debt book', () => {
 
     // --- scheduled payment from the Standard budget -------------------------
     await page.getByTestId('debt-account-card').click();
+    await page.getByRole('tab', { name: /schedule/i }).click();
     await expect(page.getByTestId('debt-schedule')).toBeVisible();
     await page.getByTestId('debt-pay-scheduled').click();
     await expect(page.getByTestId('debt-quote')).toBeVisible();
@@ -52,6 +53,7 @@ test.describe('Debt book', () => {
     await expect(page.locator('#debt-pay-category')).not.toHaveValue('');
     await page.getByTestId('debt-pay-submit').click();
     await expect(page.getByTestId('debt-payment-form')).toBeHidden({ timeout: 15_000 });
+    await page.getByRole('tab', { name: /payments/i }).click();
     await expect(page.getByTestId('debt-payments').locator('div').first()).toBeVisible();
 
     const std = await f.api.get(`/api/entry/budgets/${f.budgetId}/summary`, { headers: auth });
@@ -64,7 +66,7 @@ test.describe('Debt book', () => {
       await page.getByTestId('debt-pay-prepay').click();
       const dlg = page.getByTestId('debt-payment-form');
       await page.locator('#debt-pay-from').selectOption(f.budgetId);
-      await dlg.getByLabel('Amount input').first().fill(amount);
+      await dlg.getByTestId('debt-prepay-amount').fill(amount);
       await expect(page.getByTestId('debt-quote')).toBeVisible();
       await expect(page.getByTestId('debt-allowance')).toBeVisible();
       if ((await page.locator('#debt-pay-category').inputValue().catch(() => 'x')) === '') {
@@ -91,7 +93,9 @@ test.describe('Debt book', () => {
     const acc = (await sched.json()).accounts[0];
     expect(Number(acc.outstanding_minor)).toBeLessThan(250_000_000);
     await page.reload();
+    await expect(page.getByTestId('debt-account-card')).toBeVisible({ timeout: 30_000 });
     await page.getByTestId('debt-account-card').click();
+    await page.getByRole('tab', { name: /schedule/i }).click();
     await expect(page.getByTestId('debt-schedule').locator('tbody tr').first()).toBeVisible();
   });
 

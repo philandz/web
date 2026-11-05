@@ -4,6 +4,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 
 import { AuthHydrator } from "@/components/auth/auth-hydrator";
+import { ActiveLocale } from "@/components/layout/active-locale";
 import { isAppLocale, routing } from "@/i18n/routing";
 
 export function generateStaticParams() {
@@ -38,6 +39,7 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
+      <ActiveLocale locale={locale} />
       <AuthHydrator />
       {children}
     </NextIntlClientProvider>

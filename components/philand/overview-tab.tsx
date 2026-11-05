@@ -12,6 +12,9 @@ import type { Budget } from "@/services/budget-service";
 import type { Transaction } from "@/services/transaction-service";
 import { useRef, useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { formatShortDate } from "@/lib/format";
+import { getActiveLocale } from "@/lib/active-locale";
+import { localeToBCP47 } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -26,9 +29,7 @@ function fmt(amount: number, currency: string) {
 }
 
 function fmtDate(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-    new Date(dateStr),
-  );
+  return formatShortDate(dateStr);
 }
 
 // ---------------------------------------------------------------------------
@@ -372,7 +373,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
   }
 
   const monthLabel = useMemo(
-    () => new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date(viewYear, viewMonth)),
+    () => new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "long", year: "numeric" }).format(new Date(viewYear, viewMonth)),
     [viewYear, viewMonth],
   );
 
@@ -468,7 +469,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <span className="min-w-[96px] rounded-lg border border-border bg-muted px-2.5 py-1 text-center text-xs font-semibold text-foreground">
-                    {new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(new Date(viewYear, viewMonth))}
+                    {new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short", year: "numeric" }).format(new Date(viewYear, viewMonth))}
                   </span>
                   <button
                     type="button"

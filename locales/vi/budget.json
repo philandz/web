@@ -315,7 +315,8 @@
     "createSuccess": "Đã thêm danh mục",
     "createError": "Không thể thêm danh mục",
     "updateSuccess": "Đã cập nhật danh mục",
-    "updateError": "Không thể cập nhật danh mục"
+    "updateError": "Không thể cập nhật danh mục",
+    "duplicate": "Đã có danh mục trùng tên"
   },
   "catDetail": {
     "planned": "Kế hoạch",
@@ -899,7 +900,10 @@
       "closed": "Đóng",
       "reopened": "Mở lại",
       "settled": "Tất toán",
-      "updated": "Cập nhật"
+      "updated": "Cập nhật",
+      "adjustment": "Điều chỉnh dư nợ",
+      "rate_change": "Đổi lãi suất",
+      "prepay_rule_change": "Đổi quy tắc trả trước"
     },
     "create": {
       "title": "Thêm khoản nợ",
@@ -965,7 +969,18 @@
       "success": "Đã ghi nhận thanh toán",
       "successPaidOff": "Đã ghi nhận — khoản nợ này đã trả hết",
       "error": "Không thể ghi nhận thanh toán",
-      "errorInsufficient": "Ngân sách trả không đủ số dư"
+      "errorInsufficient": "Ngân sách trả không đủ số dư",
+      "allowanceOver": "Còn miễn phí {left}; {taxable} bị tính phí {pct}% = {fee}",
+      "allowanceFree": "Trong hạn mức miễn phí (còn {left}) — không mất phí",
+      "noPrepayFee": "Chưa có quy tắc phí trả trước — miễn phí",
+      "outcomeTerm": "Rút ngắn thời hạn: tất toán {date}, tiết kiệm {saved} lãi",
+      "outcomeInstallment": "Giảm tiền mỗi kỳ còn {amount}, tiết kiệm {saved} lãi",
+      "sourceBalance": "Số dư khả dụng: {balance}",
+      "sourceShort": "Không đủ: chỉ còn {balance}",
+      "overdueBy": "Quá hạn {days} ngày",
+      "editAmounts": "Sửa số tiền",
+      "hideEdit": "Ẩn",
+      "createCategoryHint": "Tạo \"{name}\""
     },
     "adjust": {
       "title": "Điều chỉnh dư nợ — {name}",
@@ -991,7 +1006,11 @@
       "addRule": "Thêm quy tắc",
       "ruleSummary": "miễn phí {allowance}/tháng, vượt thì phí {pct}%",
       "delete": "Xoá",
-      "error": "Không thể lưu thay đổi"
+      "error": "Không thể lưu thay đổi",
+      "confirmDeleteTitle": "Xoá mục này?",
+      "confirmDeleteRate": "Kỳ lãi suất sẽ bị xoá và lịch trả được tính lại.",
+      "confirmDeleteRule": "Quy tắc trả trước sẽ bị xoá; các lần trả trước sau đó theo quy tắc trước đó.",
+      "cancel": "Huỷ"
     },
     "detail": {
       "back": "Tất cả khoản nợ",
@@ -1020,7 +1039,40 @@
       "noPayments": "Chưa có thanh toán nào.",
       "paymentSplit": "gốc {principal} · lãi {interest} · phí {fee}",
       "historyTitle": "Lịch sử",
-      "error": "Thao tác thất bại"
+      "error": "Thao tác thất bại",
+      "more": "Thao tác khác",
+      "payNow": "Ghi nhận thanh toán",
+      "repaidPct": "Đã trả {pct}% của {opening}",
+      "overdueBy": "Quá hạn {days} ngày",
+      "dueToday": "Đến hạn hôm nay",
+      "dueIn": "Còn {days} ngày",
+      "interestLeft": "Lãi còn phải trả",
+      "estimated": "ước tính",
+      "costShare": "{pct}% tổng đã trả",
+      "balanceChart": "Dư nợ đến khi tất toán",
+      "sections": {
+        "overview": "Tổng quan",
+        "schedule": "Lịch trả",
+        "payments": "Thanh toán",
+        "terms": "Điều khoản",
+        "history": "Lịch sử"
+      },
+      "colRate": "Lãi suất",
+      "paymentSplitShort": "gốc {principal} · lãi {interest}",
+      "rateChanged": "đổi lãi suất",
+      "payStatus": {
+        "requested": "Đang xử lý",
+        "failed": "Thất bại",
+        "voided": "Đã huỷ",
+        "completed": "Xong"
+      },
+      "closeTitle": "Đóng \"{name}\"?",
+      "closeBody": "Khoản nợ đã đóng sẽ không tạo kỳ đến hạn nữa. Bạn có thể mở lại sau.",
+      "cancel": "Huỷ",
+      "evRate": "{rate}% ({type}) từ {date}",
+      "evRateDeleted": "Đã xoá kỳ lãi suất",
+      "evRule": "miễn phí {allowance}/tháng, vượt thì phí {pct}%",
+      "evAdjust": "{from} → {to} {reason}"
     }
   }
 }

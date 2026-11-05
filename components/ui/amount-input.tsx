@@ -10,6 +10,18 @@ type AmountInputProps = {
   currency?: string;
   placeholder?: string;
   className?: string;
+  /**
+   * `hero` — the big centred amount of a dialog (one per form, focused on open).
+   * `field` — a normal 40px form field, right aligned; use it whenever a form has
+   * more than one amount.
+   */
+  variant?: "hero" | "field";
+  /** Defaults to true for `hero`, false for `field`. */
+  autoFocus?: boolean;
+  id?: string;
+  /** Accessible name; defaults to a generic "Amount". */
+  ariaLabel?: string;
+  "data-testid"?: string;
 };
 
 function formatWithSeparators(raw: string): string {
@@ -29,7 +41,13 @@ export function AmountInput({
   currency = "₫",
   placeholder = "0",
   className = "",
+  variant = "hero",
+  autoFocus,
+  id,
+  ariaLabel,
+  "data-testid": testId,
 }: AmountInputProps) {
+  const shouldFocus = autoFocus ?? variant === "hero";
   const [displayValue, setDisplayValue] = useState(() => {
     if (typeof value === "number") {
       return formatWithSeparators(String(value));
@@ -46,8 +64,8 @@ export function AmountInput({
   const t = useTranslations("common.amountInput");
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (shouldFocus) inputRef.current?.focus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep display in sync when value changes externally (e.g., clearing)
   useEffect(() => {
@@ -95,6 +113,43 @@ export function AmountInput({
     setDisplayValue(formatWithSeparators(raw));
   }
 
+  if (variant === "field") {
+    const suffix = currency === "VND" ? "₫" : currency;
+    return (
+      <div className={className} data-invalid={invalid || undefined}>
+        <div
+          className={`flex h-10 w-full items-center rounded-md border bg-background px-3 text-sm focus-within:ring-2 focus-within:ring-ring ${
+            invalid ? "border-destructive" : "border-input"
+          }`}
+        >
+          <input
+            ref={inputRef}
+            id={id}
+            type="text"
+            inputMode="decimal"
+            value={displayValue}
+            placeholder={placeholder}
+            onChange={handleInputChange}
+            onBlur={commitShorthand}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitShorthand();
+            }}
+            className="w-full min-w-0 bg-transparent text-right tabular-nums outline-none placeholder:text-muted-foreground"
+            aria-label={ariaLabel ?? "Amount input"}
+            aria-invalid={invalid}
+            data-testid={testId}
+          />
+          <span className="ml-1.5 shrink-0 text-muted-foreground">{suffix}</span>
+        </div>
+        {invalid ? (
+          <p className="mt-1 text-xs text-destructive" role="alert" aria-live="assertive">
+            {t("invalid")}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div
       className={`relative flex flex-col items-center justify-center cursor-text ${className}`}
@@ -124,8 +179,10 @@ export function AmountInput({
         }}
         className="absolute inset-0 w-full h-full opacity-0 cursor-text"
         style={{ zIndex: -1 }}
-        aria-label="Amount input"
+        id={id}
+        aria-label={ariaLabel ?? "Amount input"}
         aria-invalid={invalid}
+        data-testid={testId}
       />
 
       {invalid ? (

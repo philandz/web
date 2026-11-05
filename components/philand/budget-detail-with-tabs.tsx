@@ -31,6 +31,9 @@ import { PlanTab } from "./plan-tab";
 import type { Budget, BudgetType } from "@/services/budget-service";
 import type { Transaction, TransactionKind, TransactionType, TransactionListParams } from "@/services/transaction-service";
 import { amountSign, amountToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
+import { formatCompactMoney, formatShortDate } from "@/lib/format";
+import { getActiveLocale } from "@/lib/active-locale";
+import { localeToBCP47 } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,23 +48,15 @@ function fmt(amount: number, currency: string) {
 }
 
 function fmtShort(amount: number, currency: string) {
-  // Match the mockup: ₫x.xM / ₫xK.
-  const sign = amount < 0 ? "-" : "";
-  const abs = Math.abs(amount);
-  if (abs >= 1_000_000) return `${sign}₫${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${sign}₫${(abs / 1_000).toFixed(0)}K`;
-  // fall back to full formatting for tiny values
-  return `${sign}${fmt(abs, currency)}`;
+  return formatCompactMoney(amount, currency);
 }
 
 function fmtDate(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-    new Date(dateStr),
-  );
+  return formatShortDate(dateStr);
 }
 
 function fmtDateFull(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -254,7 +249,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
     return total;
   });
 
-  const labels = monthKeys.map((d) => new Intl.DateTimeFormat(undefined, { month: "short" }).format(d));
+  const labels = monthKeys.map((d) => new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short" }).format(d));
   const { line, area, pts } = buildPath(monthlyExpense, 520, 100);
 
   const catById = new Map(categories.map((c) => [c.id, c]));
@@ -296,13 +291,13 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
             <div>
               <div className="text-[13px] font-bold text-foreground">Spending Trend</div>
               <div className="mt-0.5 text-[11px] text-muted-foreground">
-                {new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date())}
+                {new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "long", year: "numeric" }).format(new Date())}
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs">
               <Button variant="ghost" size="sm" className="h-7 px-2">◀</Button>
               <span className="rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
-                {new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(new Date())}
+                {new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short", year: "numeric" }).format(new Date())}
               </span>
               <Button variant="ghost" size="sm" className="h-7 px-2">▶</Button>
             </div>

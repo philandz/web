@@ -142,7 +142,7 @@ export function CreateAccountDialog({ open, budgetId, onClose }: Props) {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>{t("outstanding")}</Label>
-              <AmountInput value={outstanding} onChange={setOutstanding} currency="VND" />
+              <AmountInput variant="field" value={outstanding} onChange={setOutstanding} currency="VND" ariaLabel={t("outstanding")} data-testid="debt-outstanding-input" />
               <p className="text-xs text-muted-foreground">{t("outstandingHint")}</p>
             </div>
             <div className="space-y-1.5">
@@ -202,7 +202,7 @@ export function CreateAccountDialog({ open, budgetId, onClose }: Props) {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>{t("allowance")}</Label>
-                <AmountInput value={allowance} onChange={setAllowance} currency="VND" />
+                <AmountInput variant="field" value={allowance} onChange={setAllowance} currency="VND" ariaLabel={t("allowance")} data-testid="debt-allowance-input" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="d-fee-pct">{t("feePct")}</Label>
@@ -225,7 +225,7 @@ export function CreateAccountDialog({ open, budgetId, onClose }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>{t("periodicFee")}</Label>
-              <AmountInput value={periodicFee} onChange={setPeriodicFee} currency="VND" />
+              <AmountInput variant="field" value={periodicFee} onChange={setPeriodicFee} currency="VND" ariaLabel={t("periodicFee")} />
             </div>
           </div>
 

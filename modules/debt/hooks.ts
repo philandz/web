@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { debtKeys, budgetKeys } from "@/lib/query-keys";
 import {
@@ -116,5 +116,16 @@ export function useAdjustDebt(budgetId: string, accountId: string) {
     mutationFn: (body: { newOutstandingMinor: number; reason: string; occurredOn?: string; idempotencyKey: string }) =>
       debtService.adjust(budgetId, accountId, body),
     onSuccess: done,
+  });
+}
+
+/** Summaries of several debt books at once (dashboard tile). */
+export function useDebtSummaries(budgetIds: string[]) {
+  return useQueries({
+    queries: budgetIds.map((id) => ({
+      queryKey: debtKeys.summary(id),
+      queryFn: () => debtService.summary(id),
+      staleTime: 30_000,
+    })),
   });
 }
