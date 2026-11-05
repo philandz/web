@@ -131,7 +131,7 @@ function Kpi({
   tone: "income" | "expense" | "neutral" | "warn";
 }) {
   const color =
-    tone === "income" ? "text-income" : tone === "expense" ? "text-expense" : tone === "warn" ? "text-amber-600 dark:text-amber-400" : "text-foreground";
+    tone === "income" ? "text-income" : tone === "expense" ? "text-expense" : tone === "warn" ? "text-amber-700 dark:text-amber-400" : "text-foreground";
   return (
     <Card>
       <CardContent className="p-4">

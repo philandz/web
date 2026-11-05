@@ -24,9 +24,9 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 const ROLE_STYLES: Record<BudgetRole, string> = {
-  owner:       "border-amber-200 bg-amber-500/10 text-amber-600 dark:border-amber-800 dark:text-amber-400",
+  owner:       "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400",
   manager:     "border-blue-200 bg-blue-500/10 text-blue-600 dark:border-blue-800 dark:text-blue-400",
-  contributor: "border-emerald-200 bg-emerald-500/10 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400",
+  contributor: "border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400",
   viewer:      "border-slate-200 bg-slate-500/10 text-slate-500 dark:border-slate-700",
 };
 

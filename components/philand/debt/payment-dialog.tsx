@@ -319,7 +319,7 @@ export function PaymentDialog({ open, budgetId, account, kind, onClose }: Props)
                 </dl>
               )}
               {kind === "prepayment" && feeNum !== quote.suggestedFeeMinor ? (
-                <p className="text-xs text-amber-600">{t("feeOverridden", { suggested: money(quote.suggestedFeeMinor) })}</p>
+                <p className="text-xs text-amber-700">{t("feeOverridden", { suggested: money(quote.suggestedFeeMinor) })}</p>
               ) : null}
               <div className="flex items-center justify-between border-t border-border pt-2">
                 <button type="button" className="text-xs text-primary hover:underline" onClick={() => setEditing((v) => !v)} data-testid="debt-edit-amounts">

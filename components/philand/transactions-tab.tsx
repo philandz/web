@@ -481,7 +481,7 @@ export function TransactionsTab({
             </span>
           )}
           {filteredExpense > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
               ↓ {fmt(filteredExpense, currency)}
             </span>
           )}
@@ -547,6 +547,7 @@ export function TransactionsTab({
                   <th className="w-10 px-4 py-3">
                     <input
                       type="checkbox"
+                      aria-label="Select all"
                       checked={selected.size === transactions.length && transactions.length > 0}
                       onChange={toggleAll}
                       className="rounded"
@@ -621,6 +622,7 @@ export function TransactionsTab({
                     >
                       <input
                         type="checkbox"
+                        aria-label="Select row"
                         checked={selected.has(tx.id)}
                         onChange={() => toggleSelect(tx.id)}
                         className="rounded"

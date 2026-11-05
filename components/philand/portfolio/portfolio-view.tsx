@@ -175,7 +175,7 @@ function Kpi({ label, value, pct, currency }: KpiProps) {
           className={
             "mt-0.5 text-xs " +
             (pct > 0
-              ? "text-emerald-600"
+              ? "text-emerald-700"
               : pct < 0
                 ? "text-rose-600"
                 : "text-muted-foreground")

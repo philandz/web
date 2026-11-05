@@ -112,7 +112,7 @@ export function MembersTab({ budgetId }: MembersTabProps) {
                 {isFallbackOwner && (
                   <Badge
                     variant="outline"
-                    className="border-amber-500/50 text-[10px] text-amber-600 dark:text-amber-400"
+                    className="border-amber-500/50 text-[10px] text-amber-700 dark:text-amber-400"
                   >
                     {t("members.owner")}
                   </Badge>

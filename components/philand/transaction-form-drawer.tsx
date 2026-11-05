@@ -360,8 +360,8 @@ export function TransactionFormDrawer({
                       "flex-1 rounded-xl border py-2 text-sm font-medium transition-colors",
                       type === v
                         ? v === "expense"
-                          ? "border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400"
-                          : "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          ? "border-red-500/50 bg-red-500/10 text-red-700 dark:text-red-400"
+                          : "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                         : "border-border text-muted-foreground hover:bg-muted",
                     )}
                   >
@@ -535,7 +535,7 @@ export function TransactionFormDrawer({
                       const diff = Math.abs(legTotal - total);
                       if (total > 0 && diff > 1) {
                         return (
-                          <p className="text-xs text-amber-600 dark:text-amber-400">
+                          <p className="text-xs text-amber-700 dark:text-amber-400">
                             {t("splitMismatch", { diff: diff.toLocaleString() })}
                           </p>
                         );

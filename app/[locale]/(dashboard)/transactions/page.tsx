@@ -32,6 +32,7 @@ export default function TransactionsPage() {
           <SelectNative
             value={budgetId}
             onValueChange={setBudgetId}
+            aria-label={t("allBudgets")}
             className="w-full sm:w-56"
           >
             <option value="">{t("allBudgets")}</option>

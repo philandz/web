@@ -122,7 +122,11 @@
     "currentBalance": "Số dư hiện tại",
     "totalIncome": "Thu nhập",
     "totalExpense": "Chi tiêu",
-    "tabPlan": "Kế hoạch"
+    "tabPlan": "Kế hoạch",
+    "usedPct": "Đã dùng {pct}%",
+    "spentThisMonthLabel": "Đã chi tháng này",
+    "remainingAmount": "Còn {amount}",
+    "overBy": "Vượt {amount}"
   },
   "header": {
     "menu": "Menu",
@@ -858,7 +862,8 @@
       "outstanding": "Tổng dư nợ",
       "dueThisMonth": "Phải trả tháng này",
       "nextDue": "Kỳ trả tới",
-      "cost": "Lãi & phí đã trả"
+      "cost": "Lãi & phí đã trả",
+      "paid": "Tổng đã trả"
     },
     "status": {
       "active": "Đang vay",

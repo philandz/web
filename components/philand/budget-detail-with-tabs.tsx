@@ -85,7 +85,7 @@ function TxTypeChip({ type }: { type: TransactionKind }) {
   const isIncome = type === "income";
   if (isTransferKind(type)) {
     return (
-      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-sky-500/25 bg-sky-500/10 px-2 py-[2px] text-[10px] font-bold text-sky-600 dark:text-sky-400">
+      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-sky-500/25 bg-sky-500/10 px-2 py-[2px] text-[10px] font-bold text-sky-700 dark:text-sky-400">
         ⇄ {type === "transfer_in" ? "Transfer in" : "Transfer out"}
       </span>
     );
@@ -230,7 +230,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
     ...(remaining != null && spendRate != null
       ? [
           { label: t("remaining"), value: fmtShort(remaining, currency), color: "text-foreground" },
-          { label: t("spendRate"), value: `${spendRate}%`, color: spendRate >= 80 ? "text-amber-600 dark:text-amber-400" : "text-foreground" },
+          { label: t("spendRate"), value: `${spendRate}%`, color: spendRate >= 80 ? "text-amber-700 dark:text-amber-400" : "text-foreground" },
         ]
       : []),
   ];
@@ -358,7 +358,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
               >
                 <div className={cn(
                   "grid h-[34px] w-[34px] place-items-center rounded-full text-[14px]",
-                  isTransferKind(tx.type) ? "bg-sky-500/10 text-sky-600 dark:text-sky-400" : isIncome ? "bg-income/10 text-income" : "bg-expense/10 text-expense",
+                  isTransferKind(tx.type) ? "bg-sky-500/10 text-sky-700 dark:text-sky-400" : isIncome ? "bg-income/10 text-income" : "bg-expense/10 text-expense",
                 )}>
                   {isTransferKind(tx.type) ? "⇄" : isIncome ? "↑" : "↓"}
                 </div>
@@ -697,6 +697,7 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
                     <td className="px-3 py-[11px]" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
+                        aria-label="Select row"
                         checked={selected.has(tx.id)}
                         onChange={() => toggleSelect(tx.id)}
                         className="cursor-pointer"
@@ -867,9 +868,9 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
               {spendPct != null ? (
                 <span className={cn(
                   "text-[13px] font-bold tabular-nums",
-                  spendPct >= 80 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+                  spendPct >= 80 ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground",
                 )}>
-                  {Math.round(spendPct)}% used
+                  {tDetail("usedPct", { pct: Math.round(spendPct) })}
                 </span>
               ) : null}
             </div>
@@ -879,10 +880,10 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
               </div>
             ) : null}
             <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Spent this month</span>
+              <span>{tDetail("spentThisMonthLabel")}</span>
               {envelope?.monthlyLimit ? (
                 <span className="font-semibold text-income">
-                  {fmtShort(envelope.monthlyLimit - envelope.currentSpend, budget.currency)} remaining
+                  {tDetail("remainingAmount", { amount: fmtShort(envelope.monthlyLimit - envelope.currentSpend, budget.currency) })}
                 </span>
               ) : null}
             </div>

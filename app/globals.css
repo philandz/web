@@ -12,18 +12,18 @@
   --secondary: 220 16% 94%;
   --secondary-foreground: 223 22% 18%;
   --muted: 220 16% 95%;
-  --muted-foreground: 220 12% 46%;
+  --muted-foreground: 220 12% 41%;
   --accent: 202 92% 49%;
   --accent-foreground: 222 30% 14%;
-  --destructive: 356 76% 56%;
+  --destructive: 356 76% 48%;
   --destructive-foreground: 0 0% 100%;
   --border: 220 16% 90%;
   --input: 220 16% 90%;
   --ring: 247 78% 60%;
   --radius: 0.95rem;
   --highlight: 78 90% 52%;
-  --income: 160 74% 38%;
-  --expense: 356 76% 56%;
+  --income: 160 80% 27%;
+  --expense: 356 76% 48%;
   --info: 217 91% 60%;
 }
 

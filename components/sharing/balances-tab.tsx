@@ -207,7 +207,7 @@ export function BalancesTab({ budgetId, isGuest = false, isPrivate = false }: Ba
       {/* All settled banner */}
       {!hasSuggestedTransfers && (balances ?? []).some((b) => b.netBalance !== 0) && (
         <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <CheckCircle2 className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
           <p className="text-sm text-emerald-700 dark:text-emerald-300">
             {t("settlement.allSettled")}
           </p>

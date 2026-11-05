@@ -102,7 +102,7 @@ export function AccountDetail({ budgetId, account, canManage, canPay, onBack }: 
                   {t("nextDue")}: {formatIsoDate(account.nextDue.dueDate, locale)} · {money(account.nextDue.totalMinor)}
                   {account.nextDue.estimated ? " ≈" : ""}
                 </p>
-                <p className={cn("text-xs", overdue ? "font-medium text-red-600" : "text-muted-foreground")}>
+                <p className={cn("text-xs", overdue ? "font-medium text-red-700" : "text-muted-foreground")}>
                   {dueIn === null ? "" : overdue ? t("overdueBy", { days: -dueIn }) : dueIn === 0 ? t("dueToday") : t("dueIn", { days: dueIn })}
                 </p>
               </div>
@@ -212,7 +212,7 @@ export function AccountDetail({ budgetId, account, canManage, canPay, onBack }: 
                     {shown.map((r, i) => (
                       <tr key={r.seq} className={cn("tabular-nums", rateChangeAt(shown, i) ? "border-t-2 border-amber-300" : "border-t border-border")}>
                         <td className="py-1">{r.seq}</td>
-                        <td className={cn(i === 0 && overdue && "font-medium text-red-600")}>{formatIsoDate(r.dueDate, locale)}</td>
+                        <td className={cn(i === 0 && overdue && "font-medium text-red-700")}>{formatIsoDate(r.dueDate, locale)}</td>
                         <td className="text-right text-muted-foreground">{r.annualRate}%{r.estimated ? " ≈" : ""}</td>
                         <td className="text-right">{money(r.principalMinor)}</td>
                         <td className="text-right">{money(r.interestMinor)}</td>
@@ -226,7 +226,7 @@ export function AccountDetail({ budgetId, account, canManage, canPay, onBack }: 
                   {shown.map((r, i) => (
                     <li key={r.seq} className="rounded-lg border border-border p-3 text-sm">
                       <div className="flex justify-between">
-                        <span className={cn("font-medium", i === 0 && overdue && "text-red-600")}>
+                        <span className={cn("font-medium", i === 0 && overdue && "text-red-700")}>
                           #{r.seq} · {formatIsoDate(r.dueDate, locale)}
                         </span>
                         <span className="font-semibold tabular-nums">{money(r.totalMinor)}</span>
@@ -337,7 +337,7 @@ function Fact({ label, value, hint }: { label: string; value: string; hint?: str
     <div className="rounded-lg border border-border p-3">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 font-semibold tabular-nums">{value}</dd>
-      {hint ? <p className="text-[11px] text-muted-foreground">{hint}</p> : null}
+      {hint ? <dd className="text-[11px] text-muted-foreground">{hint}</dd> : null}
     </div>
   );
 }

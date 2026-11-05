@@ -18,9 +18,9 @@ import type { SharingBudgetSummary } from "@/modules/sharing/hooks";
 
 
 const ROLE_STYLES: Record<BudgetRole, string> = {
-  owner:       "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  owner:       "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
   manager:     "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  contributor: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  contributor: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
   viewer:      "bg-slate-500/8 text-slate-500 border-slate-400/20",
 };
 
@@ -77,7 +77,7 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
   const pctColor =
     spendPct == null  ? "text-muted-foreground" :
     spendPct >= 100   ? "text-red-500" :
-    spendPct >= 80    ? "text-amber-600 dark:text-amber-400" :
+    spendPct >= 80    ? "text-amber-700 dark:text-amber-400" :
     "text-muted-foreground";
 
   // A fund without a loaded summary and without a known value shows "—",

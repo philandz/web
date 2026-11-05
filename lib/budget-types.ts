@@ -27,22 +27,22 @@ export interface BudgetTypeMeta {
 export const BUDGET_TYPE_META: Record<BudgetType, BudgetTypeMeta> = {
   standard: {
     label: "Standard", labelKey: "budget.list.typeStandard", Icon: LayoutGrid, emoji: "⊞",
-    iconBg: "bg-sky-500/12 text-sky-600 dark:text-sky-400",
-    badge: "border-sky-200 bg-sky-500/10 text-sky-600 dark:border-sky-800 dark:text-sky-400",
+    iconBg: "bg-sky-500/12 text-sky-700 dark:text-sky-400",
+    badge: "border-sky-200 bg-sky-500/10 text-sky-700 dark:border-sky-800 dark:text-sky-400",
     stripe: "bg-sky-500",
     hex: { stripe: "#38bdf8", iconBg: "#e0f2fe", iconFg: "#0369a1" },
   },
   saving: {
     label: "Saving", labelKey: "budget.list.typeSaving", Icon: PiggyBank, emoji: "🐷",
-    iconBg: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400",
-    badge: "border-emerald-200 bg-emerald-500/10 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400",
+    iconBg: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400",
+    badge: "border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400",
     stripe: "bg-emerald-500",
     hex: { stripe: "#22c984", iconBg: "#dcfce7", iconFg: "#15803d" },
   },
   debt: {
     label: "Debt", labelKey: "budget.list.typeDebt", Icon: CreditCard, emoji: "💳",
-    iconBg: "bg-red-500/12 text-red-600 dark:text-red-400",
-    badge: "border-red-200 bg-red-500/10 text-red-600 dark:border-red-800 dark:text-red-400",
+    iconBg: "bg-red-500/12 text-red-700 dark:text-red-400",
+    badge: "border-red-200 bg-red-500/10 text-red-700 dark:border-red-800 dark:text-red-400",
     stripe: "bg-red-500",
     hex: { stripe: "#f05c6e", iconBg: "#fee2e2", iconFg: "#b91c1c" },
   },

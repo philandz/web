@@ -44,7 +44,7 @@ export function StockLotCard({ asset, sub, v }: StockLotCardProps) {
           <p className="text-xs text-muted-foreground">
             {t("stockUnrealized")} {formatMinor(v.unrealizedPnl)} ({v.returnPct.toFixed(2)}%)
           </p>
-          <p className="mt-2 text-xs text-amber-600">{t("stockCorporateActionWarning")}</p>
+          <p className="mt-2 text-xs text-amber-700">{t("stockCorporateActionWarning")}</p>
         </div>
       </CardContent>
     </Card>

@@ -70,7 +70,7 @@ function PortfolioSummaryCard({ budgetId }: { budgetId: string }) {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">{t("unrealizedPnl")}</p>
-            <p className={cn("text-xl font-semibold tracking-tight", isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500")}>
+            <p className={cn("text-xl font-semibold tracking-tight", isPositive ? "text-emerald-700 dark:text-emerald-400" : "text-red-500")}>
               {isPositive ? "+" : ""}{fmt(data.totalUnrealizedPnl)}
             </p>
           </div>
@@ -78,7 +78,7 @@ function PortfolioSummaryCard({ budgetId }: { budgetId: string }) {
             <p className="text-xs text-muted-foreground">{t("pnlPct")}</p>
             <div className="flex items-center gap-1">
               {isPositive ? <TrendingUp className="h-4 w-4 text-emerald-500" /> : <TrendingDown className="h-4 w-4 text-red-500" />}
-              <p className={cn("text-xl font-semibold tracking-tight", isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500")}>
+              <p className={cn("text-xl font-semibold tracking-tight", isPositive ? "text-emerald-700 dark:text-emerald-400" : "text-red-500")}>
                 {isPositive ? "+" : ""}{data.totalPnlPct.toFixed(2)}%
               </p>
             </div>
@@ -130,17 +130,17 @@ function AssetCard({ asset, budgetId, myRole, onEdit, onDelete, onUpdatePrice, o
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-base font-semibold text-foreground truncate">{asset.name}</p>
                 {isNearMaturity && (
-                  <Badge variant="outline" className="border-amber-300 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Badge variant="outline" className="border-amber-300 bg-amber-500/10 text-amber-700 dark:text-amber-400">
                     <Clock className="mr-1 h-3 w-3" />{t("maturesSoon", { days: maturityDays })}
                   </Badge>
                 )}
                 {isMatured && (
-                  <Badge variant="outline" className="border-emerald-300 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <Badge variant="outline" className="border-emerald-300 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
                     {t("matured")}
                   </Badge>
                 )}
                 {isStale && (
-                  <Badge variant="outline" className="border-amber-300 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Badge variant="outline" className="border-amber-300 bg-amber-500/10 text-amber-700 dark:text-amber-400">
                     <AlertTriangle className="mr-1 h-3 w-3" />{t("stalePrice")}
                   </Badge>
                 )}
@@ -175,7 +175,7 @@ function AssetCard({ asset, budgetId, myRole, onEdit, onDelete, onUpdatePrice, o
           {asset.assetType === "savings_deposit" && (
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <div><p className="text-xs text-muted-foreground">{t("principal")}</p><p className="font-medium">{fmt(asset.principal ?? 0)}</p></div>
-              <div><p className="text-xs text-muted-foreground">{t("accrued")}</p><p className="font-medium text-emerald-600 dark:text-emerald-400">+{fmt(asset.unrealizedPnl)}</p></div>
+              <div><p className="text-xs text-muted-foreground">{t("accrued")}</p><p className="font-medium text-emerald-700 dark:text-emerald-400">+{fmt(asset.unrealizedPnl)}</p></div>
               <div><p className="text-xs text-muted-foreground">{t("currentValue")}</p><p className="font-semibold">{fmt(asset.currentValue)}</p></div>
               <div><p className="text-xs text-muted-foreground">{t("maturity")}</p><p className="font-medium">{asset.maturityDate ?? "—"}</p></div>
             </div>
@@ -188,7 +188,7 @@ function AssetCard({ asset, budgetId, myRole, onEdit, onDelete, onUpdatePrice, o
               <div><p className="text-xs text-muted-foreground">{t("currentValue")}</p><p className="font-semibold">{fmt(asset.currentValue)}</p></div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("pnl")}</p>
-                <p className={cn("font-semibold", isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500")}>
+                <p className={cn("font-semibold", isPositive ? "text-emerald-700 dark:text-emerald-400" : "text-red-500")}>
                   {isPositive ? "+" : ""}{fmt(asset.unrealizedPnl)} ({isPositive ? "+" : ""}{asset.pnlPct.toFixed(2)}%)
                 </p>
               </div>
@@ -202,7 +202,7 @@ function AssetCard({ asset, budgetId, myRole, onEdit, onDelete, onUpdatePrice, o
               <div><p className="text-xs text-muted-foreground">{t("avgCost")}</p><p className="font-medium">{fmt(asset.avgCostPerShare ?? 0)}</p></div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("pnl")}</p>
-                <p className={cn("font-semibold", isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500")}>
+                <p className={cn("font-semibold", isPositive ? "text-emerald-700 dark:text-emerald-400" : "text-red-500")}>
                   {isPositive ? "+" : ""}{fmt(asset.unrealizedPnl)} ({isPositive ? "+" : ""}{asset.pnlPct.toFixed(2)}%)
                 </p>
               </div>

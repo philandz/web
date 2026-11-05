@@ -76,7 +76,7 @@ function CategoryRow({ category, currency, onEdit, onDetail, onArchive, onDelete
             <span className={cn(
               "ml-1.5 font-medium",
               usagePct >= 100 ? "text-red-500" :
-              usagePct >= 80  ? "text-amber-600 dark:text-amber-400" :
+              usagePct >= 80  ? "text-amber-700 dark:text-amber-400" :
               "text-muted-foreground",
             )}>
               {Math.round(usagePct)}%
@@ -113,7 +113,7 @@ function CategoryRow({ category, currency, onEdit, onDetail, onArchive, onDelete
               <span className={cn(
                 "font-medium",
                 usagePct >= 100 ? "text-red-500" :
-                usagePct >= 80  ? "text-amber-600 dark:text-amber-400" :
+                usagePct >= 80  ? "text-amber-700 dark:text-amber-400" :
                 "text-muted-foreground",
               )}>
                 {Math.round(usagePct)}%
@@ -145,7 +145,7 @@ function CategoryRow({ category, currency, onEdit, onDetail, onArchive, onDelete
       >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" aria-label="Category actions">
               <MoreHorizontal className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>

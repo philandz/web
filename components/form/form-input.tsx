@@ -10,11 +10,13 @@ type FormInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(({ id, label, hint, error, className, ...props }, ref) => {
+  const autoId = React.useId();
+  const fid = id ?? autoId;
   return (
-    <FormField id={id} label={label} hint={hint} error={error} required={props.required}>
+    <FormField id={fid} label={label} hint={hint} error={error} required={props.required}>
       <input
         ref={ref}
-        id={id}
+        id={fid}
         aria-invalid={Boolean(error)}
         className={cn(
           "h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground outline-none transition",

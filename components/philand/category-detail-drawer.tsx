@@ -81,7 +81,7 @@ export function CategoryDetailDrawer({ open, onClose, category, budgetId }: Cate
                       <p className="truncate text-sm font-medium text-foreground">{tx.description}</p>
                       <p className="text-xs text-muted-foreground">{tx.date}</p>
                     </div>
-                    <p className={`ml-3 shrink-0 text-sm font-semibold ${tx.type === "income" ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
+                    <p className={`ml-3 shrink-0 text-sm font-semibold ${tx.type === "income" ? "text-emerald-700 dark:text-emerald-400" : "text-red-500"}`}>
                       {tx.type === "income" ? "+" : "-"}{formatCurrency(tx.amount)}
                     </p>
                   </div>

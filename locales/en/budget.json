@@ -122,7 +122,11 @@
     "currentBalance": "Current balance",
     "totalIncome": "Income",
     "totalExpense": "Expense",
-    "tabPlan": "Plan"
+    "tabPlan": "Plan",
+    "usedPct": "{pct}% used",
+    "spentThisMonthLabel": "Spent this month",
+    "remainingAmount": "{amount} remaining",
+    "overBy": "{amount} over"
   },
   "header": {
     "menu": "Menu",
@@ -858,7 +862,8 @@
       "outstanding": "Total owed",
       "dueThisMonth": "Due this month",
       "nextDue": "Next payment",
-      "cost": "Interest & fees paid"
+      "cost": "Interest & fees paid",
+      "paid": "Total repaid"
     },
     "status": {
       "active": "Active",

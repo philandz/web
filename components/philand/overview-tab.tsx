@@ -39,9 +39,9 @@ function fmtDate(dateStr: string) {
 type Tone = "income" | "expense" | "neutral" | "warn";
 
 const TONE: Record<Tone, { value: string; icon: string; iconBg: string }> = {
-  income:  { value: "text-emerald-600 dark:text-emerald-400", icon: "text-emerald-500",                  iconBg: "bg-emerald-500/10" },
+  income:  { value: "text-emerald-700 dark:text-emerald-400", icon: "text-emerald-500",                  iconBg: "bg-emerald-500/10" },
   expense: { value: "text-red-500",                           icon: "text-red-500",                      iconBg: "bg-red-500/10"     },
-  warn:    { value: "text-amber-600 dark:text-amber-400",     icon: "text-amber-500 dark:text-amber-400", iconBg: "bg-amber-500/10"   },
+  warn:    { value: "text-amber-700 dark:text-amber-400",     icon: "text-amber-500 dark:text-amber-400", iconBg: "bg-amber-500/10"   },
   neutral: { value: "text-foreground",                        icon: "text-muted-foreground",              iconBg: "bg-muted"          },
 };
 

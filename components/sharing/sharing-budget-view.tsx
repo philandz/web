@@ -136,7 +136,7 @@ export function SharingBudgetView({
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 rounded-lg min-h-[44px] px-3 py-2.5 text-xs font-medium transition-all",
                   isActive
-                    ? "bg-amber-500/12 text-amber-600 dark:text-amber-400"
+                    ? "bg-amber-500/12 text-amber-700 dark:text-amber-400"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
                 )}
               >

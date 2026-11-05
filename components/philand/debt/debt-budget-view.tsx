@@ -85,7 +85,7 @@ export function DebtBudgetView({ budget, members, activeTab, onTab }: Props) {
         ) : (
           <div className="space-y-4" data-testid="debt-book">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <Tile label={t("summary.outstanding")} value={s ? money(s.totalOutstandingMinor) : "—"} testId="debt-total-outstanding" />
+              <Tile label={t("summary.paid")} value={s ? money(s.totalPaidMinor) : "—"} />
               <Tile label={t("summary.dueThisMonth")} value={s ? money(s.dueThisMonthMinor) : "—"} />
               <Tile
                 label={t("summary.nextDue")}

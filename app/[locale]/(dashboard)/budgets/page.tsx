@@ -185,7 +185,7 @@ export default function BudgetsPage() {
         description={t("subtitle")}
         icon={<Wallet className="h-5 w-5" />}
         actions={(
-          <Button size="sm" onClick={() => setShowCreate(true)} className="shrink-0">
+          <Button size="sm" onClick={() => setShowCreate(true)} className="shrink-0" aria-label={t("create")}>
             <Plus className="h-4 w-4 sm:mr-1.5" />
             <span className="hidden sm:inline">{t("create")}</span>
           </Button>
@@ -208,6 +208,7 @@ export default function BudgetsPage() {
           {/* Role + sort — visible on sm+, hidden on mobile to keep row clean */}
           <SelectNative
             value={filters.role ?? ""}
+            aria-label={t("allRoles")}
             onValueChange={(v) => updateFilters({ role: (v as BudgetRole) || undefined })}
             className="hidden w-32 sm:block"
           >
@@ -219,6 +220,7 @@ export default function BudgetsPage() {
           </SelectNative>
           <SelectNative
             value={filters.sortBy ?? ""}
+            aria-label={t("sortDefault")}
             onValueChange={(v) => updateFilters({ sortBy: (v as BudgetFilters["sortBy"]) || undefined })}
             className="hidden w-32 sm:block"
           >
@@ -233,6 +235,7 @@ export default function BudgetsPage() {
             className="hidden h-9 w-9 sm:flex"
             onClick={() => updateFilters({ sortDir: filters.sortDir === "asc" ? "desc" : "asc" })}
             title={filters.sortDir === "asc" ? "Ascending" : "Descending"}
+            aria-label={filters.sortDir === "asc" ? "Ascending" : "Descending"}
           >
             <ArrowUpDown className="h-4 w-4" />
           </Button>
@@ -242,6 +245,7 @@ export default function BudgetsPage() {
         <div className="flex gap-2 sm:hidden">
           <SelectNative
             value={filters.role ?? ""}
+            aria-label={t("allRoles")}
             onValueChange={(v) => updateFilters({ role: (v as BudgetRole) || undefined })}
             className="flex-1"
           >
@@ -253,6 +257,7 @@ export default function BudgetsPage() {
           </SelectNative>
           <SelectNative
             value={filters.sortBy ?? ""}
+            aria-label={t("sortDefault")}
             onValueChange={(v) => updateFilters({ sortBy: (v as BudgetFilters["sortBy"]) || undefined })}
             className="flex-1"
           >
@@ -264,6 +269,7 @@ export default function BudgetsPage() {
             variant="outline"
             size="sm"
             className="h-9 w-9 shrink-0 px-0"
+            aria-label={filters.sortDir === "asc" ? "Ascending" : "Descending"}
             onClick={() => updateFilters({ sortDir: filters.sortDir === "asc" ? "desc" : "asc" })}
           >
             <ArrowUpDown className="h-4 w-4" />

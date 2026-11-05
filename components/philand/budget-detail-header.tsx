@@ -144,7 +144,7 @@ export function BudgetDetailHeader({
           <div className="flex shrink-0 flex-col items-end gap-0.5" data-testid="debt-header">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">{tDebt("outstanding")}</p>
-              <p className="text-sm font-bold tabular-nums text-foreground sm:text-base">
+              <p className="text-sm font-bold tabular-nums text-foreground sm:text-base" data-testid="debt-total-outstanding">
                 {debt.data ? fmt(debt.data.totalOutstandingMinor) : "—"}
               </p>
             </div>
@@ -175,7 +175,7 @@ export function BudgetDetailHeader({
                 <p className="text-[10px] text-muted-foreground sm:text-xs">{tFund("growth")}</p>
                 <p className={cn(
                   "text-xs tabular-nums",
-                  (fund.data?.growth ?? 0) > 0 ? "text-emerald-600 dark:text-emerald-400" :
+                  (fund.data?.growth ?? 0) > 0 ? "text-emerald-700 dark:text-emerald-400" :
                   (fund.data?.growth ?? 0) < 0 ? "text-red-500" : "text-foreground",
                 )}>
                   {fund.data ? `${fund.data.growth > 0 ? "+" : ""}${fmt(fund.data.growth)}` : "—"}
@@ -204,7 +204,7 @@ export function BudgetDetailHeader({
                 <p className="text-[10px] text-muted-foreground sm:text-xs">
                   {t("totalIncome")}
                 </p>
-                <p className="text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
+                <p className="text-xs tabular-nums text-emerald-700 dark:text-emerald-400">
                   {(() => {
                     if (summary.isPending || summary.isError) return "—";
                     return fmt(summary.data?.totalIncome ?? 0);
@@ -271,7 +271,7 @@ export function BudgetDetailHeader({
               <span className={cn(
                 "text-sm font-bold tabular-nums",
                 spendPct >= 100 ? "text-red-500" :
-                spendPct >= 80  ? "text-amber-600 dark:text-amber-400" :
+                spendPct >= 80  ? "text-amber-700 dark:text-amber-400" :
                 "text-foreground",
               )}>
                 {Math.round(spendPct)}%
@@ -290,7 +290,7 @@ export function BudgetDetailHeader({
             <div className="mt-2 flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">{t("spentThisMonth")}</span>
               {envelope.monthlyLimit > envelope.currentSpend ? (
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold text-emerald-700 dark:text-emerald-400">
                   {fmt(envelope.monthlyLimit - envelope.currentSpend)}&nbsp;{t("remaining")}
                 </span>
               ) : (

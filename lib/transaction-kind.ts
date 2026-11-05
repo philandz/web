@@ -15,13 +15,13 @@ export function amountSign(k: TransactionKind): "+" | "−" {
 
 /** Transfers use a neutral colour: they move money, they are not earnings or spending. */
 export function amountToneClass(k: TransactionKind): string {
-  if (isTransferKind(k)) return "text-sky-600 dark:text-sky-400";
-  return k === "income" ? "text-emerald-600 dark:text-emerald-400" : "text-red-500";
+  if (isTransferKind(k)) return "text-sky-700 dark:text-sky-400";
+  return k === "income" ? "text-emerald-700 dark:text-emerald-400" : "text-red-500";
 }
 
 export function iconToneClass(k: TransactionKind): string {
-  if (isTransferKind(k)) return "bg-sky-500/10 text-sky-600 dark:text-sky-400";
+  if (isTransferKind(k)) return "bg-sky-500/10 text-sky-700 dark:text-sky-400";
   return k === "income"
-    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
     : "bg-red-500/10 text-red-500";
 }

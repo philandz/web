@@ -122,7 +122,7 @@ export function SharingSettlementCard({
   return (
     <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
       <header className="mb-3 flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-700 dark:text-amber-400">
           <Wallet className="h-4 w-4" />
         </div>
         <h3 className="text-base font-semibold text-foreground">
@@ -138,7 +138,7 @@ export function SharingSettlementCard({
           {t("summary.copy")}
         </Button>
         {unsettled.length === 0 && settledConfirmed.length > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
             <CheckCircle2 className="h-3 w-3" />
             {t("settlement.allSettled")}
           </span>

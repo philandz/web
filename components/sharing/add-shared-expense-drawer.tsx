@@ -403,8 +403,8 @@ export function AddSharedExpenseDrawer({
                 <span className={cn(
                   "tabular-nums font-medium",
                   Object.values(customAmounts).reduce((s, v) => s + (parseInt(v?.replace(/\D/g, "") || "0")), 0) === numericAmount
-                    ? "text-emerald-600"
-                    : "text-red-600"
+                    ? "text-emerald-700"
+                    : "text-red-700"
                 )}>
                   {formatVND(
                     Object.values(customAmounts).reduce(
@@ -452,7 +452,7 @@ export function AddSharedExpenseDrawer({
                 <p className="text-sm font-medium text-foreground">{t("splitMethod.percentageHeading")}</p>
                 <span className={cn(
                   "text-sm tabular-nums font-medium",
-                  totalPercentage === 100 ? "text-emerald-600" : "text-red-600"
+                  totalPercentage === 100 ? "text-emerald-700" : "text-red-700"
                 )}>
                   {totalPercentage}%
                 </span>
@@ -493,7 +493,7 @@ export function AddSharedExpenseDrawer({
                 <p className="text-sm font-medium text-foreground">{t("splitMethod.byItemHeading")}</p>
                 <span className={cn(
                   "text-sm tabular-nums font-medium",
-                  itemsTotal === numericAmount ? "text-emerald-600" : "text-red-600"
+                  itemsTotal === numericAmount ? "text-emerald-700" : "text-red-700"
                 )}>
                   Total: {formatVND(itemsTotal)} / {formatVND(numericAmount)}
                 </span>
