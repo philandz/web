@@ -1,30 +1,25 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { sharingService } from "@/services/sharing-service";
 import { budgetService } from "@/services/budget-service";
 import { apiClient } from "@/lib/http/client";
+import { useAuthStore } from "@/lib/auth-store";
+import { sharingKeys } from "@/lib/query-keys";
 import type {
   AddExpenseItemInput,
   ExpenseComment,
   ActivityLogEntry,
+  ParticipantBalance,
   SettlementConfirmation,
   ParticipantInfo,
   JoinLinkPreview,
   JoinAsGuestResult,
 } from "@/services/sharing-service";
 
-export const sharingKeys = {
-  all: ["sharing"] as const,
-  expenses: (budgetId: string) => [...sharingKeys.all, "expenses", budgetId] as const,
-  settlement: (budgetId: string) => [...sharingKeys.all, "settlement", budgetId] as const,
-  settlements: (budgetId: string) => [...sharingKeys.all, "settlements", budgetId] as const,
-  participants: (budgetId: string) => [...sharingKeys.all, "participants", budgetId] as const,
-  activity: (budgetId: string) => [...sharingKeys.all, "activity", budgetId] as const,
-  comments: (expenseId: string) => [...sharingKeys.all, "comments", expenseId] as const,
-  budget: (budgetId: string) => [...sharingKeys.all, "budget", budgetId] as const,
-  orgMembers: (orgId: string) => [...sharingKeys.all, "orgMembers", orgId] as const,
-};
+// Re-exported for backwards compatibility: the key factory now lives with
+// the other query keys in `@/lib/query-keys`.
+export { sharingKeys };
 
 // ---------------------------------------------------------------------------
 // Expenses
@@ -45,6 +40,29 @@ export function useAddExpenseMutation() {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: sharingKeys.expenses(vars.budgetId) });
       qc.invalidateQueries({ queryKey: sharingKeys.settlement(vars.budgetId) });
+    },
+  });
+}
+
+export function useUpdateExpenseMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: sharingService.updateExpense,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: sharingKeys.all });
+    },
+  });
+}
+
+export function useSharingStatusMutation(budgetId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (action: "archive" | "reopen") =>
+      action === "archive"
+        ? sharingService.archiveBudget(budgetId)
+        : sharingService.reopenBudget(budgetId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: sharingKeys.all });
     },
   });
 }
@@ -327,4 +345,76 @@ export function useCurrentParticipantQuery(
     },
     enabled: Boolean(budgetId && selfDisplayName),
   });
+}
+
+// ---------------------------------------------------------------------------
+// Budget summaries (batch)
+// ---------------------------------------------------------------------------
+
+export interface SharingBudgetSummary {
+  /** my net balance in the group; 0 when the current user is not a participant */
+  myBalance: number;
+  /** sum of every expense's total_amount in the group */
+  totalSpent: number;
+}
+
+/**
+ * Pure summary maths for one sharing budget: the caller's net balance plus
+ * the group's total spend.
+ */
+export function summarizeSharingBudget(
+  balances: ParticipantBalance[] | undefined,
+  expenses: Array<{ totalAmount?: number } | undefined> | undefined,
+  currentUserId: string | undefined,
+): SharingBudgetSummary {
+  const myBalance = currentUserId
+    ? balances?.find((b) => b.userId === currentUserId)?.netBalance ?? 0
+    : 0;
+  const totalSpent = (expenses ?? []).reduce<number>(
+    (sum, expense) => sum + (expense?.totalAmount ?? 0),
+    0,
+  );
+  return { myBalance, totalSpent };
+}
+
+/**
+ * Balances + total spent for several sharing budgets at once.
+ * One balances request and one expenses request per budget, all in parallel.
+ *
+ * The expenses query reuses `sharingKeys.expenses(budgetId)` so the list and
+ * the sharing detail screen share the same cache entry. Budgets whose data
+ * has not loaded (or that errored) are absent from the map — the card renders
+ * its own fallback for those.
+ */
+export function useSharingBudgetSummaries(
+  budgetIds: string[],
+): Map<string, SharingBudgetSummary> {
+  const currentUserId = useAuthStore((s) => s.profile?.id);
+  const ids = Array.from(new Set(budgetIds.filter((id) => Boolean(id))));
+
+  const balanceQueries = useQueries({
+    queries: ids.map((budgetId) => ({
+      queryKey: sharingKeys.balances(budgetId),
+      queryFn: () => sharingService.getBalances(budgetId),
+    })),
+  });
+
+  const expenseQueries = useQueries({
+    queries: ids.map((budgetId) => ({
+      queryKey: sharingKeys.expenses(budgetId),
+      queryFn: () => sharingService.listExpenses(budgetId),
+    })),
+  });
+
+  const summaries = new Map<string, SharingBudgetSummary>();
+  ids.forEach((budgetId, index) => {
+    const balances = balanceQueries[index];
+    const expenses = expenseQueries[index];
+    if (!balances?.isSuccess || !expenses?.isSuccess) return;
+    summaries.set(
+      budgetId,
+      summarizeSharingBudget(balances.data, expenses.data, currentUserId),
+    );
+  });
+  return summaries;
 }

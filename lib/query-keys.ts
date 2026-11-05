@@ -47,13 +47,54 @@ export const portfolioKeys = {
     [...portfolioKeys.details(), budgetId, assetId] as const,
   summary: (budgetId: string, source?: string) =>
     [...portfolioKeys.all, "summary", budgetId, source ?? "auto"] as const,
+  fund: (budgetId: string) => [...portfolioKeys.all, "fund", budgetId] as const,
+  fundMovements: (budgetId: string, page = 1) =>
+    [...portfolioKeys.fund(budgetId), "movements", page] as const,
   observations: (budgetId: string, assetId: string) =>
     [...portfolioKeys.detail(budgetId, assetId), "observations"] as const,
   activity: (budgetId: string, assetId: string) =>
     [...portfolioKeys.detail(budgetId, assetId), "activity"] as const,
 };
 
+export const debtKeys = {
+  all: ["debt"] as const,
+  book: (budgetId: string) => [...debtKeys.all, budgetId] as const,
+  summary: (budgetId: string) => [...debtKeys.book(budgetId), "summary"] as const,
+  accounts: (budgetId: string) => [...debtKeys.book(budgetId), "accounts"] as const,
+  schedule: (budgetId: string, accountId: string) =>
+    [...debtKeys.book(budgetId), "schedule", accountId] as const,
+  payments: (budgetId: string, accountId: string) =>
+    [...debtKeys.book(budgetId), "payments", accountId || "all"] as const,
+  events: (budgetId: string, accountId: string) =>
+    [...debtKeys.book(budgetId), "events", accountId || "all"] as const,
+};
+
 export const settingsKeys = {
   all: ["settings"] as const,
   resend: () => [...settingsKeys.all, "resend"] as const,
+};
+
+// Sharing keys live here so every sharing query (list, detail, balances)
+// resolves to the same cache entry. Each collection uses its own segment
+// so invalidating one does not nuke the others.
+export const sharingKeys = {
+  all: ["sharing"] as const,
+  expenses: (budgetId: string) => [...sharingKeys.all, "expenses", budgetId] as const,
+  settlement: (budgetId: string) => [...sharingKeys.all, "settlement", budgetId] as const,
+  settlements: (budgetId: string) => [...sharingKeys.all, "settlements", budgetId] as const,
+  participants: (budgetId: string) => [...sharingKeys.all, "participants", budgetId] as const,
+  balances: (budgetId: string) => [...sharingKeys.all, "balances", budgetId] as const,
+  activity: (budgetId: string) => [...sharingKeys.all, "activity", budgetId] as const,
+  comments: (expenseId: string) => [...sharingKeys.all, "comments", expenseId] as const,
+  budget: (budgetId: string) => [...sharingKeys.all, "budget", budgetId] as const,
+  orgMembers: (orgId: string) => [...sharingKeys.all, "orgMembers", orgId] as const,
+};
+
+export const planKeys = {
+  all: ["plan"] as const,
+  // The budget id comes first so `planKeys.budget(id)` is a prefix of every
+  // per-budget key and invalidating it actually refreshes plan + summary.
+  summary: (budgetId: string, offset: number) => [...planKeys.all, budgetId, "summary", offset] as const,
+  plan: (budgetId: string, offset: number) => [...planKeys.all, budgetId, "plan", offset] as const,
+  budget: (budgetId: string) => [...planKeys.all, budgetId] as const,
 };

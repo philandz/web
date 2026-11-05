@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { budgetService } from "./budget-service";
+import { budgetService, toBudgetRole, toBudgetType } from "./budget-service";
 
 vi.mock("@/lib/http/client", () => ({
   apiClient: {
@@ -77,5 +77,56 @@ describe("budgetService.listBudgets", () => {
     expect(result.items).toHaveLength(0);
     expect(result.meta.totalRows).toBe(0);
     expect(result.meta.totalPages).toBe(0);
+  });
+});
+
+describe("budget enum normalisation", () => {
+  it("maps numeric codes", () => {
+    expect(toBudgetType(1)).toBe("standard");
+    expect(toBudgetType(5)).toBe("sharing");
+    expect(toBudgetRole(1)).toBe("owner");
+    expect(toBudgetRole(4)).toBe("viewer");
+  });
+
+  it("maps canonical labels", () => {
+    expect(toBudgetType("saving")).toBe("saving");
+    expect(toBudgetRole("contributor")).toBe("contributor");
+  });
+
+  it("maps Rust variant names", () => {
+    expect(toBudgetType("Saving")).toBe("saving");
+    expect(toBudgetRole("Manager")).toBe("manager");
+  });
+
+  it("maps protobuf enum names", () => {
+    expect(toBudgetType("BUDGET_TYPE_INVEST")).toBe("invest");
+    expect(toBudgetRole("BUDGET_ROLE_OWNER")).toBe("owner");
+  });
+
+  it("falls back for unknown values", () => {
+    expect(toBudgetType("BUDGET_TYPE_NONSENSE")).toBe("standard");
+    expect(toBudgetRole("BUDGET_ROLE_NONSENSE")).toBe("viewer");
+  });
+
+  it("keeps the budget usable when the API sends enum labels", async () => {
+    const { apiClient } = await import("@/lib/http/client");
+    vi.mocked(apiClient.get).mockResolvedValue({
+      budgets: [
+        {
+          id: "budget-1",
+          org_id: "org-1",
+          name: "Alpha",
+          budget_type: "BUDGET_TYPE_SAVING",
+          currency: "VND",
+          my_role: "BUDGET_ROLE_MANAGER",
+        },
+      ],
+      meta: { page: 1, page_size: 20, total_pages: 1, total_rows: 1 },
+    });
+
+    const result = await budgetService.listBudgets({ orgId: "org-1" });
+
+    expect(result.items[0].type).toBe("saving");
+    expect(result.items[0].myRole).toBe("manager");
   });
 });

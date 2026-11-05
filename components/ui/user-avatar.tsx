@@ -17,13 +17,13 @@ type UserAvatarProps = {
 const AVATAR_PALETTES = [
   "bg-violet-500/20 text-violet-600 dark:text-violet-400",
   "bg-blue-500/20 text-blue-600 dark:text-blue-400",
-  "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",
-  "bg-amber-500/20 text-amber-600 dark:text-amber-400",
+  "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400",
+  "bg-amber-500/20 text-amber-700 dark:text-amber-400",
   "bg-rose-500/20 text-rose-600 dark:text-rose-400",
   "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400",
   "bg-orange-500/20 text-orange-600 dark:text-orange-400",
   "bg-teal-500/20 text-teal-600 dark:text-teal-400",
-  "bg-pink-500/20 text-pink-600 dark:text-pink-400",
+  "bg-pink-500/20 text-pink-700 dark:text-pink-400",
   "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400",
 ];
 

@@ -4,6 +4,7 @@
 
 import { useLocale } from "next-intl";
 import type { AppLocale } from "@/i18n/routing";
+import { getActiveLocale } from "@/lib/active-locale";
 
 /** Format a money amount in the active locale's standard convention. */
 export function formatCurrency(
@@ -11,7 +12,10 @@ export function formatCurrency(
   currency: string,
   locale: AppLocale | string,
 ): string {
-  return new Intl.NumberFormat(localeToBCP47(locale), {
+  // VND is always written the Vietnamese way (3.000.000 ₫) so amounts read the
+  // same in every screen; other currencies follow the active locale.
+  const tag = currency === "VND" ? "vi-VN" : localeToBCP47(locale);
+  return new Intl.NumberFormat(tag, {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
@@ -36,26 +40,80 @@ export function formatDateTime(
   }).format(date);
 }
 
-/** Format a Date or epoch-seconds with locale short date (d/m/y vs m/d/y vs y-m-d). */
+/** Parse `yyyy-mm-dd` (or a full ISO string) as a LOCAL date, so a date-only value never shifts a day. */
+export function parseIsoDate(iso: string): Date | null {
+  if (!iso) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * Full date: `04/11/2026` (vi) / `Nov 4, 2026` (en). Never the ambiguous `M/d/yy`.
+ */
 export function formatDate(
   ts: number | Date,
-  locale: AppLocale | string,
+  locale: AppLocale | string = getActiveLocale(),
 ): string {
   const date = typeof ts === "number" ? new Date(ts * (ts < 1e12 ? 1000 : 1)) : ts;
+  if (locale === "vi") {
+    return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
+  }
   return new Intl.DateTimeFormat(localeToBCP47(locale), {
-    dateStyle: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   }).format(date);
 }
 
-/** Format an ISO date string (yyyy-mm-dd or full ISO) as a localized date. */
+/** Short date for lists: the year only when it is not the current one (`04/11` · `Nov 4`). */
+export function formatShortDate(
+  iso: string | Date,
+  locale: AppLocale | string = getActiveLocale(),
+  now: Date = new Date(),
+): string {
+  const date = typeof iso === "string" ? parseIsoDate(iso) : iso;
+  if (!date) return typeof iso === "string" ? iso : "";
+  if (date.getFullYear() !== now.getFullYear()) return formatDate(date, locale);
+  if (locale === "vi") return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}`;
+  return new Intl.DateTimeFormat(localeToBCP47(locale), { month: "short", day: "numeric" }).format(date);
+}
+
+/** Format an ISO date string (yyyy-mm-dd or full ISO) as a localized full date. */
 export function formatIsoDate(
   iso: string,
-  locale: AppLocale | string,
+  locale: AppLocale | string = getActiveLocale(),
 ): string {
   if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return formatDate(date, locale);
+  const date = parseIsoDate(iso);
+  return date ? formatDate(date, locale) : iso;
+}
+
+/**
+ * Compact money for tight places (chart axes, list rows): `3,2 tr` / `650K` / `1,5 tỷ` in
+ * Vietnamese, `₫3.2M` / `₫650K` in English. Small values stay in full.
+ */
+export function formatCompactMoney(
+  value: number,
+  currency: string,
+  locale: AppLocale | string = getActiveLocale(),
+): string {
+  const sign = value < 0 ? "\u2212" : "";
+  const abs = Math.abs(value);
+  const one = (n: number, sep: string) => n.toFixed(1).replace(/\.0$/, "").replace(".", sep);
+  if (currency === "VND" && locale === "vi") {
+    if (abs >= 1_000_000_000) return `${sign}${one(abs / 1_000_000_000, ",")} tỷ`;
+    if (abs >= 1_000_000) return `${sign}${one(abs / 1_000_000, ",")} tr`;
+    if (abs >= 1_000) return `${sign}${Math.round(abs / 1_000)}K`;
+    return `${sign}${abs} ₫`;
+  }
+  const sym = currency === "VND" ? "₫" : "";
+  if (abs >= 1_000_000_000) return `${sign}${sym}${one(abs / 1_000_000_000, ".")}B`;
+  if (abs >= 1_000_000) return `${sign}${sym}${one(abs / 1_000_000, ".")}M`;
+  if (abs >= 1_000) return `${sign}${sym}${Math.round(abs / 1_000)}K`;
+  return `${sign}${formatCurrency(abs, currency, locale)}`;
 }
 
 /** Format a duration in ms as a locale-aware compact string (e.g. "2d 4h" / "2n 4g"). */

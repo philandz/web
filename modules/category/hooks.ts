@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   categoryService,
   type CategoryType,
@@ -72,4 +73,16 @@ export function useDeleteCategoryMutation(budgetId: string) {
       categoryService.deleteCategory(budgetId, categoryId),
     onSuccess: () => qc.invalidateQueries({ queryKey: categoryKeys.list(budgetId) }),
   });
+}
+
+/** Categories of several budgets merged into one list (all-budgets views). */
+export function useCategoriesForBudgets(budgetIds: string[]) {
+  const results = useQueries({
+    queries: budgetIds.map((id) => ({
+      queryKey: categoryKeys.list(id),
+      queryFn: () => categoryService.listCategories(id),
+      retry: false,
+    })),
+  });
+  return useMemo(() => results.flatMap((r) => r.data ?? []), [results]);
 }

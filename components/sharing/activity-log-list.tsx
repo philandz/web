@@ -69,7 +69,7 @@ export function ActivityLogList({ budgetId }: ActivityLogListProps) {
     return (
       <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
         <header className="mb-3 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-700 dark:text-amber-400">
             <History className="h-4 w-4" />
           </div>
           <h3 className="text-base font-semibold text-foreground">
@@ -88,7 +88,7 @@ export function ActivityLogList({ budgetId }: ActivityLogListProps) {
   return (
     <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
       <header className="mb-3 flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-700 dark:text-amber-400">
           <History className="h-4 w-4" />
         </div>
         <h3 className="text-base font-semibold text-foreground">

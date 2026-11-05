@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   ArrowUpDown,
@@ -29,6 +29,9 @@ import {
   type BudgetFilters,
 } from "@/lib/query-params/budgets";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
+import { useFundSummaries } from "@/modules/portfolio/hooks";
+import { isFeatureEnabled } from "@/lib/features";
+import { useSharingBudgetSummaries } from "@/modules/sharing/hooks";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import type { BudgetListParams, BudgetRole, BudgetType } from "@/services/budget-service";
 import { cn } from "@/lib/utils";
@@ -130,8 +133,24 @@ export default function BudgetsPage() {
   };
 
   const { data, isLoading, isError, refetch } = useBudgetsQuery(listParams);
-  const budgets = data?.items ?? [];
+  const budgets = useMemo(() => data?.items ?? [], [data]);
   const meta = data?.meta;
+
+  // Enrichment for the card metrics: a saving card shows its fund value,
+  // a sharing card shows my balance + the total spent.
+  // Only funds have a fund summary; with the flag off a Saving budget is a ledger.
+  const savingFundOn = isFeatureEnabled("savingFund");
+  const savingIds = useMemo(
+    () => (savingFundOn ? budgets.filter((b) => b.type === "saving").map((b) => b.id) : []),
+    [budgets, savingFundOn],
+  );
+
+  const sharingIds = useMemo(
+    () => budgets.filter((b) => b.type === "sharing").map((b) => b.id),
+    [budgets],
+  );
+  const funds = useFundSummaries(savingIds);
+  const sharing = useSharingBudgetSummaries(sharingIds);
 
   // ── No org selected ──
   if (!orgId) {
@@ -142,6 +161,22 @@ export default function BudgetsPage() {
 
   const activeType = filters.type ?? "";
 
+  const renderCard = (budget: (typeof budgets)[number]) => (
+    <BudgetCard
+      key={budget.id}
+      budget={budget}
+      fund={funds.get(budget.id)}
+      sharingSummary={sharing.get(budget.id)}
+      onClick={() =>
+        router.push(
+          budget.type === "sharing"
+            ? routes.sharingDetail(budget.id)
+            : routes.budgetDetail(budget.id),
+        )
+      }
+    />
+  );
+
   return (
     <div className="animate-fade-in-up space-y-6">
       {/* ── Page header ── */}
@@ -150,7 +185,7 @@ export default function BudgetsPage() {
         description={t("subtitle")}
         icon={<Wallet className="h-5 w-5" />}
         actions={(
-          <Button size="sm" onClick={() => setShowCreate(true)} className="shrink-0">
+          <Button size="sm" onClick={() => setShowCreate(true)} className="shrink-0" aria-label={t("create")}>
             <Plus className="h-4 w-4 sm:mr-1.5" />
             <span className="hidden sm:inline">{t("create")}</span>
           </Button>
@@ -173,6 +208,7 @@ export default function BudgetsPage() {
           {/* Role + sort — visible on sm+, hidden on mobile to keep row clean */}
           <SelectNative
             value={filters.role ?? ""}
+            aria-label={t("allRoles")}
             onValueChange={(v) => updateFilters({ role: (v as BudgetRole) || undefined })}
             className="hidden w-32 sm:block"
           >
@@ -184,6 +220,7 @@ export default function BudgetsPage() {
           </SelectNative>
           <SelectNative
             value={filters.sortBy ?? ""}
+            aria-label={t("sortDefault")}
             onValueChange={(v) => updateFilters({ sortBy: (v as BudgetFilters["sortBy"]) || undefined })}
             className="hidden w-32 sm:block"
           >
@@ -198,6 +235,7 @@ export default function BudgetsPage() {
             className="hidden h-9 w-9 sm:flex"
             onClick={() => updateFilters({ sortDir: filters.sortDir === "asc" ? "desc" : "asc" })}
             title={filters.sortDir === "asc" ? "Ascending" : "Descending"}
+            aria-label={filters.sortDir === "asc" ? "Ascending" : "Descending"}
           >
             <ArrowUpDown className="h-4 w-4" />
           </Button>
@@ -207,6 +245,7 @@ export default function BudgetsPage() {
         <div className="flex gap-2 sm:hidden">
           <SelectNative
             value={filters.role ?? ""}
+            aria-label={t("allRoles")}
             onValueChange={(v) => updateFilters({ role: (v as BudgetRole) || undefined })}
             className="flex-1"
           >
@@ -218,6 +257,7 @@ export default function BudgetsPage() {
           </SelectNative>
           <SelectNative
             value={filters.sortBy ?? ""}
+            aria-label={t("sortDefault")}
             onValueChange={(v) => updateFilters({ sortBy: (v as BudgetFilters["sortBy"]) || undefined })}
             className="flex-1"
           >
@@ -229,6 +269,7 @@ export default function BudgetsPage() {
             variant="outline"
             size="sm"
             className="h-9 w-9 shrink-0 px-0"
+            aria-label={filters.sortDir === "asc" ? "Ascending" : "Descending"}
             onClick={() => updateFilters({ sortDir: filters.sortDir === "asc" ? "desc" : "asc" })}
           >
             <ArrowUpDown className="h-4 w-4" />
@@ -299,19 +340,7 @@ export default function BudgetsPage() {
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {budgets.map((budget) => (
-            <BudgetCard
-              key={budget.id}
-              budget={budget}
-              onClick={() =>
-                router.push(
-                  budget.type === "sharing"
-                    ? routes.sharingDetail(budget.id)
-                    : routes.budgetDetail(budget.id),
-                )
-              }
-            />
-          ))}
+          {budgets.map(renderCard)}
         </div>
       )}
 

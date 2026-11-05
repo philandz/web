@@ -8,6 +8,9 @@ import { routes } from "@/constants/routes";
 
 import { BudgetDetailHeader } from "@/components/philand/budget-detail-header";
 import { InvestBudgetView } from "@/components/philand/invest-budget-view";
+import { DebtBudgetView, toDebtTab } from "@/components/philand/debt/debt-budget-view";
+import { FundBudgetView, toFundTab } from "@/components/philand/portfolio/fund-budget-view";
+import { isFeatureEnabled } from "@/lib/features";
 import { BudgetDetailWithTabs } from "@/components/philand/budget-detail-with-tabs";
 import { PageErrorState } from "@/components/state/page-error-state";
 import { PageLoadingState } from "@/components/state/page-loading-state";
@@ -17,7 +20,7 @@ import { useBudgetMembersQuery, useBudgetQuery } from "@/modules/budget/hooks";
 // Tab config
 // ---------------------------------------------------------------------------
 
-const ALL_TABS = ["overview", "transactions", "categories", "members", "settings", "assets"] as const;
+const ALL_TABS = ["overview", "transactions", "categories", "members", "settings", "assets", "plan"] as const;
 type TabName = (typeof ALL_TABS)[number];
 
 function isValidTab(v: string | null): v is TabName {
@@ -93,6 +96,30 @@ export default function BudgetDetailPage() {
         <BudgetDetailHeader budget={budget} members={members} />
         <InvestBudgetView budgetId={budgetId} myRole={budget.myRole} />
       </div>
+    );
+  }
+
+  // Debt budgets are debt books (many loans + schedules) once the flag is on
+  if (budget.type === "debt" && isFeatureEnabled("debtV2")) {
+    return (
+      <DebtBudgetView
+        budget={budget}
+        members={members}
+        activeTab={toDebtTab(rawTab)}
+        onTab={(tab) => handleTabChange(tab)}
+      />
+    );
+  }
+
+  // Saving budgets are funds (cash pocket + holdings) once the flag is on
+  if (budget.type === "saving" && isFeatureEnabled("savingFund")) {
+    return (
+      <FundBudgetView
+        budget={budget}
+        members={members}
+        activeTab={toFundTab(rawTab)}
+        onTab={(tab) => handleTabChange(tab)}
+      />
     );
   }
 

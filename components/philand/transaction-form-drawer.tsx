@@ -19,6 +19,7 @@ import {
   useCreateSplitTransactionMutation,
 } from "@/modules/transaction/hooks";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
+import { acceptsManualEntries } from "@/lib/budget-types";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { useCategoriesQuery } from "@/modules/category/hooks";
 import { mediaService } from "@/services/media-service";
@@ -166,9 +167,13 @@ export function TransactionFormDrawer({
     orgId: tenant.selectedOrgId ?? "",
     pageSize: 100,
   });
-  const allBudgets = pagedBudgets?.items ?? [];
+  // Split legs can only land on budgets that take manual entries (not Sharing,
+  // not a Saving fund).
+  const allBudgets = (pagedBudgets?.items ?? []).filter((b) => acceptsManualEntries(b.type));
 
-  const [type, setType] = useState<TransactionType>(transaction?.type ?? defaultType);
+  const [type, setType] = useState<TransactionType>(
+    transaction?.type === "income" || transaction?.type === "expense" ? transaction.type : defaultType,
+  );
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
   const [description, setDescription] = useState(transaction?.description ?? "");
   const [date, setDate] = useState(transaction?.date ?? new Date().toISOString().slice(0, 10));
@@ -200,7 +205,7 @@ export function TransactionFormDrawer({
   // Reset form when transaction changes
   useEffect(() => {
     if (transaction) {
-      setType(transaction.type);
+      setType(transaction.type === "income" ? "income" : "expense");
       setAmount(String(transaction.amount));
       setDescription(transaction.description);
       setDate(transaction.date);
@@ -355,8 +360,8 @@ export function TransactionFormDrawer({
                       "flex-1 rounded-xl border py-2 text-sm font-medium transition-colors",
                       type === v
                         ? v === "expense"
-                          ? "border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400"
-                          : "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          ? "border-red-500/50 bg-red-500/10 text-red-700 dark:text-red-400"
+                          : "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                         : "border-border text-muted-foreground hover:bg-muted",
                     )}
                   >
@@ -530,7 +535,7 @@ export function TransactionFormDrawer({
                       const diff = Math.abs(legTotal - total);
                       if (total > 0 && diff > 1) {
                         return (
-                          <p className="text-xs text-amber-600 dark:text-amber-400">
+                          <p className="text-xs text-amber-700 dark:text-amber-400">
                             {t("splitMismatch", { diff: diff.toLocaleString() })}
                           </p>
                         );

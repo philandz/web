@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/http/client";
+import { camelToSnake, snakeToCamel } from "@/lib/wire-casing";
 
 const BASE = "/api/budget";
 
@@ -277,6 +278,98 @@ export interface PortfolioActivity {
 // Service
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Saving fund (cash pocket + holdings) — plan R2
+// ---------------------------------------------------------------------------
+
+export type FundCashMovementKind =
+  | "OPENING_BALANCE"
+  | "TRANSFER_IN"
+  | "TRANSFER_OUT"
+  | "ASSET_PURCHASE"
+  | "ASSET_REDEMPTION"
+  | "INTEREST_PAYOUT"
+  | "FEE"
+  | "ADJUSTMENT"
+  | "UNSPECIFIED";
+
+export interface FundCashMovement {
+  id: string;
+  budgetId: string;
+  kind: string | number;
+  amountMinor: number;
+  refType?: string;
+  refId?: string;
+  transferGroupId?: string;
+  actorUserId: string;
+  note?: string;
+  occurredOn: string;
+  createdAt: number;
+}
+
+export interface FundAllocationSlice {
+  label: string;
+  value: number;
+  pct: number;
+}
+
+export interface FundUpcomingMaturity {
+  assetId: string;
+  displayName: string;
+  maturityDate: number;
+  expectedAmount: number;
+}
+
+export interface FundSummary {
+  budgetId: string;
+  currency: string;
+  cashBalance: number;
+  holdingsValue: number;
+  totalValue: number;
+  netContributed: number;
+  growth: number;
+  growthPct: number;
+  allocation?: FundAllocationSlice[];
+  upcoming?: FundUpcomingMaturity[];
+}
+
+export interface FundTransferBody {
+  counterpartyBudgetId: string;
+  amountMinor: number;
+  occurredOn: string;
+  note?: string;
+  idempotencyKey: string;
+}
+
+export interface FundTransferResult {
+  movement?: FundCashMovement;
+  cashBalance: number;
+  transferGroupId: string;
+}
+
+/** Normalises "FUND_CASH_MOVEMENT_KIND_TRANSFER_IN" / "TRANSFER_IN" / "transfer_in" to the short upper-case form. */
+export function normalizeFundKind(kind: string | number | undefined): FundCashMovementKind {
+  const known: FundCashMovementKind[] = [
+    "OPENING_BALANCE", "TRANSFER_IN", "TRANSFER_OUT", "ASSET_PURCHASE",
+    "ASSET_REDEMPTION", "INTEREST_PAYOUT", "FEE", "ADJUSTMENT",
+  ];
+  // The gateway serialises protobuf enums as numbers (1 = OPENING_BALANCE ... 8 = ADJUSTMENT).
+  if (typeof kind === "number") return known[kind - 1] ?? "UNSPECIFIED";
+  const k = (kind ?? "").replace(/^FUND_CASH_MOVEMENT_KIND_/i, "").toUpperCase();
+  return (known as string[]).includes(k) ? (k as FundCashMovementKind) : "UNSPECIFIED";
+}
+
+/**
+ * The fund-transfer proto requires `note` and `idempotency_key`; the web treats
+ * the note as optional, so send an empty string rather than dropping the key
+ * (the gateway rejects a body with a missing required field).
+ */
+function fundTransferBody(budgetId: string, body: FundTransferBody): Record<string, unknown> {
+  // `budget_id` is required by the proto even though the gateway overwrites it
+  // with the path value — a body without it is rejected with 422.
+  return camelToSnake({ ...body, budget_id: budgetId, note: body.note ?? "" });
+}
+
 export const portfolioService = {
   listAssets(budgetId: string, opts?: { source?: AssetSource; page?: number; pageSize?: number }) {
     const search = new URLSearchParams();
@@ -284,24 +377,26 @@ export const portfolioService = {
     if (opts?.page) search.set("page", String(opts.page));
     if (opts?.pageSize) search.set("page_size", String(opts.pageSize));
     const qs = search.toString();
-    return apiClient.get<{ assets: ValuatedAsset[]; total_rows: number }>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets${qs ? `?${qs}` : ""}`,
-    );
+    return apiClient
+      .get<{ assets: ValuatedAsset[]; total_rows: number }>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets${qs ? `?${qs}` : ""}`,
+      )
+      .then((raw) => snakeToCamel<{ assets: ValuatedAsset[]; totalRows: number }>(raw));
   },
 
   getAsset(budgetId: string, assetId: string) {
-    return apiClient.get<{ asset: ValuatedAsset }>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}`,
-    );
+    return apiClient
+      .get<{ asset: ValuatedAsset }>(`${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}`)
+      .then((raw) => snakeToCamel<{ asset: ValuatedAsset }>(raw));
   },
 
   getSummary(budgetId: string, opts?: { source?: AssetSource }) {
     const search = new URLSearchParams();
     if (opts?.source) search.set("source", opts.source);
     const qs = search.toString();
-    return apiClient.get<PortfolioSummary>(
-      `${BASE}/budgets/${budgetId}/portfolio/summary${qs ? `?${qs}` : ""}`,
-    );
+    return apiClient
+      .get<PortfolioSummary>(`${BASE}/budgets/${budgetId}/portfolio/summary${qs ? `?${qs}` : ""}`)
+      .then((raw) => snakeToCamel<PortfolioSummary>(raw));
   },
 
   updateMetadata(
@@ -309,17 +404,34 @@ export const portfolioService = {
     assetId: string,
     body: { displayName?: string; notes?: string },
   ) {
-    return apiClient.patch<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}`,
-      body,
-    );
+    // The proto has no `optional` on these two fields, so the gateway rejects
+    // the request when one of them is missing.
+    return apiClient
+      .patch<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}`,
+        camelToSnake({ budget_id: budgetId, asset_id: assetId, displayName: "", notes: "", ...body }),
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   archive(budgetId: string, assetId: string) {
-    return apiClient.post<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/archive`,
-      {},
-    );
+    return apiClient
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/archive`,
+        { budget_id: budgetId, asset_id: assetId },
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
+  },
+
+  /** Creates a holding from an already wire-shaped body (see lib/portfolio/holding-body). */
+  createHolding(
+    budgetId: string,
+    kind: "fixed-deposit" | "savings-account" | "gold-lot",
+    wireBody: Record<string, unknown>,
+  ) {
+    return apiClient
+      .post<PortfolioAsset>(`${BASE}/budgets/${budgetId}/portfolio/assets/${kind}`, wireBody)
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   createSavingsAccount(
@@ -339,10 +451,12 @@ export const portfolioService = {
       idempotencyKey?: string;
     },
   ) {
-    return apiClient.post<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/savings-account`,
-      body,
-    );
+    return apiClient
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/savings-account`,
+        camelToSnake(body),
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   createFixedDeposit(
@@ -364,10 +478,12 @@ export const portfolioService = {
       idempotencyKey?: string;
     },
   ) {
-    return apiClient.post<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/fixed-deposit`,
-      body,
-    );
+    return apiClient
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/fixed-deposit`,
+        camelToSnake(body),
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   createGoldLot(
@@ -389,10 +505,12 @@ export const portfolioService = {
       idempotencyKey?: string;
     },
   ) {
-    return apiClient.post<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/gold-lot`,
-      body,
-    );
+    return apiClient
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/gold-lot`,
+        camelToSnake(body),
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   createStockLot(
@@ -411,10 +529,12 @@ export const portfolioService = {
       idempotencyKey?: string;
     },
   ) {
-    return apiClient.post<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/stock-lot`,
-      body,
-    );
+    return apiClient
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/stock-lot`,
+        camelToSnake(body),
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   createEtfLot(
@@ -435,10 +555,12 @@ export const portfolioService = {
       idempotencyKey?: string;
     },
   ) {
-    return apiClient.post<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/etf-lot`,
-      body,
-    );
+    return apiClient
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/etf-lot`,
+        camelToSnake(body),
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   createCryptoLot(
@@ -457,10 +579,12 @@ export const portfolioService = {
       idempotencyKey?: string;
     },
   ) {
-    return apiClient.post<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/crypto-lot`,
-      body,
-    );
+    return apiClient
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/crypto-lot`,
+        camelToSnake(body),
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
   },
 
   recordPrice(
@@ -476,28 +600,34 @@ export const portfolioService = {
       idempotencyKey?: string;
     },
   ) {
-    return apiClient.post<PriceObservation>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/observations`,
-      body,
-    );
+    return apiClient
+      .post<PriceObservation>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/observations`,
+        camelToSnake(body),
+      )
+      .then((raw) => snakeToCamel<PriceObservation>(raw));
   },
 
   listPrices(budgetId: string, assetId: string, limit?: number) {
     const search = new URLSearchParams();
     if (limit) search.set("limit", String(limit));
     const qs = search.toString();
-    return apiClient.get<{ observations: PriceObservation[] }>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/observations${qs ? `?${qs}` : ""}`,
-    );
+    return apiClient
+      .get<{ observations: PriceObservation[] }>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/observations${qs ? `?${qs}` : ""}`,
+      )
+      .then((raw) => snakeToCamel<{ observations: PriceObservation[] }>(raw));
   },
 
   listActivity(budgetId: string, assetId: string, limit?: number) {
     const search = new URLSearchParams();
     if (limit) search.set("limit", String(limit));
     const qs = search.toString();
-    return apiClient.get<{ activities: PortfolioActivity[] }>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/activity${qs ? `?${qs}` : ""}`,
-    );
+    return apiClient
+      .get<{ activities: PortfolioActivity[] }>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/activity${qs ? `?${qs}` : ""}`,
+      )
+      .then((raw) => snakeToCamel<{ activities: PortfolioActivity[] }>(raw));
   },
 
   recordStockDisposal(
@@ -511,10 +641,42 @@ export const portfolioService = {
       idempotencyKey?: string;
     },
   ) {
-    return apiClient.post<PortfolioAsset>(
-      `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/stock-disposal`,
-      body,
-    );
+    return apiClient
+      .post<PortfolioAsset>(
+        `${BASE}/budgets/${budgetId}/portfolio/assets/${assetId}/stock-disposal`,
+        camelToSnake(body),
+      )
+      .then((raw) => snakeToCamel<PortfolioAsset>(raw));
+  },
+
+  getFundSummary(budgetId: string) {
+    return apiClient
+      .get<FundSummary>(`${BASE}/budgets/${budgetId}/portfolio/fund`)
+      .then((raw) => snakeToCamel<FundSummary>(raw));
+  },
+
+  listFundMovements(budgetId: string, params?: { page?: number; pageSize?: number }) {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.pageSize) search.set("page_size", String(params.pageSize));
+    const qs = search.toString();
+    return apiClient
+      .get<{ movements?: FundCashMovement[]; total_rows: number }>(
+        `${BASE}/budgets/${budgetId}/portfolio/fund/movements${qs ? `?${qs}` : ""}`,
+      )
+      .then((raw) => snakeToCamel<{ movements?: FundCashMovement[]; totalRows: number }>(raw));
+  },
+
+  depositToFund(budgetId: string, body: FundTransferBody) {
+    return apiClient
+      .post<FundTransferResult>(`${BASE}/budgets/${budgetId}/portfolio/fund/deposit`, fundTransferBody(budgetId, body))
+      .then((raw) => snakeToCamel<FundTransferResult>(raw));
+  },
+
+  withdrawFromFund(budgetId: string, body: FundTransferBody) {
+    return apiClient
+      .post<FundTransferResult>(`${BASE}/budgets/${budgetId}/portfolio/fund/withdraw`, fundTransferBody(budgetId, body))
+      .then((raw) => snakeToCamel<FundTransferResult>(raw));
   },
 
   /** Force-refresh portfolio valuations from price providers (admin action). */

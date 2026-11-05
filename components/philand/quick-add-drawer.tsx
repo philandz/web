@@ -221,8 +221,8 @@ export function QuickAddDrawer({
                           className={cn(
                             "inline-flex w-full items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors",
                             row.type === "income"
-                              ? "border-emerald-300 bg-emerald-500/15 text-emerald-600 dark:border-emerald-700 dark:text-emerald-400"
-                              : "border-red-300 bg-red-500/15 text-red-600 dark:border-red-700 dark:text-red-400",
+                              ? "border-emerald-300 bg-emerald-500/15 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400"
+                              : "border-red-300 bg-red-500/15 text-red-700 dark:border-red-700 dark:text-red-400",
                           )}
                         >
                           {row.type === "income" ? t("income") : t("expense")}

@@ -17,8 +17,8 @@ const sizeClasses = {
 
 const signColorClasses = {
   auto: "", // applied dynamically below
-  positive: "text-emerald-600",
-  negative: "text-red-600",
+  positive: "text-emerald-700",
+  negative: "text-red-700",
   neutral: "text-foreground",
 };
 
@@ -40,9 +40,9 @@ export function MoneyAmount({
   let colorClass: string;
   if (sign === "auto") {
     colorClass = value > 0
-      ? "text-emerald-600"
+      ? "text-emerald-700"
       : value < 0
-        ? "text-red-600"
+        ? "text-red-700"
         : "text-foreground";
   } else {
     colorClass = signColorClasses[sign];

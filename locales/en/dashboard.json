@@ -226,5 +226,16 @@
   "states": {
     "loading": "Loading dashboard...",
     "error": "Something went wrong in dashboard."
+  },
+  "orgOverview": {
+    "title": "This period across your budgets",
+    "spent": "Spent",
+    "remaining": "Left to spend",
+    "available": "Available",
+    "fund": "Savings fund",
+    "sharing": "Shared budgets",
+    "sharingCount": "{count, plural, one {# active budget} other {# active budgets}}",
+    "debt": "Debt",
+    "debtNext": "Next {date} · {amount}"
   }
 }

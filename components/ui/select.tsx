@@ -61,17 +61,20 @@ function SelectNative({
   placeholder,
   className,
   children,
+  "aria-label": ariaLabel,
 }: {
   value: string;
   onValueChange: (v: string) => void;
   placeholder?: string;
   className?: string;
   children: React.ReactNode;
+  "aria-label"?: string;
 }) {
   return (
     <div className={cn("relative", className)}>
       <select
         value={value}
+        aria-label={ariaLabel ?? placeholder}
         onChange={(e) => onValueChange(e.target.value)}
         className="h-10 w-full appearance-none rounded-xl border border-input bg-background px-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
       >

@@ -37,7 +37,7 @@ export function GuestViewBanner({ budgetId, displayName }: GuestViewBannerProps)
         >
           {t("guest.guestLabel")}
         </Badge>
-        <span className="text-amber-600 dark:text-amber-400">
+        <span className="text-amber-700 dark:text-amber-400">
           {t("guest.limitation")}
         </span>
       </span>

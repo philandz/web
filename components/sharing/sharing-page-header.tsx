@@ -79,7 +79,7 @@ export function SharingPageHeader({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           {/* Icon + name */}
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/12 text-amber-600 dark:text-amber-400">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/12 text-amber-700 dark:text-amber-400">
               <Share2 className="h-5 w-5" strokeWidth={1.75} />
             </div>
             <div className="min-w-0 flex-1">
@@ -89,7 +89,7 @@ export function SharingPageHeader({
                 </h1>
                 <Badge
                   variant="outline"
-                  className="border-amber-200 bg-amber-500/10 text-[10px] text-amber-600 dark:border-amber-800 dark:text-amber-400 sm:text-xs"
+                  className="border-amber-200 bg-amber-500/10 text-[10px] text-amber-700 dark:border-amber-800 dark:text-amber-400 sm:text-xs"
                 >
                   {currency}
                 </Badge>
@@ -138,6 +138,7 @@ export function SharingPageHeader({
                 variant="outline"
                 onClick={onAddExpenseClick}
                 className={cn("shadow-soft", !canInvite && "ml-auto")}
+                aria-label={t("header.addExpense")}
               >
                 <Plus className="mr-1.5 h-4 w-4" />
                 <span className="hidden sm:inline">{t("header.addExpense")}</span>

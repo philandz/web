@@ -7,10 +7,14 @@ import { useBurnRateQuery } from "@/modules/budget/hooks";
 import { useCategoriesQuery } from "@/modules/category/hooks";
 import { useTransactionsQuery } from "@/modules/transaction/hooks";
 import { cn } from "@/lib/utils";
+import { amountSign, amountToneClass, iconToneClass, isInflow } from "@/lib/transaction-kind";
 import type { Budget } from "@/services/budget-service";
 import type { Transaction } from "@/services/transaction-service";
 import { useRef, useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { formatShortDate } from "@/lib/format";
+import { getActiveLocale } from "@/lib/active-locale";
+import { localeToBCP47 } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -25,9 +29,7 @@ function fmt(amount: number, currency: string) {
 }
 
 function fmtDate(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-    new Date(dateStr),
-  );
+  return formatShortDate(dateStr);
 }
 
 // ---------------------------------------------------------------------------
@@ -37,9 +39,9 @@ function fmtDate(dateStr: string) {
 type Tone = "income" | "expense" | "neutral" | "warn";
 
 const TONE: Record<Tone, { value: string; icon: string; iconBg: string }> = {
-  income:  { value: "text-emerald-600 dark:text-emerald-400", icon: "text-emerald-500",                  iconBg: "bg-emerald-500/10" },
+  income:  { value: "text-emerald-700 dark:text-emerald-400", icon: "text-emerald-500",                  iconBg: "bg-emerald-500/10" },
   expense: { value: "text-red-500",                           icon: "text-red-500",                      iconBg: "bg-red-500/10"     },
-  warn:    { value: "text-amber-600 dark:text-amber-400",     icon: "text-amber-500 dark:text-amber-400", iconBg: "bg-amber-500/10"   },
+  warn:    { value: "text-amber-700 dark:text-amber-400",     icon: "text-amber-500 dark:text-amber-400", iconBg: "bg-amber-500/10"   },
   neutral: { value: "text-foreground",                        icon: "text-muted-foreground",              iconBg: "bg-muted"          },
 };
 
@@ -313,14 +315,12 @@ function SpendingChart({ transactions, currency, year, month }: { transactions: 
 // ---------------------------------------------------------------------------
 
 function RecentTxRow({ tx, currency }: { tx: Transaction; currency: string }) {
-  const isIncome = tx.type === "income";
+  const isIncome = isInflow(tx.type);
   return (
     <div className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
       <div className={cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-        isIncome
-          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-          : "bg-red-500/10 text-red-500",
+        iconToneClass(tx.type),
       )}>
         {isIncome
           ? <ArrowUpRight className="h-3.5 w-3.5" />
@@ -336,9 +336,9 @@ function RecentTxRow({ tx, currency }: { tx: Transaction; currency: string }) {
 
       <p className={cn(
         "shrink-0 text-sm font-semibold tabular-nums",
-        isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-red-500",
+        amountToneClass(tx.type),
       )}>
-        {isIncome ? "+" : "−"}{fmt(tx.amount, currency)}
+        {amountSign(tx.type)}{fmt(tx.amount, currency)}
       </p>
     </div>
   );
@@ -373,7 +373,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
   }
 
   const monthLabel = useMemo(
-    () => new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date(viewYear, viewMonth)),
+    () => new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "long", year: "numeric" }).format(new Date(viewYear, viewMonth)),
     [viewYear, viewMonth],
   );
 
@@ -413,7 +413,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
   return (
     <div className="space-y-4">
       {/* ── KPI cards ── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-4">
+      <div className={cn("grid grid-cols-2 gap-3", remaining != null && spendRate != null ? "md:grid-cols-4" : "md:grid-cols-2")}>
         <SummaryCard
           label={t("income")}
           value={fmt(income, budget.currency)}
@@ -426,15 +426,18 @@ export function OverviewTab({ budget }: OverviewTabProps) {
           icon={TrendingDown}
           tone="expense"
         />
+        {/* Remaining / rate only mean something against a limit. */}
+        {remaining != null && spendRate != null ? (
+          <>
         <SummaryCard
           label={t("remaining")}
-          value={remaining != null ? fmt(remaining, budget.currency) : t("noLimit")}
+          value={fmt(remaining ?? 0, budget.currency)}
           icon={Wallet}
           tone={remaining != null && remaining < 0 ? "expense" : "neutral"}
         />
         <SummaryCard
           label={t("spendRate")}
-          value={spendRate != null ? `${spendRate}%` : t("noLimit")}
+          value={`${spendRate ?? 0}%`}
           icon={Zap}
           tone={
             spendRate != null && spendRate >= 100 ? "expense" :
@@ -445,6 +448,8 @@ export function OverviewTab({ budget }: OverviewTabProps) {
             ? `${t("ofLimit")} ${fmt(limit, budget.currency)}`
             : undefined}
         />
+          </>
+        ) : null}
       </div>
 
       {hasData ? (
@@ -469,7 +474,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <span className="min-w-[96px] rounded-lg border border-border bg-muted px-2.5 py-1 text-center text-xs font-semibold text-foreground">
-                    {new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(new Date(viewYear, viewMonth))}
+                    {new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short", year: "numeric" }).format(new Date(viewYear, viewMonth))}
                   </span>
                   <button
                     type="button"

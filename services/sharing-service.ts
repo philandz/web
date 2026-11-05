@@ -1,3 +1,4 @@
+import { normalizeEnumLabel, type EnumLabelSpec } from "@/lib/enum-label";
 import { apiClient } from "@/lib/http/client";
 import { writeSharingSession } from "@/lib/sharing/session";
 
@@ -129,12 +130,16 @@ export interface ParticipantInfo {
 // Balance (from GetBalances)
 // ---------------------------------------------------------------------------
 
-export interface Balance {
+export interface ParticipantBalance {
   userId: string;
   displayName: string;
   email: string;
-  netBalance: number; // positive = owed to this person, negative = owes others
+  /** positive = the group owes this participant; negative = this participant owes the group */
+  netBalance: number;
 }
+
+/** @deprecated Use {@link ParticipantBalance}. */
+export type Balance = ParticipantBalance;
 
 // ---------------------------------------------------------------------------
 // Raw response shapes
@@ -268,7 +273,9 @@ interface RawBalance {
   user_id: string;
   display_name: string;
   email: string;
-  net_balance: number;
+  // The gateway sends a JSON number, but some gateways/proxies serialise
+  // 64-bit amounts as strings. Coerce defensively.
+  net_balance: number | string;
 }
 
 // ---------------------------------------------------------------------------
@@ -291,8 +298,19 @@ const SPLIT_METHOD_TO_NUM: Record<SplitMethod, number> = {
   by_item: 5,
 };
 
-function toSplitMethod(v: number): SplitMethod {
-  return SPLIT_METHOD_MAP[v] ?? "equal";
+const SPLIT_METHOD_SPEC: EnumLabelSpec<SplitMethod> = {
+  numeric: SPLIT_METHOD_MAP,
+  labels: ["equal", "custom", "weighted", "percentage", "by_item"],
+  fallback: "equal",
+};
+
+/**
+ * Accepts numeric codes, canonical labels, Rust variant names and protobuf
+ * enum names. The gateway emits the canonical lowercase label; older builds
+ * emitted the numeric code, so both must work.
+ */
+export function toSplitMethod(v: number | string): SplitMethod {
+  return normalizeEnumLabel(v, SPLIT_METHOD_SPEC);
 }
 
 function mapExpense(raw: RawExpense): Expense {
@@ -387,12 +405,13 @@ function mapParticipant(raw: RawParticipant): ParticipantInfo {
   };
 }
 
-function mapBalance(raw: RawBalance): Balance {
+function mapBalance(raw: RawBalance): ParticipantBalance {
+  const net = Number(raw.net_balance);
   return {
     userId: raw.user_id,
     displayName: raw.display_name,
     email: raw.email,
-    netBalance: raw.net_balance,
+    netBalance: Number.isFinite(net) ? net : 0,
   };
 }
 
@@ -404,6 +423,52 @@ export interface AddExpenseItemInput {
   label: string;
   amount: number;
   assignments: { userId: string; numerator: number }[];
+}
+
+export interface ExpenseInput {
+  paidBy: string;
+  totalAmount: number;
+  description: string;
+  expenseDate: string;
+  categoryId?: string;
+  splitMethod: SplitMethod;
+  legs: { userId: string; amount: number; weight?: number }[];
+  items?: AddExpenseItemInput[];
+  receiptMediaId?: string;
+}
+
+/** Wire body shared by create (POST) and update (PATCH). */
+function buildExpenseBody(input: ExpenseInput) {
+  // For percentage the weight slot carries basis points (0-10000); the UI
+  // captures 0-100, so convert here at the wire boundary.
+  const legs = input.legs.map((l) => ({
+    user_id: l.userId,
+    amount: l.amount,
+    weight:
+      input.splitMethod === "percentage"
+        ? Math.round((l.weight ?? 0) * 100)
+        : l.weight ?? 0,
+  }));
+  const items =
+    input.items?.map((it) => ({
+      label: it.label,
+      amount: it.amount,
+      assignments: it.assignments.map((a) => ({
+        user_id: a.userId,
+        numerator: a.numerator,
+      })),
+    })) ?? [];
+  return {
+    paid_by: input.paidBy,
+    total_amount: input.totalAmount,
+    description: input.description,
+    expense_date: input.expenseDate,
+    category_id: input.categoryId ?? "",
+    split_method: SPLIT_METHOD_TO_NUM[input.splitMethod],
+    legs,
+    items,
+    receipt_media_id: input.receiptMediaId ?? "",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -425,57 +490,28 @@ export const sharingService = {
     return mapExpense(raw);
   },
 
-  async addExpense(input: {
-    budgetId: string;
-    paidBy: string;
-    totalAmount: number;
-    description: string;
-    expenseDate: string;
-    categoryId?: string;
-    splitMethod: SplitMethod;
-    legs: { userId: string; amount: number; weight?: number }[];
-    items?: AddExpenseItemInput[];
-    receiptMediaId?: string;
-  }): Promise<Expense> {
-    const splitMethodNum = SPLIT_METHOD_TO_NUM[input.splitMethod];
-
-    // Build legs payload; for percentage the third slot (weight) carries
-    // basis-points (0-10000). The UI captures percentages 0-100, so we
-    // convert here at the wire boundary.
-    const legs = input.legs.map((l) => ({
-      user_id: l.userId,
-      amount: l.amount,
-      weight:
-        input.splitMethod === "percentage"
-          ? Math.round((l.weight ?? 0) * 100)
-          : l.weight ?? 0,
-    }));
-
-    // Build items payload; only used for BY_ITEM split
-    const items = input.items?.map((it) => ({
-      label: it.label,
-      amount: it.amount,
-      assignments: it.assignments.map((a) => ({
-        user_id: a.userId,
-        numerator: a.numerator,
-      })),
-    })) ?? [];
-
+  async addExpense(input: ExpenseInput & { budgetId: string }): Promise<Expense> {
     const raw = await apiClient.post<RawExpense>(
       `${BASE}/budgets/${input.budgetId}/expenses`,
-      {
-        paid_by: input.paidBy,
-        total_amount: input.totalAmount,
-        description: input.description,
-        expense_date: input.expenseDate,
-        category_id: input.categoryId ?? "",
-        split_method: splitMethodNum,
-        legs,
-        items,
-        receipt_media_id: input.receiptMediaId ?? "",
-      }
+      buildExpenseBody(input),
     );
     return mapExpense(raw);
+  },
+
+  async updateExpense(input: ExpenseInput & { expenseId: string }): Promise<Expense> {
+    const raw = await apiClient.patch<RawExpense>(
+      `${BASE}/expenses/${input.expenseId}`,
+      buildExpenseBody(input),
+    );
+    return mapExpense(raw);
+  },
+
+  async archiveBudget(budgetId: string): Promise<void> {
+    await apiClient.post(`${BASE}/budgets/${budgetId}/archive`, {});
+  },
+
+  async reopenBudget(budgetId: string): Promise<void> {
+    await apiClient.post(`${BASE}/budgets/${budgetId}/reopen`, {});
   },
 
   async deleteExpense(expenseId: string): Promise<void> {
@@ -666,7 +702,7 @@ export const sharingService = {
 
   // --- Balances ---
 
-  async getBalances(budgetId: string): Promise<Balance[]> {
+  async getBalances(budgetId: string): Promise<ParticipantBalance[]> {
     const raw = await apiClient.get<{ balances: RawBalance[] }>(
       `${BASE}/budgets/${budgetId}/balances`
     );

@@ -64,7 +64,7 @@ function InvalidState() {
   return (
     <Card>
       <div className="flex flex-col items-center gap-4 py-4 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 text-red-600">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 text-red-700">
           <ShieldAlert className="h-8 w-8" />
         </div>
         <div className="space-y-1">

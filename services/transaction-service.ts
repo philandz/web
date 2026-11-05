@@ -1,3 +1,4 @@
+import { normalizeEnumLabel, type EnumLabelSpec } from "@/lib/enum-label";
 import { apiClient } from "@/lib/http/client";
 
 const BASE = "/api/entry";
@@ -7,12 +8,23 @@ const BASE = "/api/entry";
 // ---------------------------------------------------------------------------
 
 export type TransactionType = "income" | "expense";
+/** What an entry can be when read back; transfers are created via the transfer API only. */
+export type TransactionKind = TransactionType | "transfer_out" | "transfer_in";
+
+export interface TransferLink {
+  groupId: string;
+  counterpartyBudgetId?: string;
+  /** "entry" = another standard budget, "fund_cash" = a saving/invest fund */
+  counterpartyKind?: string;
+}
 
 export interface Transaction {
   id: string;
   budgetId: string;
   categoryId?: string;
-  type: TransactionType;
+  type: TransactionKind;
+  /** set when type is transfer_out / transfer_in */
+  transfer?: TransferLink;
   amount: number;
   description: string;
   date: string;
@@ -28,7 +40,7 @@ export interface TransactionListParams {
   budgetId?: string;
   budgetIds?: string[];
   q?: string;
-  type?: TransactionType;
+  type?: TransactionType | "transfer";
   categoryId?: string;
   categoryIds?: string[];
   memberIds?: string[];
@@ -142,6 +154,9 @@ interface RawEntry {
   notes?: string;
   created_by?: string;
   created_at?: number;
+  transfer_group_id?: string | null;
+  counterparty_budget_id?: string | null;
+  counterparty_kind?: string | null;
 }
 
 interface RawMeta {
@@ -151,11 +166,22 @@ interface RawMeta {
   total_rows: number;
 }
 
-const KIND_MAP: Record<number, TransactionType> = { 1: "expense", 2: "income" };
+const KIND_MAP: Record<number, TransactionKind> = {
+  1: "expense",
+  2: "income",
+  3: "transfer_out",
+  4: "transfer_in",
+};
 
-function toKind(v: number | string): TransactionType {
-  if (typeof v === "number") return KIND_MAP[v] ?? "expense";
-  return (v as TransactionType) || "expense";
+const KIND_SPEC: EnumLabelSpec<TransactionKind> = {
+  numeric: KIND_MAP,
+  labels: ["expense", "income", "transfer_out", "transfer_in"],
+  fallback: "expense",
+};
+
+/** Accepts numeric codes, canonical labels, Rust variant names and protobuf enum names. */
+export function toKind(v: number | string): TransactionKind {
+  return normalizeEnumLabel(v, KIND_SPEC);
 }
 
 function mapEntry(raw: RawEntry): Transaction {
@@ -164,6 +190,13 @@ function mapEntry(raw: RawEntry): Transaction {
     budgetId: raw.budget_id,
     categoryId: raw.category_id || undefined,
     type: toKind(raw.kind),
+    transfer: raw.transfer_group_id
+      ? {
+          groupId: raw.transfer_group_id,
+          counterpartyBudgetId: raw.counterparty_budget_id || undefined,
+          counterpartyKind: raw.counterparty_kind || undefined,
+        }
+      : undefined,
     amount: raw.amount,
     description: raw.description,
     date: raw.entry_date,
@@ -173,6 +206,20 @@ function mapEntry(raw: RawEntry): Transaction {
     notes: raw.notes || undefined,
     createdBy: raw.created_by ?? raw.base?.created_by,
     createdAt: raw.created_at ?? raw.base?.created_at ?? 0,
+  };
+}
+
+interface RawTransfer {
+  group_id: string;
+  out_entry?: RawEntry | null;
+  in_entry?: RawEntry | null;
+}
+
+function mapTransfer(raw: RawTransfer) {
+  return {
+    groupId: raw.group_id,
+    out: mapEntry(raw.out_entry as RawEntry),
+    in: mapEntry(raw.in_entry as RawEntry),
   };
 }
 
@@ -271,6 +318,44 @@ export const transactionService = {
       notes: input.notes,
     });
     return mapEntry(raw);
+  },
+
+  async createTransfer(input: {
+    sourceBudgetId: string;
+    destinationBudgetId: string;
+    amount: number;
+    date: string;
+    description?: string;
+    notes?: string;
+    idempotencyKey?: string;
+  }): Promise<{ groupId: string; out: Transaction; in: Transaction }> {
+    const raw = await apiClient.post<RawTransfer>(`${BASE}/transfers`, {
+      source_budget_id: input.sourceBudgetId,
+      destination_budget_id: input.destinationBudgetId,
+      amount: input.amount,
+      entry_date: input.date,
+      description: input.description ?? "",
+      notes: input.notes,
+      idempotency_key: input.idempotencyKey ?? "",
+    });
+    return mapTransfer(raw);
+  },
+
+  async updateTransfer(
+    groupId: string,
+    input: { amount?: number; date?: string; description?: string; notes?: string },
+  ): Promise<{ groupId: string; out: Transaction; in: Transaction }> {
+    const raw = await apiClient.patch<RawTransfer>(`${BASE}/transfers/${groupId}`, {
+      amount: input.amount,
+      entry_date: input.date,
+      description: input.description,
+      notes: input.notes,
+    });
+    return mapTransfer(raw);
+  },
+
+  async deleteTransfer(groupId: string): Promise<void> {
+    await apiClient.request(`${BASE}/transfers/${groupId}`, { method: "DELETE" });
   },
 
   async deleteTransaction(transactionId: string): Promise<void> {

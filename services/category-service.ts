@@ -1,3 +1,4 @@
+import { normalizeEnumLabel, type EnumLabelSpec } from "@/lib/enum-label";
 import { apiClient } from "@/lib/http/client";
 
 const BASE = "/api/category";
@@ -49,9 +50,15 @@ interface RawCategory {
 
 const CAT_TYPE_MAP: Record<number, CategoryType> = { 1: "expense", 2: "income" };
 
-function toCatType(v: number | string): CategoryType {
-  if (typeof v === "number") return CAT_TYPE_MAP[v] ?? "expense";
-  return (v as CategoryType) || "expense";
+const CAT_TYPE_SPEC: EnumLabelSpec<CategoryType> = {
+  numeric: CAT_TYPE_MAP,
+  labels: ["expense", "income"],
+  fallback: "expense",
+};
+
+/** Accepts numeric codes, canonical labels, Rust variant names and protobuf enum names. */
+export function toCatType(v: number | string): CategoryType {
+  return normalizeEnumLabel(v, CAT_TYPE_SPEC);
 }
 
 function mapCategory(raw: RawCategory): Category {
