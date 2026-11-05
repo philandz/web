@@ -1073,6 +1073,13 @@
       "evRateDeleted": "Đã xoá kỳ lãi suất",
       "evRule": "miễn phí {allowance}/tháng, vượt thì phí {pct}%",
       "evAdjust": "{from} → {to} {reason}"
+    },
+    "card": {
+      "repaid": "Đã trả {pct}%",
+      "year": "năm",
+      "overdueDays": "trễ {days} ngày",
+      "today": "hôm nay",
+      "inDays": "còn {days} ngày"
     }
   }
 }

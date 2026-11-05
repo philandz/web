@@ -66,3 +66,22 @@ export function parsePayload(text: string): Payload {
     return {};
   }
 }
+
+/** Rate in force today (latest period that has started), or null when none is recorded. */
+export function currentRate(a: Pick<DebtAccount, "ratePeriods">, now: Date = new Date()): string | null {
+  const today = new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+  const started = [...(a.ratePeriods ?? [])].filter((r) => r.effectiveFrom <= today).sort((x, y) => y.effectiveFrom.localeCompare(x.effectiveFrom));
+  return started[0]?.annualRate ?? null;
+}
+
+/** Overdue first, then active by soonest due date, then settled/closed. */
+export function sortAccounts<T extends Pick<DebtAccount, "nextDue" | "status" | "name">>(list: T[], now?: Date): T[] {
+  const rank = (a: T) => (isOverdue(a, now) ? 0 : a.status === "active" ? 1 : 2);
+  return [...list].sort((a, b) => {
+    const r = rank(a) - rank(b);
+    if (r !== 0) return r;
+    const da = a.nextDue?.dueDate ?? "9999-12-31";
+    const db = b.nextDue?.dueDate ?? "9999-12-31";
+    return da.localeCompare(db) || a.name.localeCompare(b.name);
+  });
+}

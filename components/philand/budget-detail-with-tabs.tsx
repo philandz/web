@@ -226,8 +226,13 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
   const kpis = [
     { label: t("income"), value: fmt(income, currency), color: "text-income" },
     { label: t("expense"), value: fmt(expense, currency), color: "text-expense" },
-    { label: t("remaining"), value: remaining != null ? fmtShort(remaining, currency) : t("noLimit"), color: "text-foreground" },
-    { label: t("spendRate"), value: spendRate != null ? `${spendRate}%` : t("noLimit"), color: spendRate != null && spendRate >= 80 ? "text-amber-600 dark:text-amber-400" : "text-foreground" },
+    // Without a monthly limit "remaining" and "rate" have no meaning: show them only when a limit exists.
+    ...(remaining != null && spendRate != null
+      ? [
+          { label: t("remaining"), value: fmtShort(remaining, currency), color: "text-foreground" },
+          { label: t("spendRate"), value: `${spendRate}%`, color: spendRate >= 80 ? "text-amber-600 dark:text-amber-400" : "text-foreground" },
+        ]
+      : []),
   ];
 
   // Trend chart uses the last 12 months of expense totals.
@@ -274,7 +279,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-2.5 md:grid-cols-4">
+      <div className={cn("grid gap-2.5", kpis.length > 2 ? "md:grid-cols-4" : "md:grid-cols-2")}>
         {kpis.map((k) => (
           <Panel key={k.label} className="p-4">
             <div className="text-[10px] font-bold uppercase tracking-[.07em] text-muted-foreground">{k.label}</div>

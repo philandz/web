@@ -17,7 +17,7 @@ import type { Budget, BudgetMember } from "@/services/budget-service";
 
 import { AccountDetail } from "./account-detail";
 import { CreateAccountDialog } from "./create-account-dialog";
-import { isOverdue, repaidPct } from "./debt-format";
+import { currentRate, daysUntil, isOverdue, repaidPct, sortAccounts } from "./debt-format";
 
 export const DEBT_TABS = ["debts", "history", "members", "settings"] as const;
 export type DebtTab = (typeof DEBT_TABS)[number];
@@ -47,6 +47,7 @@ export function DebtBudgetView({ budget, members, activeTab, onTab }: Props) {
   const [createOpen, setCreateOpen] = useState(false);
   const detail = (accounts.data ?? []).find((a) => a.id === selected);
   const s = summary.data;
+  const relDue = (d: number) => (d < 0 ? t("card.overdueDays", { days: -d }) : d === 0 ? t("card.today") : t("card.inDays", { days: d }));
 
   return (
     <div className="animate-fade-in-up space-y-4">
@@ -110,7 +111,7 @@ export function DebtBudgetView({ budget, members, activeTab, onTab }: Props) {
               </p>
             ) : null}
             <div className="grid gap-3 md:grid-cols-2">
-              {(accounts.data ?? []).map((a) => (
+              {sortAccounts(accounts.data ?? []).map((a) => (
                 <button
                   key={a.id}
                   type="button"
@@ -129,16 +130,24 @@ export function DebtBudgetView({ budget, members, activeTab, onTab }: Props) {
                         </div>
                         <span className="text-right text-base font-bold tabular-nums">{money(a.outstandingMinor)}</span>
                       </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
                         <div className="h-full bg-emerald-500" style={{ width: `${repaidPct(a)}%` }} />
                       </div>
-                      <p className={cn("text-xs", isOverdue(a) ? "font-medium text-red-500" : "text-muted-foreground")}>
-                        {a.status !== "active"
-                          ? t(`status.${a.status}`)
-                          : a.nextDue?.dueDate
-                            ? t("nextDueLine", { date: formatIsoDate(a.nextDue.dueDate, locale), amount: money(a.nextDue.totalMinor) })
-                            : t("noSchedule")}
-                        {isOverdue(a) ? ` · ${t("overdue")}` : ""}
+                      <p className="text-[11px] text-muted-foreground">
+                        {t("card.repaid", { pct: repaidPct(a) })}
+                        {currentRate(a) ? ` · ${currentRate(a)}%/${t("card.year")}` : ""}
+                      </p>
+                      <p className={cn("flex items-center gap-1.5 text-xs", isOverdue(a) ? "font-medium text-red-500" : "text-muted-foreground")}>
+                        {isOverdue(a) ? (
+                          <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-700">{t("overdue")}</span>
+                        ) : null}
+                        <span>
+                          {a.status !== "active"
+                            ? t(`status.${a.status}`)
+                            : a.nextDue?.dueDate
+                              ? `${t("nextDueLine", { date: formatIsoDate(a.nextDue.dueDate, locale), amount: money(a.nextDue.totalMinor) })} · ${relDue(daysUntil(a.nextDue.dueDate))}`
+                              : t("noSchedule")}
+                        </span>
                       </p>
                     </CardContent>
                   </Card>

@@ -118,13 +118,16 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
             </div>
           </div>
 
-          <span className={cn(
-            "mt-0.5 shrink-0 inline-flex items-center rounded-full border px-2 py-0.5",
-            "text-[10px] font-semibold capitalize tracking-wide",
-            ROLE_STYLES[budget.myRole]
-          )}>
-            {budget.myRole}
-          </span>
+          {/* The owner badge is noise on your own budgets: only show a role when it is not "owner". */}
+          {budget.myRole !== "owner" && (
+            <span className={cn(
+              "mt-0.5 shrink-0 inline-flex items-center rounded-full border px-2 py-0.5",
+              "text-[10px] font-semibold capitalize tracking-wide",
+              ROLE_STYLES[budget.myRole]
+            )}>
+              {budget.myRole}
+            </span>
+          )}
         </div>
 
         {/* ── Row 2: Primary metric — spend / fund value / my balance ── */}
@@ -230,7 +233,7 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
             <>
               <Users className="h-3 w-3 shrink-0" />
               <span>
-                {budget.memberCount ?? 1}&nbsp;{t("members")}
+                {t("memberCount", { count: budget.memberCount ?? 1 })}
               </span>
             </>
           )}

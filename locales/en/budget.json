@@ -1073,6 +1073,13 @@
       "evRateDeleted": "Rate period removed",
       "evRule": "free {allowance}/month, then {pct}% fee",
       "evAdjust": "{from} → {to} {reason}"
+    },
+    "card": {
+      "repaid": "{pct}% repaid",
+      "year": "yr",
+      "overdueDays": "{days} days late",
+      "today": "due today",
+      "inDays": "in {days} days"
     }
   }
 }
