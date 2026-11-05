@@ -23,8 +23,17 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
 
+import { budgetTypeMeta } from "@/lib/budget-types";
+import { isFeatureEnabled } from "@/lib/features";
+import { PeriodOverview } from "./period-overview";
+import { TransactionComposer } from "@/components/transaction-composer/transaction-composer";
+import { PlanTab } from "./plan-tab";
 import type { Budget, BudgetType } from "@/services/budget-service";
-import type { Transaction, TransactionType, TransactionListParams } from "@/services/transaction-service";
+import type { Transaction, TransactionKind, TransactionType, TransactionListParams } from "@/services/transaction-service";
+import { amountSign, amountToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
+import { formatCompactMoney, formatShortDate } from "@/lib/format";
+import { getActiveLocale } from "@/lib/active-locale";
+import { localeToBCP47 } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,23 +48,15 @@ function fmt(amount: number, currency: string) {
 }
 
 function fmtShort(amount: number, currency: string) {
-  // Match the mockup: ₫x.xM / ₫xK.
-  const sign = amount < 0 ? "-" : "";
-  const abs = Math.abs(amount);
-  if (abs >= 1_000_000) return `${sign}₫${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${sign}₫${(abs / 1_000).toFixed(0)}K`;
-  // fall back to full formatting for tiny values
-  return `${sign}${fmt(abs, currency)}`;
+  return formatCompactMoney(amount, currency);
 }
 
 function fmtDate(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-    new Date(dateStr),
-  );
+  return formatShortDate(dateStr);
 }
 
 function fmtDateFull(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -63,18 +64,13 @@ function fmtDateFull(dateStr: string) {
   }).format(new Date(dateStr));
 }
 
-type TypeCfg = { label: string; stripe: string; iconBg: string; iconFg: string; icon: string };
-
-const TYPE_CFG: Record<BudgetType, TypeCfg> = {
-  standard: { label: "Standard", stripe: "#38bdf8", iconBg: "#e0f2fe", iconFg: "#0369a1", icon: "⊞" },
-  saving: { label: "Saving", stripe: "#22c984", iconBg: "#dcfce7", iconFg: "#15803d", icon: "🐷" },
-  debt: { label: "Debt", stripe: "#f05c6e", iconBg: "#fee2e2", iconFg: "#b91c1c", icon: "💳" },
-  invest: { label: "Invest", stripe: "#9d74f5", iconBg: "#ede9fe", iconFg: "#6d28d9", icon: "📈" },
-  sharing: { label: "Sharing", stripe: "#f59e0b", iconBg: "#fef3c7", iconFg: "#b45309", icon: "🤝" },
-};
+function typeCfg(type: BudgetType) {
+  const m = budgetTypeMeta(type);
+  return { labelKey: m.labelKey, icon: m.emoji, ...m.hex };
+}
 
 function TypeIcon({ type }: { type: BudgetType }) {
-  const cfg = TYPE_CFG[type] ?? TYPE_CFG.standard;
+  const cfg = typeCfg(type);
   return (
     <div
       className="grid h-11 w-11 place-items-center rounded-[12px]"
@@ -85,8 +81,15 @@ function TypeIcon({ type }: { type: BudgetType }) {
   );
 }
 
-function TxTypeChip({ type }: { type: TransactionType }) {
+function TxTypeChip({ type }: { type: TransactionKind }) {
   const isIncome = type === "income";
+  if (isTransferKind(type)) {
+    return (
+      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-sky-500/25 bg-sky-500/10 px-2 py-[2px] text-[10px] font-bold text-sky-700 dark:text-sky-400">
+        ⇄ {type === "transfer_in" ? "Transfer in" : "Transfer out"}
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
@@ -223,8 +226,13 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
   const kpis = [
     { label: t("income"), value: fmt(income, currency), color: "text-income" },
     { label: t("expense"), value: fmt(expense, currency), color: "text-expense" },
-    { label: t("remaining"), value: remaining != null ? fmtShort(remaining, currency) : t("noLimit"), color: "text-foreground" },
-    { label: t("spendRate"), value: spendRate != null ? `${spendRate}%` : t("noLimit"), color: spendRate != null && spendRate >= 80 ? "text-amber-600 dark:text-amber-400" : "text-foreground" },
+    // Without a monthly limit "remaining" and "rate" have no meaning: show them only when a limit exists.
+    ...(remaining != null && spendRate != null
+      ? [
+          { label: t("remaining"), value: fmtShort(remaining, currency), color: "text-foreground" },
+          { label: t("spendRate"), value: `${spendRate}%`, color: spendRate >= 80 ? "text-amber-700 dark:text-amber-400" : "text-foreground" },
+        ]
+      : []),
   ];
 
   // Trend chart uses the last 12 months of expense totals.
@@ -246,7 +254,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
     return total;
   });
 
-  const labels = monthKeys.map((d) => new Intl.DateTimeFormat(undefined, { month: "short" }).format(d));
+  const labels = monthKeys.map((d) => new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short" }).format(d));
   const { line, area, pts } = buildPath(monthlyExpense, 520, 100);
 
   const catById = new Map(categories.map((c) => [c.id, c]));
@@ -271,7 +279,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-2.5 md:grid-cols-4">
+      <div className={cn("grid gap-2.5", kpis.length > 2 ? "md:grid-cols-4" : "md:grid-cols-2")}>
         {kpis.map((k) => (
           <Panel key={k.label} className="p-4">
             <div className="text-[10px] font-bold uppercase tracking-[.07em] text-muted-foreground">{k.label}</div>
@@ -288,13 +296,13 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
             <div>
               <div className="text-[13px] font-bold text-foreground">Spending Trend</div>
               <div className="mt-0.5 text-[11px] text-muted-foreground">
-                {new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date())}
+                {new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "long", year: "numeric" }).format(new Date())}
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs">
               <Button variant="ghost" size="sm" className="h-7 px-2">◀</Button>
               <span className="rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
-                {new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(new Date())}
+                {new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short", year: "numeric" }).format(new Date())}
               </span>
               <Button variant="ghost" size="sm" className="h-7 px-2">▶</Button>
             </div>
@@ -342,7 +350,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
         </div>
         <div>
           {recent.map((tx, i) => {
-            const isIncome = tx.type === "income";
+            const isIncome = isInflow(tx.type);
             return (
               <div
                 key={tx.id}
@@ -350,9 +358,9 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
               >
                 <div className={cn(
                   "grid h-[34px] w-[34px] place-items-center rounded-full text-[14px]",
-                  isIncome ? "bg-income/10 text-income" : "bg-expense/10 text-expense",
+                  isTransferKind(tx.type) ? "bg-sky-500/10 text-sky-700 dark:text-sky-400" : isIncome ? "bg-income/10 text-income" : "bg-expense/10 text-expense",
                 )}>
-                  {isIncome ? "↑" : "↓"}
+                  {isTransferKind(tx.type) ? "⇄" : isIncome ? "↑" : "↓"}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-semibold text-foreground">{tx.description}</div>
@@ -360,9 +368,9 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
                 </div>
                 <div className={cn(
                   "text-[14px] font-extrabold tabular-nums",
-                  isIncome ? "text-income" : "text-expense",
+                  isTransferKind(tx.type) ? amountToneClass(tx.type) : isIncome ? "text-income" : "text-expense",
                 )}>
-                  {isIncome ? "+" : "−"}{fmtShort(tx.amount, currency)}
+                  {amountSign(tx.type)}{fmtShort(tx.amount, currency)}
                 </div>
               </div>
             );
@@ -669,7 +677,7 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
               {paged.map((tx) => {
                 const isActive = detailOpen && detailTx?.id === tx.id;
                 const isHover = hoverRow === tx.id;
-                const isIncome = tx.type === "income";
+                const isIncome = isInflow(tx.type);
                 const cat = tx.categoryId ? categoryMap.get(tx.categoryId) : null;
                 return (
                   <tr
@@ -689,6 +697,7 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
                     <td className="px-3 py-[11px]" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
+                        aria-label="Select row"
                         checked={selected.has(tx.id)}
                         onChange={() => toggleSelect(tx.id)}
                         className="cursor-pointer"
@@ -712,9 +721,9 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
                     <td className="px-3 py-[11px] whitespace-nowrap text-right">
                       <span className={cn(
                         "text-[14px] font-extrabold tabular-nums tracking-[-.02em]",
-                        isIncome ? "text-income" : "text-expense",
+                        isTransferKind(tx.type) ? amountToneClass(tx.type) : isIncome ? "text-income" : "text-expense",
                       )}>
-                        {isIncome ? "+" : "−"}{fmtShort(tx.amount, budget.currency)}
+                        {amountSign(tx.type)}{fmtShort(tx.amount, budget.currency)}
                       </span>
                     </td>
                     <td className="px-3 py-[11px]">
@@ -784,6 +793,7 @@ function BudgetTransactionsMock({ budget }: { budget: Budget }) {
 // ---------------------------------------------------------------------------
 
 export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budget; activeTab: string; onTab: (t: string) => void }) {
+  const planningEnabled = isFeatureEnabled("periodPlanning") && budget.type === "standard";
   const tDetail = useTranslations("budget.detail");
   const tShell = useTranslations("dashboard.shell");
 
@@ -791,7 +801,8 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
   const { data: envelope } = useBurnRateQuery(budget.id);
   const summary = useEntrySummaryQuery(budget.id);
 
-  const cfg = TYPE_CFG[budget.type] ?? TYPE_CFG.standard;
+  const cfg = typeCfg(budget.type);
+  const tRoot = useTranslations();
   const spendPct = envelope?.monthlyLimit ? Math.min(100, (envelope.currentSpend / envelope.monthlyLimit) * 100) : null;
   const barColor = spendPct == null ? "hsl(var(--border))" : spendPct >= 100 ? "hsl(var(--expense))" : spendPct >= 80 ? "hsl(38 85% 50%)" : "hsl(var(--primary))";
 
@@ -819,14 +830,16 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                   className="rounded-full border px-2.5 py-1 text-[11px] font-bold"
                   style={{ background: cfg.iconBg, color: cfg.iconFg, borderColor: `${cfg.stripe}33` }}
                 >
-                  {cfg.label}
+                  {tRoot(cfg.labelKey)}
                 </span>
-                <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-bold capitalize text-muted-foreground">
-                  {budget.myRole}
-                </span>
+                {budget.myRole !== "owner" ? (
+                  <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-bold capitalize text-muted-foreground">
+                    {budget.myRole}
+                  </span>
+                ) : null}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {budget.currency} · {members.length || budget.memberCount || 1} members
+                {budget.currency} · {tRoot("budget.card.memberCount", { count: members.length || budget.memberCount || 1 })}
               </div>
             </div>
 
@@ -850,25 +863,27 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                 <span className="text-sm font-bold text-foreground tabular-nums">
                   {fmtShort(envelope?.currentSpend ?? 0, budget.currency)}
                 </span>
-                <span> / {fmtShort(envelope?.monthlyLimit ?? 0, budget.currency)}</span>
+                {envelope?.monthlyLimit ? <span> / {fmtShort(envelope.monthlyLimit, budget.currency)}</span> : null}
               </span>
               {spendPct != null ? (
                 <span className={cn(
                   "text-[13px] font-bold tabular-nums",
-                  spendPct >= 80 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+                  spendPct >= 80 ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground",
                 )}>
-                  {Math.round(spendPct)}% used
+                  {tDetail("usedPct", { pct: Math.round(spendPct) })}
                 </span>
               ) : null}
             </div>
-            <div className="h-[6px] w-full overflow-hidden rounded-full bg-border">
-              <div className="h-full rounded-full transition-all duration-500 ease-smooth" style={{ width: `${spendPct ?? 0}%`, background: barColor }} />
-            </div>
+            {envelope?.monthlyLimit ? (
+              <div className="h-[6px] w-full overflow-hidden rounded-full bg-border">
+                <div className="h-full rounded-full transition-all duration-500 ease-smooth" style={{ width: `${spendPct ?? 0}%`, background: barColor }} />
+              </div>
+            ) : null}
             <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Spent this month</span>
+              <span>{tDetail("spentThisMonthLabel")}</span>
               {envelope?.monthlyLimit ? (
                 <span className="font-semibold text-income">
-                  {fmtShort(envelope.monthlyLimit - envelope.currentSpend, budget.currency)} remaining
+                  {tDetail("remainingAmount", { amount: fmtShort(envelope.monthlyLimit - envelope.currentSpend, budget.currency) })}
                 </span>
               ) : null}
             </div>
@@ -878,6 +893,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
             {([
               { id: "overview", label: tDetail("tabOverview") },
               { id: "transactions", label: tDetail("tabTransactions") },
+              ...(planningEnabled ? [{ id: "plan", label: tDetail("tabPlan") }] : []),
               { id: "categories", label: tDetail("tabCategories") },
               { id: "members", label: tDetail("tabMembers") },
               { id: "settings", label: tDetail("tabSettings") },
@@ -904,12 +920,29 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
       </Panel>
 
       <div className="mt-4">
-        {activeTab === "overview" ? <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} /> : null}
+        {activeTab === "overview" ? (
+          planningEnabled ? (
+            <PeriodOverview budgetId={budget.id} currency={budget.currency} onEditPlan={() => onTab("plan")} />
+          ) : (
+            <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} />
+          )
+        ) : null}
+        {activeTab === "plan" && planningEnabled ? (
+          <PlanTab budgetId={budget.id} currency={budget.currency} myRole={budget.myRole} />
+        ) : null}
         {activeTab === "transactions" ? <TransactionsTab budgetId={budget.id} currency={budget.currency} /> : null}
         {activeTab === "categories" ? <CategoriesTab budgetId={budget.id} currency={budget.currency} myRole={budget.myRole} /> : null}
 {activeTab === "members" ? <MembersTab budgetId={budget.id} orgId={budget.orgId} myRole={budget.myRole} /> : null}
         {activeTab === "settings" ? <SettingsTab budget={budget} myRole={budget.myRole} /> : null}
       </div>
+
+      {budget.type === "standard" ? (
+        <TransactionComposer
+          budgetId={budget.id}
+          currency={budget.currency}
+          canWrite={budget.myRole !== "viewer"}
+        />
+      ) : null}
     </div>
   );
 }

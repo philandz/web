@@ -7,7 +7,9 @@ import { Wallet } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { OverviewTab } from "@/components/philand/overview-tab";
+import { OrgOverview } from "@/components/philand/org-overview";
 import { EmptyState } from "@/components/state/empty-state";
+import { acceptsManualEntries } from "@/lib/budget-types";
 import { SelectNative } from "@/components/ui/select";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
@@ -24,12 +26,18 @@ export default function DashboardPage() {
   const orgId = tenant.selectedOrgId ?? "";
   const { data: pagedBudgets, isLoading } = useBudgetsQuery({ orgId, page: 1, pageSize: 50 });
   const budgets = pagedBudgets?.items ?? [];
+  // The overview below is an income/expense ledger: only offer budgets that have one. Funds,
+  // debt books and groups have their own tiles above and their own pages.
+  const ledgerBudgets = useMemo(() => {
+    const ledger = (pagedBudgets?.items ?? []).filter((b) => acceptsManualEntries(b.type));
+    return ledger.length > 0 ? ledger : (pagedBudgets?.items ?? []);
+  }, [pagedBudgets]);
 
   const selectedBudgetId = searchParams.get("budget") ?? "";
   const selectedBudget = useMemo(() => {
-    if (!budgets.length) return null;
-    return budgets.find((b) => b.id === selectedBudgetId) ?? budgets[0];
-  }, [budgets, selectedBudgetId]);
+    if (!ledgerBudgets.length) return null;
+    return ledgerBudgets.find((b) => b.id === selectedBudgetId) ?? ledgerBudgets[0];
+  }, [ledgerBudgets, selectedBudgetId]);
 
   // Keep the URL canonical when budgets load.
   useEffect(() => {
@@ -53,18 +61,20 @@ export default function DashboardPage() {
         title={t("title")}
         description={t("subtitle")}
         icon={<Wallet className="h-5 w-5" />}
-        actions={budgets.length > 0 ? (
+        actions={ledgerBudgets.length > 1 ? (
           <SelectNative
             value={selectedBudget?.id ?? ""}
             onValueChange={(id) => router.replace(`/?budget=${encodeURIComponent(id)}`)}
             className="w-full sm:w-72"
           >
-            {budgets.map((b) => (
+            {ledgerBudgets.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </SelectNative>
         ) : null}
       />
+
+      {!isLoading && budgets.length > 0 ? <OrgOverview budgets={budgets} /> : null}
 
       {isLoading ? (
         <div className="surface-panel rounded-2xl p-6">

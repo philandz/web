@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Trash2 } from "lucide-react";
+import { Archive, RotateCcw, Trash2 } from "lucide-react";
 import { budgetService, type Budget } from "@/services/budget-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { useToast } from "@/components/state/toast-provider";
 import { PrivateBudgetToggle } from "./private-budget-toggle";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useSettlementQuery, useSharingStatusMutation } from "@/modules/sharing/hooks";
 
 type SettingsTabProps = {
   budgetId: string;
@@ -27,6 +29,22 @@ export function SettingsTab({ budgetId, initialBudget }: SettingsTabProps) {
 
   const [name, setName] = useState(initialBudget?.name ?? "");
   const [savingName, setSavingName] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  const statusMutation = useSharingStatusMutation(budgetId);
+  const { data: settlement } = useSettlementQuery(budgetId);
+  const hasUnsettled = (settlement?.transfers ?? []).length > 0;
+  const isArchived = budget?.status === "archived";
+  const canManage = budget?.myRole === "owner" || budget?.myRole === "manager";
+
+  function changeStatus(action: "archive" | "reopen") {
+    statusMutation.mutate(action, {
+      onSuccess: () => {
+        setBudget((b) => (b ? { ...b, status: action === "archive" ? "archived" : "active" } : b));
+        toast.success(t(action === "archive" ? "archive.done" : "archive.reopened"));
+      },
+      onError: () => toast.error(t("errors.errorGeneric")),
+    });
+  }
 
   // Fetch budget if not provided
   useState(() => {
@@ -108,6 +126,40 @@ export function SettingsTab({ budgetId, initialBudget }: SettingsTabProps) {
           initial={budget?.is_private ?? false}
         />
       </div>
+
+      {/* Finish & settle / reopen — owner or manager */}
+      {canManage && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-card p-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              {isArchived ? t("archive.reopen") : t("archive.finish")}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {isArchived ? t("archive.reopenDesc") : t("archive.finishDesc")}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={statusMutation.isPending}
+            onClick={() => (isArchived ? changeStatus("reopen") : setConfirmArchive(true))}
+          >
+            {isArchived ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+          </Button>
+        </div>
+      )}
+      <ConfirmDialog
+        open={confirmArchive}
+        onOpenChange={setConfirmArchive}
+        title={t("archive.finish")}
+        description={hasUnsettled ? t("archive.unsettledWarning") : t("archive.finishConfirm")}
+        confirmLabel={t("form.confirm")}
+        cancelLabel={t("form.cancel")}
+        onConfirm={() => {
+          setConfirmArchive(false);
+          changeStatus("archive");
+        }}
+      />
 
       {/* Delete budget — owner only, placeholder for T2.8 */}
       {isOwner && (

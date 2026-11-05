@@ -134,7 +134,7 @@ export function InviteMemberDialog({
 
 function UserPlusIcon() {
   return (
-    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"

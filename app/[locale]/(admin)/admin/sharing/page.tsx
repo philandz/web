@@ -45,7 +45,7 @@ function ActionBadge({ action, t }: { action: string; t: ReturnType<typeof useTr
   return (
     <Badge
       variant={variant}
-      className={cn("capitalize", isDestructive && "border-red-200 text-red-600 dark:border-red-800 dark:text-red-400")}
+      className={cn("capitalize", isDestructive && "border-red-200 text-red-700 dark:border-red-800 dark:text-red-400")}
     >
       {action.replace(/_/g, " ").toLowerCase()}
     </Badge>
@@ -128,7 +128,7 @@ function BudgetDetail({
                       <td className="pr-4 py-1.5 text-muted-foreground">{joined}</td>
                       <td className="py-1.5">
                         {m.revoked ? (
-                          <Badge variant="secondary" className="text-xs border-red-200 text-red-600 dark:border-red-800 dark:text-red-400">{t("revoked")}</Badge>
+                          <Badge variant="secondary" className="text-xs border-red-200 text-red-700 dark:border-red-800 dark:text-red-400">{t("revoked")}</Badge>
                         ) : (
                           <Badge variant="default" className="text-xs">{t("active")}</Badge>
                         )}

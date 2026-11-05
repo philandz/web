@@ -12,7 +12,7 @@ import { Sheet, SheetBody, SheetClose, SheetContent, SheetHeader, SheetTitle } f
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useToast } from "@/components/state/toast-provider";
 import {
-  useDeleteTransactionMutation, useTransactionAttachmentsQuery,
+  useDeleteTransactionMutation, useDeleteTransferMutation, useTransactionAttachmentsQuery,
   useCommentsQuery, useAddCommentMutation, useEditCommentMutation, useDeleteCommentMutation,
 } from "@/modules/transaction/hooks";
 import { useCategoriesQuery } from "@/modules/category/hooks";
@@ -21,6 +21,9 @@ import { useAuthStore } from "@/lib/auth-store";
 import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
 import type { Transaction } from "@/services/transaction-service";
 import { cn } from "@/lib/utils";
+import { isInflow, isTransferKind } from "@/lib/transaction-kind";
+import { getActiveLocale } from "@/lib/active-locale";
+import { localeToBCP47 } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -35,7 +38,7 @@ function fmt(amount: number, currency?: string) {
 }
 
 function fmtDate(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -45,7 +48,7 @@ function fmtDate(dateStr: string) {
 
 function fmtTs(ts: number) {
   if (!ts) return "—";
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(ts < 1e12 ? ts * 1000 : ts));
@@ -176,7 +179,7 @@ function CommentThread({ entryId, members }: {
 
   function fmtTs(ts: number) {
     if (!ts) return "";
-    return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+    return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
       .format(new Date(ts < 1e12 ? ts * 1000 : ts));
   }
 
@@ -293,6 +296,8 @@ interface TransactionDetailDrawerProps {
   transaction: Transaction | null;
   budgetId: string;
   currency?: string;
+  /** Hide edit / delete (legacy history of a Saving fund). */
+  readOnly?: boolean;
 }
 
 export function TransactionDetailDrawer({
@@ -301,11 +306,13 @@ export function TransactionDetailDrawer({
   transaction,
   budgetId,
   currency = "VND",
+  readOnly = false,
 }: TransactionDetailDrawerProps) {
   const t = useTranslations("budget.txDetail");
   const toast = useToast();
   const profile = useAuthStore((s) => s.profile);
   const deleteMutation = useDeleteTransactionMutation();
+  const deleteTransferMutation = useDeleteTransferMutation();
   const { data: categories = [] } = useCategoriesQuery(budgetId);
   const { data: members = [] } = useBudgetMembersQuery(budgetId);
   const [editOpen, setEditOpen] = useState(false);
@@ -313,7 +320,8 @@ export function TransactionDetailDrawer({
 
   if (!transaction) return null;
 
-  const isIncome = transaction.type === "income";
+  const isTransfer = isTransferKind(transaction.type);
+  const isIncome = isInflow(transaction.type);
   const category = categories.find((c) => c.id === transaction.categoryId);
   const creator = transaction.createdBy
     ? members.find((m) => m.userId === transaction.createdBy)
@@ -322,7 +330,9 @@ export function TransactionDetailDrawer({
   const creatorAvatar = creatorIsMe ? (profile?.avatar ?? undefined) : undefined;
 
   function handleDelete() {
-    deleteMutation.mutate(transaction!.id, {
+    const mutation = isTransfer ? deleteTransferMutation : deleteMutation;
+    const target = isTransfer ? (transaction!.transfer?.groupId ?? "") : transaction!.id;
+    mutation.mutate(target, {
       onSuccess: () => {
         toast.success(t("deleteSuccess"));
         setConfirmDelete(false);
@@ -370,7 +380,7 @@ export function TransactionDetailDrawer({
                 {isIncome
                   ? <ArrowUpRight className="h-3 w-3" />
                   : <ArrowDownLeft className="h-3 w-3" />}
-                {isIncome ? t("income") ?? "Income" : t("expense") ?? "Expense"}
+                {isTransfer ? (transaction.type === "transfer_in" ? "Transfer in" : "Transfer out") : isIncome ? t("income") ?? "Income" : t("expense") ?? "Expense"}
               </span>
 
               {/* Amount */}
@@ -493,7 +503,9 @@ export function TransactionDetailDrawer({
             <CommentThread entryId={transaction.id} members={members} />
 
             {/* ── Actions ── */}
+            {readOnly ? null : (
             <div className="flex gap-2 pt-1">
+              {isTransfer ? null : (
               <Button
                 variant="outline"
                 size="sm"
@@ -503,6 +515,7 @@ export function TransactionDetailDrawer({
                 <Pencil className="mr-1.5 h-3.5 w-3.5" />
                 {t("edit")}
               </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -513,6 +526,7 @@ export function TransactionDetailDrawer({
                 {t("delete")}
               </Button>
             </div>
+            )}
 
           </SheetBody>
         </SheetContent>

@@ -5,7 +5,7 @@ import {
   type TransactionType,
 } from "@/services/transaction-service";
 import { mediaService } from "@/services/media-service";
-import { transactionKeys } from "@/lib/query-keys";
+import { budgetKeys, planKeys, transactionKeys } from "@/lib/query-keys";
 
 export function useTransactionsQuery(params: TransactionListParams = {}) {
   return useQuery({
@@ -31,16 +31,30 @@ export function useTransactionQuery(transactionId: string | null) {
   });
 }
 
-export function useCreateTransactionMutation() {
+/**
+ * Every write moves money, so the period overview (plan) and the budget
+ * "Spent" KPI are stale afterwards — refresh them together with the lists.
+ */
+function useInvalidateAfterWrite() {
   const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: transactionKeys.lists() });
+    qc.invalidateQueries({ queryKey: planKeys.all });
+    qc.invalidateQueries({ queryKey: budgetKeys.all });
+  };
+}
+
+export function useCreateTransactionMutation() {
+  const invalidate = useInvalidateAfterWrite();
   return useMutation({
     mutationFn: transactionService.createTransaction,
-    onSuccess: () => qc.invalidateQueries({ queryKey: transactionKeys.lists() }),
+    onSuccess: invalidate,
   });
 }
 
 export function useUpdateTransactionMutation(transactionId: string) {
   const qc = useQueryClient();
+  const invalidate = useInvalidateAfterWrite();
   return useMutation({
     mutationFn: (input: {
       type?: TransactionType;
@@ -52,18 +66,18 @@ export function useUpdateTransactionMutation(transactionId: string) {
       notes?: string;
     }) => transactionService.updateTransaction(transactionId, input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: transactionKeys.lists() });
+      invalidate();
       qc.invalidateQueries({ queryKey: transactionKeys.detail(transactionId) });
     },
   });
 }
 
 export function useDeleteTransactionMutation() {
-  const qc = useQueryClient();
+  const invalidate = useInvalidateAfterWrite();
   return useMutation({
     mutationFn: (transactionId: string) =>
       transactionService.deleteTransaction(transactionId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: transactionKeys.lists() }),
+    onSuccess: invalidate,
   });
 }
 
@@ -182,5 +196,40 @@ export function useCreateSplitTransactionMutation() {
   return useMutation({
     mutationFn: transactionService.createSplitTransaction,
     onSuccess: () => qc.invalidateQueries({ queryKey: transactionKeys.lists() }),
+  });
+}
+
+function useInvalidateAfterTransfer() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: transactionKeys.lists() });
+    qc.invalidateQueries({ queryKey: transactionKeys.all });
+    qc.invalidateQueries({ queryKey: planKeys.all });
+    qc.invalidateQueries({ queryKey: budgetKeys.all });
+  };
+}
+
+export function useCreateTransferMutation() {
+  const invalidate = useInvalidateAfterTransfer();
+  return useMutation({
+    mutationFn: transactionService.createTransfer,
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateTransferMutation(groupId: string) {
+  const invalidate = useInvalidateAfterTransfer();
+  return useMutation({
+    mutationFn: (input: { amount?: number; date?: string; description?: string; notes?: string }) =>
+      transactionService.updateTransfer(groupId, input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteTransferMutation() {
+  const invalidate = useInvalidateAfterTransfer();
+  return useMutation({
+    mutationFn: (groupId: string) => transactionService.deleteTransfer(groupId),
+    onSuccess: invalidate,
   });
 }

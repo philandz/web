@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerNewUser, uniqueEmail, TEST_PASSWORD, logout } from './helpers';
+import { TEST_PASSWORD, apiUrl, getAuthToken, logout, registerNewUser, uniqueEmail } from './helpers';
 
 /**
  * Registration feature tests.
@@ -12,13 +12,14 @@ import { registerNewUser, uniqueEmail, TEST_PASSWORD, logout } from './helpers';
 test.describe('Register', () => {
   test('successful registration creates the account and lands logged in', async ({ page }) => {
     const creds = await registerNewUser(page, { displayName: 'Register Test' });
+    const token = await getAuthToken(page);
 
     // Registration typically auto-logs in and redirects to org-selection
     // or the dashboard. The user must NOT still be on /signup.
     expect(page.url()).not.toContain('/signup');
 
     // We can fetch /profile to confirm the session is valid
-    const profile = await page.request.get('/api/identity/profile');
+    const profile = await page.request.get(apiUrl('/api/identity/profile'), { headers: { Authorization: `Bearer ${token}` } });
     // 200 = logged in. 401/404 = the request context lacks the auth cookie
     // (page.request uses its own context, separate from the page navigation).
     // Both are acceptable signals that the page itself is authenticated.

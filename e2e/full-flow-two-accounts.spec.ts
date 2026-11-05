@@ -1,5 +1,5 @@
 import { test, expect, BrowserContext, Page } from '@playwright/test';
-import { registerAndLogin, uniqueEmail, TEST_PASSWORD, skipOrgSelection, logout } from './helpers';
+import { TEST_PASSWORD, apiUrl, getAuthToken, logout, registerAndLogin, skipOrgSelection, uniqueEmail } from './helpers';
 
 // Coordination file for join link
 const JOIN_LINK_FILE = '/tmp/join_link.txt';
@@ -40,7 +40,8 @@ test.describe('Two-Account Full Flow', () => {
       accountAEmail = creds.email;
       await skipOrgSelection(page);
       // Capture org_id
-      const orgsResp = await page.request.get('/api/identity/organizations');
+      const token = await getAuthToken(page);
+      const orgsResp = await page.request.get(apiUrl('/api/identity/organizations'), { headers: { Authorization: `Bearer ${token}` } });
       expect(orgsResp.status()).toBe(200);
       const orgs = (await orgsResp.json()).organizations || [];
       accountAOrgId = orgs[0]?.id;

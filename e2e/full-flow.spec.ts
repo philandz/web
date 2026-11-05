@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerAndLogin, logout } from './helpers';
+import { apiUrl, getAuthToken, logout, registerAndLogin } from './helpers';
 
 /**
  * Full-flow end-to-end tests for the post-migration project.
@@ -18,12 +18,14 @@ import { registerAndLogin, logout } from './helpers';
 test.describe('Full flow', () => {
   test('authenticated user can create a Standard budget', async ({ page }) => {
     const { email, password } = await registerAndLogin(page, { displayName: 'Full Flow User' });
-    const orgs = await page.request.get('/api/identity/organizations');
+    const token = await getAuthToken(page);
+    const orgs = await page.request.get(apiUrl('/api/identity/organizations'), { headers: { Authorization: `Bearer ${token}` } });
     expect(orgs.status()).toBe(200);
     const orgsBody = await orgs.json();
-    const orgId = orgsBody.organizations[0].id;
+    const orgId = orgsBody.organizations[0].base?.id;
 
-    const res = await page.request.post('/api/budget/budgets', {
+    const res = await page.request.post(apiUrl('/api/budget/budgets'), {
+      headers: { Authorization: `Bearer ${token}` },
       data: {
         org_id: orgId,
         name: 'Standard Test Budget',
@@ -31,7 +33,7 @@ test.describe('Full flow', () => {
         currency: 'VND',
       },
     });
-    expect(res.status()).toBe(200);
+    expect(res.status()).toBe(201);
     const body = await res.json();
     expect(body.name).toBe('Standard Test Budget');
     expect(body.owner_id).toBeTruthy();
@@ -40,22 +42,25 @@ test.describe('Full flow', () => {
 
   test('authenticated user can create a category under a budget', async ({ page }) => {
     const creds = await registerAndLogin(page, { displayName: 'Category Test' });
-    const orgId = (await (await page.request.get('/api/identity/organizations')).json())
-      .organizations[0].id;
+    const token = await getAuthToken(page);
+    const orgId = (await (await page.request.get(apiUrl('/api/identity/organizations'), { headers: { Authorization: `Bearer ${token}` } })).json())
+      .organizations[0].base?.id;
 
-    const budgetRes = await page.request.post('/api/budget/budgets', {
+    const budgetRes = await page.request.post(apiUrl('/api/budget/budgets'), {
+      headers: { Authorization: `Bearer ${token}` },
       data: { org_id: orgId, name: 'Cat Test Budget', budget_type: 'standard', currency: 'VND' },
     });
     const budgetId = (await budgetRes.json()).id;
 
-    const res = await page.request.post('/api/category/categories', {
+    const res = await page.request.post(apiUrl('/api/category/categories'), {
+      headers: { Authorization: `Bearer ${token}` },
       data: {
         budget_id: budgetId,
         name: 'Food',
         kind: 'expense',
       },
     });
-    expect(res.status()).toBe(200);
+    expect(res.status()).toBe(201);
     const body = await res.json();
     expect(body.kind).toBe('expense');
     expect(body.budget_id).toBe(budgetId);
@@ -63,18 +68,22 @@ test.describe('Full flow', () => {
 
   test('authenticated user can create an entry under a category', async ({ page }) => {
     const creds = await registerAndLogin(page, { displayName: 'Entry Test' });
-    const orgId = (await (await page.request.get('/api/identity/organizations')).json())
-      .organizations[0].id;
+    const token = await getAuthToken(page);
+    const orgId = (await (await page.request.get(apiUrl('/api/identity/organizations'), { headers: { Authorization: `Bearer ${token}` } })).json())
+      .organizations[0].base?.id;
 
-    const budgetId = (await (await page.request.post('/api/budget/budgets', {
+    const budgetId = (await (await page.request.post(apiUrl('/api/budget/budgets'), {
+      headers: { Authorization: `Bearer ${token}` },
       data: { org_id: orgId, name: 'Entry Test Budget', budget_type: 'standard', currency: 'VND' },
     })).json()).id;
 
-    const catId = (await (await page.request.post('/api/category/categories', {
+    const catId = (await (await page.request.post(apiUrl('/api/category/categories'), {
+      headers: { Authorization: `Bearer ${token}` },
       data: { budget_id: budgetId, name: 'Food', kind: 'expense' },
     })).json()).id;
 
-    const res = await page.request.post('/api/entry/entries', {
+    const res = await page.request.post(apiUrl('/api/entry/entries'), {
+      headers: { Authorization: `Bearer ${token}` },
       data: {
         budget_id: budgetId,
         category_id: catId,
@@ -84,7 +93,7 @@ test.describe('Full flow', () => {
         description: 'Lunch',
       },
     });
-    expect(res.status()).toBe(200);
+    expect(res.status()).toBe(201);
     const body = await res.json();
     expect(body.amount_minor).toBe(1000);
     expect(body.kind).toBe('expense');
@@ -92,10 +101,12 @@ test.describe('Full flow', () => {
 
   test('authenticated user can create a Sharing budget', async ({ page }) => {
     const creds = await registerAndLogin(page, { displayName: 'Sharing Test' });
-    const orgId = (await (await page.request.get('/api/identity/organizations')).json())
-      .organizations[0].id;
+    const token = await getAuthToken(page);
+    const orgId = (await (await page.request.get(apiUrl('/api/identity/organizations'), { headers: { Authorization: `Bearer ${token}` } })).json())
+      .organizations[0].base?.id;
 
-    const res = await page.request.post('/api/budget/budgets', {
+    const res = await page.request.post(apiUrl('/api/budget/budgets'), {
+      headers: { Authorization: `Bearer ${token}` },
       data: {
         org_id: orgId,
         name: 'Group Trip',
@@ -103,7 +114,7 @@ test.describe('Full flow', () => {
         currency: 'VND',
       },
     });
-    expect(res.status()).toBe(200);
+    expect(res.status()).toBe(201);
     const body = await res.json();
     expect(body.budget_type).toBe('sharing');
   });
@@ -113,8 +124,9 @@ test.describe('Full flow', () => {
     const ctx = await browser.newContext();
     const setupPage = await ctx.newPage();
     const creds = await registerAndLogin(setupPage, { displayName: 'Sharing Owner' });
+    const token = await getAuthToken(page);
     const orgId = (await (await setupPage.request.get('/api/identity/organizations')).json())
-      .organizations[0].id;
+      .organizations[0].base?.id;
     const budgetRes = await setupPage.request.post('/api/budget/budgets', {
       data: {
         org_id: orgId,

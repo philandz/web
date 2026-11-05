@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerAndLogin, skipOrgSelection, expectRedirectToLogin } from './helpers';
+import { apiUrl, expectRedirectToLogin, getAuthToken, registerAndLogin, skipOrgSelection } from './helpers';
 
 /**
  * Sharing feature tests.
@@ -28,10 +28,11 @@ test.describe('Sharing', () => {
 
   test('authenticated user can see an empty sharing list (no Sharing budgets yet)', async ({ page }) => {
     const { email, password } = await registerAndLogin(page);
+    const token = await getAuthToken(page);
     await skipOrgSelection(page);
 
     // Get the org_id for this user
-    const orgsResp = await page.request.get('/api/identity/organizations');
+    const orgsResp = await page.request.get(apiUrl('/api/identity/organizations'), { headers: { Authorization: `Bearer ${token}` } });
     expect(orgsResp.status()).toBeLessThan(400);
     const orgs = (await orgsResp.json()).organizations || [];
     if (orgs.length === 0) test.skip(true, 'no org');

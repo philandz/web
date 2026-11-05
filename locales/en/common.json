@@ -28,5 +28,8 @@
     "loading": "Loading...",
     "redirecting": "Redirecting...",
     "somethingWrong": "Something went wrong. Please try again."
+  },
+  "amountInput": {
+    "invalid": "Enter a valid amount (e.g. 50k, 1tr5, 120000)"
   }
 }

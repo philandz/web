@@ -360,7 +360,7 @@ export default function AdminPortfolioDetailPage() {
             <Badge variant="outline" className="capitalize">{budget.type}</Badge>
             <Button
               variant="outline"
-              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+              className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
               onClick={() => setShowForceClose(true)}
             >
               {t("forceClose")}

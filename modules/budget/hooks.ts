@@ -42,7 +42,7 @@ export function useCreateBudgetMutation() {
 export function useUpdateBudgetMutation(budgetId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name?: string; type?: BudgetType }) =>
+    mutationFn: (input: { name?: string; type?: BudgetType; periodStartDay?: number; timezone?: string }) =>
       budgetService.updateBudget(budgetId, input),
     onSuccess: (updated: Budget) => {
       qc.setQueryData(budgetKeys.detail(budgetId), updated);

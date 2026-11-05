@@ -61,7 +61,7 @@ function roleLabel(role: AppOrgRole, t: (k: string) => string) {
 }
 
 function roleBadgeClass(role: AppOrgRole) {
-  if (role === "owner") return "border-amber-200 bg-amber-500/10 text-amber-600 dark:border-amber-800 dark:text-amber-400";
+  if (role === "owner") return "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400";
   if (role === "admin") return "border-blue-200 bg-blue-500/10 text-blue-600 dark:border-blue-800 dark:text-blue-400";
   return "";
 }
@@ -93,7 +93,7 @@ function RolesMatrix() {
     }
     if (value === "partial") {
       return (
-        <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+        <span className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
           {label}
         </span>
       );

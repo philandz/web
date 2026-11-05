@@ -112,7 +112,7 @@ export function SharingMembersCard({
     <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
       <header className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/12 text-amber-700 dark:text-amber-400">
             <Users className="h-4 w-4" />
           </div>
           <h3 className="text-base font-semibold text-foreground">
@@ -179,7 +179,7 @@ export function SharingMembersCard({
                     className={
                       "shrink-0 text-sm font-semibold tabular-nums " +
                       (balance > 0
-                        ? "text-emerald-600 dark:text-emerald-400"
+                        ? "text-emerald-700 dark:text-emerald-400"
                         : "text-rose-600 dark:text-rose-400")
                     }
                   >
@@ -187,7 +187,7 @@ export function SharingMembersCard({
                     {formatCurrency(balance, "VND", locale)}
                   </span>
                 ) : (
-                  <UserCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <UserCheck className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
                 )}
                 <Button
                   variant="ghost"

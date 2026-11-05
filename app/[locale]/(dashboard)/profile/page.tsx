@@ -190,6 +190,7 @@ export default function ProfilePage() {
                 type="file"
                 accept={AVATAR_FILE_TYPES.join(",")}
                 className="sr-only"
+                aria-label={t("avatarUploadLabel")}
                 onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
               />
             </div>

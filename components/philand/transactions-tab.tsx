@@ -7,6 +7,7 @@ import {
   AlertCircle,
   ArrowDownLeft,
   ArrowUpRight,
+  ArrowLeftRight,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -36,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useBulkTransactionMutation, useTransactionsQuery } from "@/modules/transaction/hooks";
-import { useCategoriesQuery } from "@/modules/category/hooks";
+import { useCategoriesForBudgets } from "@/modules/category/hooks";
 import { useBudgetMembersQuery } from "@/modules/budget/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import type { TransactionApplied, TransactionDraft } from "@/lib/types/transaction-search";
@@ -54,6 +55,10 @@ import { DatePreset, getPresetRange } from "@/lib/date-range";
 import type { Transaction, TransactionListParams } from "@/services/transaction-service";
 import { transactionKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
+import { Feature } from "@/components/ui/feature";
+import { TransferDialog } from "./transfer-dialog";
+import { amountSign, amountToneClass, iconToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
+import { formatIsoDate, formatShortDate } from "@/lib/format";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
 function fmt(amount: number, currency: string) {
@@ -65,9 +70,7 @@ function fmt(amount: number, currency: string) {
 }
 
 function fmtDate(dateStr: string) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-    new Date(dateStr),
-  );
+  return formatShortDate(dateStr);
 }
 
 
@@ -81,6 +84,8 @@ interface TransactionsTabProps {
   currency?: string;
   showBudgetFilter?: boolean;
   persistFiltersInUrl?: boolean;
+  /** Hide add / transfer / edit / delete — e.g. a Saving fund's legacy history. */
+  readOnly?: boolean;
 }
 
 export function TransactionsTab({
@@ -89,9 +94,12 @@ export function TransactionsTab({
   currency = "VND",
   showBudgetFilter = false,
   persistFiltersInUrl = true,
+  readOnly = false,
 }: TransactionsTabProps) {
   const t = useTranslations("budget.transactions");
   const tBudget = useTranslations("budget.transactions");
+  const tTransfer = useTranslations("budget.transfer");
+  const [transferOpen, setTransferOpen] = useState(false);
   const toast = useToast();
 
   const router = useRouter();
@@ -144,7 +152,7 @@ export function TransactionsTab({
 
   const { data, isLoading, isError } = useTransactionsQuery(queryParams);
 
-  const { data: categories = [] } = useCategoriesQuery(budgetId || null);
+  const categories = useCategoriesForBudgets(budgetId ? [budgetId] : (budgetIds ?? []));
   const { data: members = [] } = useBudgetMembersQuery(budgetId || null);
   const profile = useAuthStore((s) => s.profile);
   const bulkMutation = useBulkTransactionMutation();
@@ -327,8 +335,16 @@ export function TransactionsTab({
             placeholder={t("searchPlaceholder")}
           />
         </div>
-        {budgetId && (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
+        {budgetId && !readOnly && (
+          <Feature flag="transfers">
+            <Button size="sm" variant="outline" onClick={() => setTransferOpen(true)} data-testid="open-transfer">
+              <ArrowLeftRight className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{tTransfer("button")}</span>
+            </Button>
+          </Feature>
+        )}
+        {budgetId && !readOnly && (
+          <Button size="sm" onClick={() => setCreateOpen(true)} data-testid="add-transaction">
             <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
             <span className="hidden sm:inline">{t("addTransaction")}</span>
           </Button>
@@ -396,63 +412,65 @@ export function TransactionsTab({
           <span className="hidden sm:inline ml-1.5">{t("search")}</span>
         </Button>
 
-        {/* Filter chips — inside expanded panel */}
-        {filtersOpen && (
-          <div className="flex flex-wrap gap-1.5 w-full">
-            {applied.type && applied.type !== "all" && (
-              <FilterBadge
-                label={applied.type}
-                onClear={() =>
-                  applySearchWithDraft({ ...draft, type: "all" })
-                }
-              />
-            )}
-            {applied.categoryIds.map((id) => (
+      </FilterPanel>
+
+      {/* Applied filters — always visible, so a hidden filter can never explain "missing" rows */}
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5" data-testid="applied-filters">
+          {applied.type && applied.type !== "all" && (
+            <FilterBadge
+              label={applied.type}
+              onClear={() =>
+                applySearchWithDraft({ ...draft, type: "all" })
+              }
+            />
+          )}
+          {applied.categoryIds.map((id) => (
+            <FilterBadge
+              key={id}
+              label={categoryMap.get(id)?.name ?? id}
+              onClear={() =>
+                applySearchWithDraft({
+                  ...draft,
+                  categoryIds: applied.categoryIds.filter((c) => c !== id),
+                })
+              }
+            />
+          ))}
+          {applied.memberIds.map((id) => {
+            const member = memberMap.get(id);
+            return (
               <FilterBadge
                 key={id}
-                label={categoryMap.get(id)?.name ?? id}
+                label={member?.displayName ?? id}
                 onClear={() =>
                   applySearchWithDraft({
                     ...draft,
-                    categoryIds: applied.categoryIds.filter((c) => c !== id),
+                    memberIds: applied.memberIds.filter((m) => m !== id),
                   })
                 }
               />
-            ))}
-            {applied.memberIds.map((id) => {
-              const member = memberMap.get(id);
-              return (
-                <FilterBadge
-                  key={id}
-                  label={member?.displayName ?? id}
-                  onClear={() =>
-                    applySearchWithDraft({
-                      ...draft,
-                      memberIds: applied.memberIds.filter((m) => m !== id),
-                    })
-                  }
-                />
-              );
-            })}
-            {applied.dateFrom && (
-              <FilterBadge
-                label={`From ${applied.dateFrom}`}
-                onClear={() =>
-                  applySearchWithDraft({ ...draft, dateFrom: "" })
-                }
-              />
-            )}
-            {applied.dateTo && (
-              <FilterBadge
-                label={`To ${applied.dateTo}`}
-                onClear={() =>
-                  applySearchWithDraft({ ...draft, dateTo: "" })
-                }
-              />
-            )}
-          </div>
-        )}
-      </FilterPanel>
+            );
+          })}
+          {applied.dateFrom && (
+            <FilterBadge
+              label={applied.dateTo ? `${formatIsoDate(applied.dateFrom)} – ${formatIsoDate(applied.dateTo)}` : `≥ ${formatIsoDate(applied.dateFrom)}`}
+              onClear={() =>
+                applySearchWithDraft({ ...draft, dateFrom: "", dateTo: "" })
+              }
+            />
+          )}
+          {applied.dateTo && !applied.dateFrom && (
+            <FilterBadge
+              label={`≤ ${formatIsoDate(applied.dateTo)}`}
+              onClear={() =>
+                applySearchWithDraft({ ...draft, dateTo: "" })
+              }
+            />
+          )}
+        </div>
+      )}
+
 
       {/* Sticky SummaryStrip — above table */}
       {transactions.length > 0 && (
@@ -463,7 +481,7 @@ export function TransactionsTab({
             </span>
           )}
           {filteredExpense > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
               ↓ {fmt(filteredExpense, currency)}
             </span>
           )}
@@ -529,6 +547,7 @@ export function TransactionsTab({
                   <th className="w-10 px-4 py-3">
                     <input
                       type="checkbox"
+                      aria-label="Select all"
                       checked={selected.size === transactions.length && transactions.length > 0}
                       onChange={toggleAll}
                       className="rounded"
@@ -603,6 +622,7 @@ export function TransactionsTab({
                     >
                       <input
                         type="checkbox"
+                        aria-label="Select row"
                         checked={selected.has(tx.id)}
                         onChange={() => toggleSelect(tx.id)}
                         className="rounded"
@@ -614,7 +634,7 @@ export function TransactionsTab({
                     <td className="px-4 py-3">
                       <StatusChip
                         value={tx.type}
-                        label={tx.type === "income" ? t("income") : t("expense")}
+                        label={isTransferKind(tx.type) ? (tx.type === "transfer_in" ? "Transfer in" : "Transfer out") : tx.type === "income" ? t("income") : t("expense")}
                       />
                     </td>
                     <td className="max-w-[200px] px-4 py-3 font-medium text-foreground">
@@ -642,12 +662,10 @@ export function TransactionsTab({
                     <td
                       className={cn(
                         "px-4 py-3 text-right font-semibold tabular-nums",
-                        tx.type === "income"
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-red-500",
+                        amountToneClass(tx.type),
                       )}
                     >
-                      {tx.type === "income" ? "+" : "−"}
+                      {amountSign(tx.type)}
                       {fmt(tx.amount, currency)}
                     </td>
                     <td className="px-4 py-3">
@@ -706,12 +724,10 @@ export function TransactionsTab({
                 <div
                   className={cn(
                     "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                    tx.type === "income"
-                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "bg-red-500/10 text-red-500",
+                    iconToneClass(tx.type),
                   )}
                 >
-                  {tx.type === "income" ? (
+                  {isInflow(tx.type) ? (
                     <ArrowUpRight className="h-4 w-4" />
                   ) : (
                     <ArrowDownLeft className="h-4 w-4" />
@@ -745,12 +761,10 @@ export function TransactionsTab({
                 <p
                   className={cn(
                     "shrink-0 text-sm font-semibold tabular-nums",
-                    tx.type === "income"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-red-500",
+                    amountToneClass(tx.type),
                   )}
                 >
-                  {tx.type === "income" ? "+" : "−"}
+                  {amountSign(tx.type)}
                   {fmt(tx.amount, currency)}
                 </p>
               </div>
@@ -782,6 +796,7 @@ export function TransactionsTab({
         transaction={detailTx}
         budgetId={budgetId}
         currency={currency}
+        readOnly={readOnly}
       />
 
       <TransactionFormDrawer
@@ -798,6 +813,13 @@ export function TransactionsTab({
           currency={currency}
         />
       )}
+      <Feature flag="transfers">
+        <TransferDialog
+          open={transferOpen}
+          sourceBudgetId={budgetId}
+          onClose={() => setTransferOpen(false)}
+        />
+      </Feature>
     </div>
   );
 }

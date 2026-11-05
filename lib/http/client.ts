@@ -241,6 +241,10 @@ class ApiClient {
   patch<T>(path: string, body?: unknown, options?: Omit<RequestOptions, "method" | "body">) {
     return this.request<T>(path, { ...options, method: "PATCH", body });
   }
+
+  put<T>(path: string, body?: unknown, options?: Omit<RequestOptions, "method" | "body">) {
+    return this.request<T>(path, { ...options, method: "PUT", body });
+  }
 }
 
 export const apiClient = new ApiClient(API_ORIGIN);
