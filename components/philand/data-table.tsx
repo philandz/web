@@ -529,15 +529,38 @@ export function DateDropdown({
 // Member popover with checkbox list
 // ---------------------------------------------------------------------------
 
+export interface PeopleLabels {
+  trigger: string;
+  title: string;
+  clear: string;
+  selected: string;
+  empty: string;
+  emptyHint: string;
+  onlyMe?: string;
+}
+
 export function MemberPopover({
   value,
   onChange,
   members,
+  labels,
+  meId,
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   members: { userId: string; displayName: string; avatar?: string | null }[];
+  labels?: PeopleLabels;
+  /** When set (and labelled), the list starts with a one-tap "only me". */
+  meId?: string;
 }) {
+  const L: PeopleLabels = labels ?? {
+    trigger: "Members",
+    title: "Filter by member",
+    clear: "Clear",
+    selected: "selected",
+    empty: "No members yet",
+    emptyHint: "Invite teammates to filter by them.",
+  };
   const [open, setOpen] = useState(false);
 
   function toggle(id: string) {
@@ -562,7 +585,7 @@ export function MemberPopover({
           )}
         >
           <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>Members</span>
+          <span>{L.trigger}</span>
           {value.length > 0 && (
             <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
               {value.length}
@@ -574,31 +597,43 @@ export function MemberPopover({
       <PopoverContent align="start" sideOffset={6} className="w-64 p-0">
         <div className="border-b border-border bg-muted/40 px-3 py-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-foreground">Filter by member</p>
+            <p className="text-xs font-semibold text-foreground">{L.title}</p>
             {value.length > 0 && (
               <button
                 type="button"
                 onClick={() => onChange([])}
                 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-primary"
               >
-                Clear
+                {L.clear}
               </button>
             )}
           </div>
           {value.length > 0 && (
             <p className="mt-0.5 text-[10px] text-muted-foreground">
-              {value.length} selected
+              {value.length} {L.selected}
             </p>
           )}
         </div>
         {safeMembers.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-1 px-3 py-6 text-center">
             <UsersIcon className="h-5 w-5 text-muted-foreground/60" />
-            <p className="text-xs font-medium text-foreground">No members yet</p>
-            <p className="text-[11px] text-muted-foreground">Invite teammates to filter by them.</p>
+            <p className="text-xs font-medium text-foreground">{L.empty}</p>
+            <p className="text-[11px] text-muted-foreground">{L.emptyHint}</p>
           </div>
         ) : (
           <div className="max-h-64 overflow-y-auto p-1">
+            {meId && L.onlyMe && safeMembers.some((m) => m.userId === meId) && (
+              <button
+                type="button"
+                onClick={() => onChange(value.length === 1 && value[0] === meId ? [] : [meId])}
+                className={cn(
+                  "mb-1 w-full rounded-md border border-dashed border-primary/40 px-2 py-1.5 text-left text-sm font-medium text-primary transition-colors hover:bg-primary/5",
+                  value.length === 1 && value[0] === meId && "bg-primary/10",
+                )}
+              >
+                {L.onlyMe}
+              </button>
+            )}
             {safeMembers.map((m) => {
               const checked = value.includes(m.userId);
               return (
