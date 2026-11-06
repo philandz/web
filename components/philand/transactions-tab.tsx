@@ -144,6 +144,7 @@ export function TransactionsTab({
       sortDir: applied.sortDir,
       page: applied.page,
       pageSize: applied.pageSize,
+      includeSummary: true,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [applied, budgetId, budgetIds],
@@ -175,16 +176,11 @@ export function TransactionsTab({
   // ── Derived UI state ────────────────────────────────────────────────────
   const activeFilterCount = useMemo(() => countActiveFilters(applied), [applied]);
 
-  // Summary totals (client-side over the current page, per spec)
-  const filteredIncome = useMemo(
-    () => transactions.filter((tx) => tx.type === "income").reduce((s, tx) => s + tx.amount, 0),
-    [transactions],
-  );
-  const filteredExpense = useMemo(
-    () => transactions.filter((tx) => tx.type === "expense").reduce((s, tx) => s + tx.amount, 0),
-    [transactions],
-  );
-
+  // Totals cover the WHOLE filtered set (server summary), not just this page.
+  const summary = data?.summary;
+  const filteredIncome = summary?.income ?? 0;
+  const filteredExpense = summary?.expense ?? 0;
+  const filteredTransfer = (summary?.transferIn ?? 0) + (summary?.transferOut ?? 0);
 
   // ── Local UI state ──────────────────────────────────────────────────────
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -469,6 +465,11 @@ export function TransactionsTab({
           {filteredExpense > 0 && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
               ↓ {fmt(filteredExpense, currency)}
+            </span>
+          )}
+          {filteredTransfer > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
+              ⇄ {fmt(filteredTransfer, currency)}
             </span>
           )}
           <span className="ml-auto text-xs text-muted-foreground">
