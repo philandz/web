@@ -22,7 +22,8 @@
     "emptySubtitle": "Create your first budget to start tracking finances",
     "noOrg": "Select an organization to view budgets",
     "count": "{count, plural, =0 {No budgets} one {1 budget} other {# budgets}}",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "clearSearch": "Clear search"
   },
   "card": {
     "balance": "Balance",
@@ -187,7 +188,6 @@
       "thisMonth": "This month",
       "custom": "Custom range"
     },
-    "maxRangeError": "Maximum selectable range is 30 days.",
     "refresh": "Refresh",
     "search": "Search",
     "importCsv": "Import CSV",
@@ -1137,7 +1137,16 @@
       "evRate": "{rate}% ({type}) from {date}",
       "evRateDeleted": "Rate period removed",
       "evRule": "free {allowance}/month, then {pct}% fee",
-      "evAdjust": "{from} → {to} {reason}"
+      "evAdjust": "{from} → {to} {reason}",
+      "payFilter": {
+        "kind": "Payment type",
+        "allKinds": "All types",
+        "clear": "Clear filters",
+        "count": "{count, plural, one {# payment} other {# payments}}",
+        "error": "Couldn't load payments.",
+        "retry": "Retry",
+        "noMatch": "No payments match these filters."
+      }
     },
     "card": {
       "repaid": "{pct}% repaid",

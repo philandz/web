@@ -17,11 +17,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/state/toast-provider";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatIsoDate } from "@/lib/format";
-import { useDebtEventsQuery, useDebtLifecycle, useDebtPaymentsQuery, useDebtScheduleQuery } from "@/modules/debt/hooks";
+import { useDebtEventsQuery, useDebtLifecycle, useDebtScheduleQuery } from "@/modules/debt/hooks";
 import type { DebtAccount, DebtEvent, DebtPaymentKind } from "@/services/debt-service";
 
 import { AdjustDialog } from "./adjust-dialog";
 import { PaymentDialog } from "./payment-dialog";
+import { PaymentsSection } from "./payments-section";
 import { TermsEditor } from "./terms-editor";
 import { balancePath, daysUntil, isOverdue, isScheduled, parsePayload, rateChangeAt, repaidPct } from "./debt-format";
 
@@ -44,7 +45,6 @@ export function AccountDetail({ budgetId, account, canManage, canPay, onBack }: 
   const money = (v: number) => formatCurrency(v, account.currency || "VND", locale);
   const scheduled = isScheduled(account.repaymentMethod);
   const schedule = useDebtScheduleQuery(budgetId, scheduled ? account.id : null);
-  const payments = useDebtPaymentsQuery(budgetId, account.id);
   const events = useDebtEventsQuery(budgetId, account.id);
   const life = useDebtLifecycle(budgetId, account.id);
   const [section, setSection] = useState<Section>("overview");
@@ -254,27 +254,7 @@ export function AccountDetail({ budgetId, account, canManage, canPay, onBack }: 
         </Card>
       ) : null}
 
-      {section === "payments" ? (
-        <Card>
-          <CardContent className="space-y-1 p-4 text-sm" data-testid="debt-payments">
-            {(payments.data?.items ?? []).length === 0 ? <p className="text-muted-foreground">{t("noPayments")}</p> : null}
-            {(payments.data?.items ?? []).map((p) => (
-              <div key={p.id} className="flex items-start justify-between gap-3 border-t border-border py-2 first:border-t-0">
-                <div>
-                  <p className="font-medium">
-                    {tk(`payKind.${p.kind}`)}
-                    {p.status !== "completed" ? <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-800">{t(`payStatus.${p.status}`)}</span> : null}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatIsoDate(p.paidOn, locale)} · {t("paymentSplit", { principal: money(p.principalMinor), interest: money(p.interestMinor), fee: money(p.feeMinor) })}
-                  </p>
-                </div>
-                <span className="shrink-0 font-semibold tabular-nums">{money(p.totalMinor)}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      ) : null}
+      {section === "payments" ? <PaymentsSection budgetId={budgetId} account={account} /> : null}
 
       {section === "terms" ? <TermsEditor budgetId={budgetId} account={account} canManage={canManage} /> : null}
 

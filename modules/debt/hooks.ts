@@ -4,6 +4,7 @@ import { debtKeys, budgetKeys } from "@/lib/query-keys";
 import {
   debtService,
   type CreateDebtAccountBody,
+  type DebtPaymentFilter,
   type PrepayRule,
   type QuoteBody,
   type RatePeriod,
@@ -35,11 +36,18 @@ export function useDebtScheduleQuery(budgetId: string | null, accountId: string 
   });
 }
 
-export function useDebtPaymentsQuery(budgetId: string | null, accountId = "") {
+export function useDebtPaymentsQuery(
+  budgetId: string | null,
+  accountId = "",
+  opts: { page?: number; pageSize?: number; filter?: DebtPaymentFilter; enabled?: boolean } = {},
+) {
+  const { page = 0, pageSize = 50, filter = {}, enabled = true } = opts;
   return useQuery({
-    queryKey: debtKeys.payments(budgetId ?? "", accountId),
-    queryFn: () => debtService.listPayments(budgetId!, accountId),
-    enabled: Boolean(budgetId),
+    // shares the `payments(...)` prefix, so every payment write still refreshes it
+    queryKey: [...debtKeys.payments(budgetId ?? "", accountId), page, pageSize, filter] as const,
+    queryFn: () => debtService.listPayments(budgetId!, accountId, page, pageSize, filter),
+    placeholderData: (prev) => prev,
+    enabled: Boolean(budgetId) && enabled,
   });
 }
 

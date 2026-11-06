@@ -22,7 +22,8 @@
     "emptySubtitle": "Tạo ngân sách đầu tiên để bắt đầu theo dõi tài chính",
     "noOrg": "Chọn tổ chức để xem ngân sách",
     "count": "{count, plural, =0 {Không có ngân sách} other {# ngân sách}}",
-    "refresh": "Làm mới"
+    "refresh": "Làm mới",
+    "clearSearch": "Xoá tìm kiếm"
   },
   "card": {
     "balance": "Số dư",
@@ -187,7 +188,6 @@
       "thisMonth": "Tháng này",
       "custom": "Tùy chỉnh"
     },
-    "maxRangeError": "Phạm vi chọn tối đa là 30 ngày.",
     "refresh": "Làm mới",
     "search": "Tìm kiếm",
     "importCsv": "Nhập CSV",
@@ -1137,7 +1137,16 @@
       "evRate": "{rate}% ({type}) từ {date}",
       "evRateDeleted": "Đã xoá kỳ lãi suất",
       "evRule": "miễn phí {allowance}/tháng, vượt thì phí {pct}%",
-      "evAdjust": "{from} → {to} {reason}"
+      "evAdjust": "{from} → {to} {reason}",
+      "payFilter": {
+        "kind": "Loại thanh toán",
+        "allKinds": "Tất cả loại",
+        "clear": "Xoá bộ lọc",
+        "count": "{count} khoản thanh toán",
+        "error": "Không tải được các khoản thanh toán.",
+        "retry": "Thử lại",
+        "noMatch": "Không có khoản thanh toán nào khớp bộ lọc."
+      }
     },
     "card": {
       "repaid": "Đã trả {pct}%",
