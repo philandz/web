@@ -192,7 +192,8 @@
     "importCsv": "Import CSV",
     "quickAdd": "Quick Add",
     "addTransaction": "Add Transaction",
-    "colBy": "By"
+    "colBy": "By",
+    "transfer": "Transfer"
   },
   "txForm": {
     "createTitle": "Add Transaction",

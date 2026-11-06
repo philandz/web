@@ -20,6 +20,7 @@ import {
 import { useExpensesQuery, useParticipantsQuery } from "@/modules/sharing/hooks";
 import { useParticipantNameLookup } from "@/modules/sharing/participant-name-lookup";
 import { cn } from "@/lib/utils";
+import { getPresetRange } from "@/lib/date-range";
 import type { Expense } from "@/services/sharing-service";
 
 type SharingExpensesListProps = {
@@ -281,24 +282,10 @@ export function SharingExpensesList({
             from={dateRange.from}
             to={dateRange.to}
             onSelect={(preset) => {
-              // Reuse the same getPresetRange logic the transactions-tab
-              // uses. We don't import the helper directly to keep the
-              // sharing module dependency-light.
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const fmt = (d: Date) => d.toISOString().slice(0, 10);
-              if (preset === "today") {
-                setDateRange({ from: fmt(today), to: fmt(today) });
-              } else if (preset === "last7Days") {
-                const from = new Date(today);
-                from.setDate(from.getDate() - 6);
-                setDateRange({ from: fmt(from), to: fmt(today) });
-              } else if (preset === "thisMonth") {
-                const first = new Date(today.getFullYear(), today.getMonth(), 1);
-                setDateRange({ from: fmt(first), to: fmt(today) });
-              } else {
-                setDateRange((r) => ({ ...r }));
-              }
+              // Local calendar dates (never toISOString(): that is UTC and shifts "today"
+              // by a day before 07:00 in UTC+7).
+              const range = getPresetRange(preset);
+              if (range) setDateRange(range);
             }}
             onCustomChange={(from, to) => setDateRange({ from, to })}
           />

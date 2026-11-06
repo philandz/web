@@ -119,16 +119,12 @@ export function isDateRangeTooWide(from: string, to: string, maxDays = 30): bool
 export { getCurrentMonthRange, getPresetRange } from "@/lib/date-range";
 
 export function countActiveFilters(applied: TransactionDraft): number {
+  // Only real filters count. Sort, page and page size are view settings, and a date range is
+  // always visible on its own trigger, so none of them belong in the "Filters (n)" badge.
   let count = 0;
   if (applied.q) count++;
   if (applied.type !== "all") count++;
   if (applied.categoryIds.length > 0) count++;
   if (applied.memberIds.length > 0) count++;
-  if (applied.dateFrom) count++;
-  if (applied.dateTo) count++;
-  if (applied.sortBy !== "date") count++;
-  if (applied.sortDir !== "desc") count++;
-  if (applied.page !== 1) count++;
-  if (applied.pageSize !== 30) count++;
   return count;
 }

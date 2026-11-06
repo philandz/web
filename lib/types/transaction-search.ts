@@ -1,6 +1,6 @@
 export interface TransactionDraft {
   q: string;
-  type: "all" | "expense" | "income";
+  type: "all" | "expense" | "income" | "transfer";
   categoryIds: string[];
   memberIds: string[];
   dateFrom: string;

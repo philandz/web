@@ -56,6 +56,7 @@ import type { Transaction, TransactionListParams } from "@/services/transaction-
 import { transactionKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import { Feature } from "@/components/ui/feature";
+import { isFeatureEnabled } from "@/lib/features";
 import { TransferDialog } from "./transfer-dialog";
 import { amountSign, amountToneClass, iconToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
 import { formatIsoDate, formatShortDate } from "@/lib/format";
@@ -358,23 +359,28 @@ export function TransactionsTab({
         activeFilterCount={activeFilterCount}
       >
         {/* Type popover (single-select radio, matches Member/Category pill style) */}
-        <TypePopover<"all" | "expense" | "income">
-          value={draft.type === "all" ? "all" : (draft.type as "expense" | "income")}
+        <TypePopover<"all" | "expense" | "income" | "transfer">
+          value={draft.type}
           options={[
             { value: "all" as const, label: t("allTypes") },
             { value: "expense" as const, label: t("expense") },
             { value: "income" as const, label: t("income") },
+            ...(isFeatureEnabled("transfers")
+              ? [{ value: "transfer" as const, label: t("transfer") }]
+              : []),
           ]}
           onChange={(v) => applySearchWithDraft({ ...draft, type: v })}
           labels={{ title: t("filterTypeTitle") ?? "Filter by type", all: t("allTypes") }}
         />
 
         {/* Member popover */}
-        <MemberPopover
-          value={draft.memberIds}
-          onChange={(ids) => applySearchWithDraft({ ...draft, memberIds: ids })}
-          members={members}
-        />
+        {members.length > 0 && (
+          <MemberPopover
+            value={draft.memberIds}
+            onChange={(ids) => applySearchWithDraft({ ...draft, memberIds: ids })}
+            members={members}
+          />
+        )}
 
         {/* Category popover */}
         <CategoryPopover

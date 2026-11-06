@@ -192,7 +192,8 @@
     "importCsv": "Nhập CSV",
     "quickAdd": "Thêm nhanh",
     "addTransaction": "Thêm giao dịch",
-    "colBy": "Bởi"
+    "colBy": "Bởi",
+    "transfer": "Chuyển khoản"
   },
   "txForm": {
     "createTitle": "Thêm giao dịch",
