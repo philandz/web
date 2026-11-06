@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Receipt, Search, SlidersHorizontal, X } from "lucide-react";
 import { MoneyAmount } from "@/components/ui/money-amount";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -103,6 +103,13 @@ function formatDateHeader(dateStr: string, t: (key: string) => string): string {
   return t("time.older");
 }
 
+/** "Nov 5" / "5 thg 11": a bucket label like "This week" alone does not say which day a row is. */
+function shortDate(ymd: string, locale: string): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  if (!y || !m || !d) return ymd;
+  return new Date(y, m - 1, d).toLocaleDateString(locale, { day: "numeric", month: "short" });
+}
+
 function getDateKey(dateStr: string): string {
   const date = new Date(dateStr);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -139,6 +146,7 @@ export function SharingExpensesList({
 }: SharingExpensesListProps) {
   const t = useTranslations("sharing");
   const tl = useTranslations("sharing.list");
+  const locale = useLocale();
 
   const parse = useCallback(() => defaultState(), []);
   const serialize = useCallback(() => {}, []);
@@ -471,7 +479,7 @@ export function SharingExpensesList({
           {grouped.map((group) => (
             <div key={group.key} className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {group.header}
+                {group.header} · {shortDate(group.key.split("|")[1], locale)}
               </p>
               <div className="divide-y divide-border/40 rounded-xl border border-border/60 bg-card/40 overflow-hidden">
                 {group.items.map((expense) => {

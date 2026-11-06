@@ -356,13 +356,13 @@ export function TransactionsTab({
         <Button
           size="sm"
           variant="outline"
-          className="h-9"
+          className="hidden h-9 sm:inline-flex"
           onClick={() => refetch()}
           disabled={isFetching}
           aria-label={t("refresh")}
         >
           <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
-          <span className="ml-1.5 hidden sm:inline">{t("refresh")}</span>
+          <span className="ml-1.5">{t("refresh")}</span>
         </Button>
       </div>
 

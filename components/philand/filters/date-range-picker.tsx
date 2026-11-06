@@ -159,8 +159,16 @@ export function DateRangePicker({ value, periodStartDay, onChange, className }: 
             )}
           >
             <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <span className="truncate">{label}</span>
-            {dates && <span className="hidden truncate font-normal text-muted-foreground sm:inline">· {dates}</span>}
+            {/* Phones stack the dates under the label so the range is never hidden */}
+            <span className="flex min-w-0 flex-col items-start leading-tight sm:flex-row sm:items-center sm:gap-1.5">
+              <span className="truncate">{label}</span>
+              {dates && (
+                <span className="truncate text-[10px] font-normal text-muted-foreground sm:text-xs">
+                  <span className="hidden sm:inline">· </span>
+                  {dates}
+                </span>
+              )}
+            </span>
             <ChevronDown className={cn("h-3 w-3 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
           </button>
         </PopoverTrigger>
