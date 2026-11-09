@@ -475,6 +475,52 @@ function buildExpenseBody(input: ExpenseInput) {
 // Service
 // ---------------------------------------------------------------------------
 
+export interface ExpenseListQuery {
+  q?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  /** Who paid (OR). */
+  paidByIds?: string[];
+  /** Has a share in the expense (OR). */
+  shareParticipantIds?: string[];
+  categoryIds?: string[];
+  scope?: "all" | "shared" | "personal";
+  sortBy?: "date" | "amount";
+  sortDir?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ExpensePage {
+  items: Expense[];
+  meta: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    totalRows: number;
+    /** Sum over every matching expense, not just this page. */
+    totalAmount: number;
+  };
+}
+
+export function buildExpenseQuery(query: ExpenseListQuery): string {
+  const p = new URLSearchParams();
+  if (query.q?.trim()) p.set("q", query.q.trim());
+  if (query.dateFrom) p.set("date_from", query.dateFrom);
+  if (query.dateTo) p.set("date_to", query.dateTo);
+  if (query.paidByIds?.length) p.set("paid_by_ids", query.paidByIds.join(","));
+  if (query.shareParticipantIds?.length)
+    p.set("share_participant_ids", query.shareParticipantIds.join(","));
+  if (query.categoryIds?.length) p.set("category_ids", query.categoryIds.join(","));
+  if (query.scope && query.scope !== "all") p.set("scope", query.scope);
+  if (query.sortBy) p.set("sort_by", query.sortBy);
+  if (query.sortDir) p.set("sort_dir", query.sortDir);
+  if (query.page) p.set("page", String(query.page));
+  if (query.pageSize) p.set("page_size", String(query.pageSize));
+  const qs = p.toString();
+  return qs ? `?${qs}` : "";
+}
+
 export const sharingService = {
   // --- Expenses ---
 
@@ -483,6 +529,32 @@ export const sharingService = {
       `${BASE}/budgets/${budgetId}/expenses`
     );
     return (raw.expenses ?? []).map(mapExpense);
+  },
+
+  /** Server-side filtered, sorted and paged list (see ExpenseListQuery). */
+  async listExpensesPage(budgetId: string, query: ExpenseListQuery): Promise<ExpensePage> {
+    const raw = await apiClient.get<{
+      expenses: RawExpense[];
+      meta?: {
+        page: number;
+        page_size: number;
+        total_pages: number;
+        total_rows: number;
+        total_amount: number;
+      };
+    }>(`${BASE}/budgets/${budgetId}/expenses${buildExpenseQuery(query)}`);
+    const items = (raw.expenses ?? []).map(mapExpense);
+    return {
+      items,
+      meta: {
+        page: raw.meta?.page ?? 1,
+        pageSize: raw.meta?.page_size ?? items.length,
+        totalPages: raw.meta?.total_pages ?? 1,
+        totalRows: raw.meta?.total_rows ?? items.length,
+        totalAmount:
+          raw.meta?.total_amount ?? items.reduce((sum, e) => sum + e.totalAmount, 0),
+      },
+    };
   },
 
   async getExpense(expenseId: string): Promise<Expense> {

@@ -22,7 +22,8 @@
     "emptySubtitle": "Create your first budget to start tracking finances",
     "noOrg": "Select an organization to view budgets",
     "count": "{count, plural, =0 {No budgets} one {1 budget} other {# budgets}}",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "clearSearch": "Clear search"
   },
   "card": {
     "balance": "Balance",
@@ -171,7 +172,8 @@
     "empty": {
       "title": "No transactions found.",
       "body": "Try adjusting your search or filters.",
-      "clear": "Clear filters"
+      "clear": "Clear filters",
+      "allTime": "Show all time"
     },
     "filters": "Filters",
     "filterTypeTitle": "Filter by type",
@@ -186,13 +188,71 @@
       "thisMonth": "This month",
       "custom": "Custom range"
     },
-    "maxRangeError": "Maximum selectable range is 30 days.",
     "refresh": "Refresh",
     "search": "Search",
     "importCsv": "Import CSV",
     "quickAdd": "Quick Add",
     "addTransaction": "Add Transaction",
-    "colBy": "By"
+    "colBy": "By",
+    "transfer": "Transfer",
+    "range": {
+      "title": "Date range",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7": "Last 7 days",
+      "last30": "Last 30 days",
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "thisPeriod": "This period",
+      "lastPeriod": "Last period",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "thisQuarter": "This quarter",
+      "lastQuarter": "Last quarter",
+      "thisYear": "This year",
+      "lastYear": "Last year",
+      "all": "All time",
+      "custom": "Custom range",
+      "from": "From",
+      "to": "To",
+      "previous": "Previous range",
+      "next": "Next range",
+      "maxHint": "Up to {days} days.",
+      "clamped": "Range cut to {days} days.",
+      "errors": {
+        "invalid": "Invalid date.",
+        "order": "The end date is before the start date.",
+        "tooWide": "The range is longer than 366 days. Shorten it or pick All time."
+      }
+    },
+    "people": {
+      "trigger": "Created by",
+      "title": "Filter by who entered it",
+      "empty": "No members yet",
+      "emptyHint": "Invite teammates to filter by them.",
+      "onlyMe": "Only mine"
+    },
+    "amount": {
+      "trigger": "Amount",
+      "title": "Filter by amount",
+      "min": "At least",
+      "max": "At most",
+      "apply": "Apply",
+      "order": "The minimum is above the maximum."
+    },
+    "sort": {
+      "label": "Sort by",
+      "date_desc": "Date, newest first",
+      "date_asc": "Date, oldest first",
+      "amount_desc": "Amount, high to low",
+      "amount_asc": "Amount, low to high",
+      "description_asc": "Description A–Z",
+      "description_desc": "Description Z–A"
+    },
+    "resetAll": "Reset all",
+    "showResults": "Show {count, plural, one {# result} other {# results}}",
+    "results": "{count, plural, one {# transaction} other {# transactions}}",
+    "loadError": "Could not load transactions."
   },
   "txForm": {
     "createTitle": "Add Transaction",
@@ -1077,7 +1137,16 @@
       "evRate": "{rate}% ({type}) from {date}",
       "evRateDeleted": "Rate period removed",
       "evRule": "free {allowance}/month, then {pct}% fee",
-      "evAdjust": "{from} → {to} {reason}"
+      "evAdjust": "{from} → {to} {reason}",
+      "payFilter": {
+        "kind": "Payment type",
+        "allKinds": "All types",
+        "clear": "Clear filters",
+        "count": "{count, plural, one {# payment} other {# payments}}",
+        "error": "Couldn't load payments.",
+        "retry": "Retry",
+        "noMatch": "No payments match these filters."
+      }
     },
     "card": {
       "repaid": "{pct}% repaid",

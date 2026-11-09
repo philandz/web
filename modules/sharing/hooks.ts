@@ -15,6 +15,7 @@ import type {
   ParticipantInfo,
   JoinLinkPreview,
   JoinAsGuestResult,
+  ExpenseListQuery,
 } from "@/services/sharing-service";
 
 // Re-exported for backwards compatibility: the key factory now lives with
@@ -30,6 +31,24 @@ export function useExpensesQuery(budgetId: string) {
     queryKey: sharingKeys.expenses(budgetId),
     queryFn: () => sharingService.listExpenses(budgetId),
     enabled: Boolean(budgetId),
+  });
+}
+
+/**
+ * One page of the filtered expense list. Filtering, sorting and paging happen on the server, so
+ * a big budget never ships every expense to the browser. Shares the `expenses(budgetId)` key
+ * prefix, so every expense write refreshes it too.
+ */
+export function useExpensesPageQuery(
+  budgetId: string,
+  query: ExpenseListQuery,
+  options: { enabled?: boolean } = {},
+) {
+  return useQuery({
+    queryKey: [...sharingKeys.expenses(budgetId), "page", query] as const,
+    queryFn: () => sharingService.listExpensesPage(budgetId, query),
+    placeholderData: (prev) => prev,
+    enabled: Boolean(budgetId) && (options.enabled ?? true),
   });
 }
 

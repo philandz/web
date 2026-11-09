@@ -1,134 +1,182 @@
 import type { TransactionDraft } from "@/lib/types/transaction-search";
+import {
+  detectRangeToken,
+  parseRangeToken,
+  resolveRange,
+  validateRange,
+  type RangeContext,
+  type RangeError,
+} from "@/lib/date-range";
 
-export const DEFAULT_DRAFT: TransactionDraft = {
-  q: "",
-  type: "all",
-  categoryIds: [],
-  memberIds: [],
-  dateFrom: "",
-  dateTo: "",
-  sortBy: "date",
-  sortDir: "desc",
-  page: 1,
-  pageSize: 30,
-};
+/** What the URL cannot tell us: the budget's period and which range to open on. */
+export interface QueryContext {
+  /** Budget period start day (1..28). Absent for the all-budgets page. */
+  periodStartDay?: number;
+  /** Token used when the URL has no range. Defaults to the budget period (calendar month if none). */
+  defaultRange?: string;
+  today?: Date;
+}
 
-export function defaultDraft(): TransactionDraft {
-  return { ...DEFAULT_DRAFT };
+export const DEFAULT_PAGE_SIZE = 30;
+export const PAGE_SIZES = [10, 30, 50, 100];
+
+export function defaultRangeToken(ctx: QueryContext): string {
+  return ctx.defaultRange ?? (ctx.periodStartDay ? "period:0" : "month:0");
+}
+
+function rangeCtx(ctx: QueryContext): RangeContext {
+  return { today: ctx.today, periodStartDay: ctx.periodStartDay };
+}
+
+export function draftForRange(base: TransactionDraft, token: string, ctx: QueryContext): TransactionDraft {
+  const r = resolveRange(token, rangeCtx(ctx)) ?? { from: "", to: "" };
+  return { ...base, range: token, dateFrom: r.from, dateTo: r.to, page: 1 };
+}
+
+export function defaultDraft(ctx: QueryContext = {}): TransactionDraft {
+  return draftForRange(
+    {
+      q: "",
+      type: "all",
+      categoryIds: [],
+      memberIds: [],
+      range: "",
+      dateFrom: "",
+      dateTo: "",
+      sortBy: "date",
+      sortDir: "desc",
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+    },
+    defaultRangeToken(ctx),
+    ctx,
+  );
+}
+
+const TYPES: TransactionDraft["type"][] = ["all", "expense", "income", "transfer"];
+const SORTS: TransactionDraft["sortBy"][] = ["date", "amount", "description"];
+
+function ids(v: string | null): string[] {
+  return v ? v.split(",").filter(Boolean) : [];
+}
+
+function intOrUndefined(v: string | null): number | undefined {
+  if (v === null || v === "") return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.trunc(n) : undefined;
 }
 
 /**
- * Read URL search params → applied state.
- * Omits default values to keep URL clean.
+ * URL → state. Precedence for the date range: an explicit `from`/`to` (custom), then a `range`
+ * token, then the default. Bad values fall back to defaults instead of throwing.
  */
-export function parseUrlParams(sp: URLSearchParams): TransactionDraft {
-  return {
+export function parseUrlParams(sp: URLSearchParams, ctx: QueryContext = {}): TransactionDraft {
+  const base = defaultDraft(ctx);
+  const type = sp.get("type") as TransactionDraft["type"] | null;
+  const sort = sp.get("sort") as TransactionDraft["sortBy"] | null;
+  const pageSize = Number(sp.get("page_size"));
+  const page = Number(sp.get("page"));
+  const out: TransactionDraft = {
+    ...base,
     q: sp.get("q") ?? "",
-    type: (sp.get("type") as TransactionDraft["type"]) ?? "all",
-    categoryIds: sp.get("category_ids") ? sp.get("category_ids")!.split(",").filter(Boolean) : [],
-    memberIds: sp.get("member_ids") ? sp.get("member_ids")!.split(",").filter(Boolean) : [],
-    dateFrom: sp.get("from") ?? "",
-    dateTo: sp.get("to") ?? "",
-    sortBy: (sp.get("sort") as TransactionDraft["sortBy"]) ?? "date",
-    sortDir: (sp.get("dir") as TransactionDraft["sortDir"]) ?? "desc",
-    page: Number(sp.get("page") || "1") || 1,
-    pageSize: Number(sp.get("page_size") || "30") || 30,
+    type: type && TYPES.includes(type) ? type : "all",
+    categoryIds: ids(sp.get("category_ids")),
+    memberIds: ids(sp.get("member_ids")),
+    amountMin: intOrUndefined(sp.get("amount_min")),
+    amountMax: intOrUndefined(sp.get("amount_max")),
+    sortBy: sort && SORTS.includes(sort) ? sort : "date",
+    sortDir: sp.get("dir") === "asc" ? "asc" : "desc",
+    page: Number.isInteger(page) && page >= 1 ? page : 1,
+    pageSize: PAGE_SIZES.includes(pageSize) ? pageSize : DEFAULT_PAGE_SIZE,
   };
+
+  const from = sp.get("from") ?? "";
+  const to = sp.get("to") ?? "";
+  const token = sp.get("range");
+  if (from || to) {
+    out.range = "custom";
+    out.dateFrom = from;
+    out.dateTo = to;
+  } else if (token && parseRangeToken(token) && parseRangeToken(token)!.kind !== "custom") {
+    const r = resolveRange(token, rangeCtx(ctx)) ?? { from: "", to: "" };
+    out.range = token;
+    out.dateFrom = r.from;
+    out.dateTo = r.to;
+  }
+  return out;
 }
 
-/**
- * Write applied state → URL search params (mutates sp in place).
- * Drops canonical defaults so the URL stays clean.
- */
-export function serializeToUrl(applied: TransactionDraft, sp: URLSearchParams): void {
+/** State → URL (mutates `sp`). Defaults are dropped so a clean URL means "the default view". */
+export function serializeToUrl(applied: TransactionDraft, sp: URLSearchParams, ctx: QueryContext = {}): void {
   const set = (key: string, value: string | number | null | undefined) => {
-    if (value === undefined || value === null || value === "") {
-      sp.delete(key);
-    } else {
-      sp.set(key, String(value));
-    }
+    if (value === undefined || value === null || value === "") sp.delete(key);
+    else sp.set(key, String(value));
   };
 
   set("q", applied.q || null);
   set("type", applied.type === "all" ? null : applied.type);
   set("category_ids", applied.categoryIds.join(",") || null);
   set("member_ids", applied.memberIds.join(",") || null);
-  set("from", applied.dateFrom || null);
-  set("to", applied.dateTo || null);
+  set("amount_min", applied.amountMin);
+  set("amount_max", applied.amountMax);
+
+  if (applied.range === "custom") {
+    set("range", null);
+    set("from", applied.dateFrom || null);
+    set("to", applied.dateTo || null);
+    // an open range is "all"
+    if (!applied.dateFrom && !applied.dateTo) set("range", "all");
+  } else {
+    set("from", null);
+    set("to", null);
+    set("range", applied.range === defaultRangeToken(ctx) ? null : applied.range);
+  }
+
   set("sort", applied.sortBy === "date" ? null : applied.sortBy);
   set("dir", applied.sortDir === "desc" ? null : applied.sortDir);
   set("page", applied.page === 1 ? null : applied.page);
-  set("page_size", applied.pageSize === 30 ? null : applied.pageSize);
+  set("page_size", applied.pageSize === DEFAULT_PAGE_SIZE ? null : applied.pageSize);
 }
 
-/**
- * Validate a draft before applying.
- * Returns { ok: true } or { ok: false, errors }.
- */
-export function validateDraft(draft: TransactionDraft): {
+export interface DraftValidation {
   ok: boolean;
-  errors: Record<string, string>;
-} {
-  const errors: Record<string, string> = {};
+  errors: Record<string, RangeError | "tooMany" | "amountOrder">;
+}
 
-  // Date range: max 30 days
-  if (draft.dateFrom && draft.dateTo) {
-    const from = new Date(draft.dateFrom);
-    const to = new Date(draft.dateTo);
-    if (isNaN(from.getTime()) || isNaN(to.getTime())) {
-      errors.dateFrom = "Invalid date format";
-    } else if (to < from) {
-      errors.dateTo = "End date must be after start date";
-    } else if (isDateRangeTooWide(draft.dateFrom, draft.dateTo)) {
-      errors.dateTo = "Maximum selectable range is 30 days.";
-    }
-  } else if (draft.dateFrom) {
-    const from = new Date(draft.dateFrom);
-    if (isNaN(from.getTime())) {
-      errors.dateFrom = "Invalid date format";
-    }
-  } else if (draft.dateTo) {
-    const to = new Date(draft.dateTo);
-    if (isNaN(to.getTime())) {
-      errors.dateTo = "Invalid date format";
-    }
+export function validateDraft(draft: TransactionDraft): DraftValidation {
+  const errors: DraftValidation["errors"] = {};
+  const rangeError = validateRange(draft.dateFrom, draft.dateTo);
+  if (rangeError) errors.dateTo = rangeError;
+  if (draft.categoryIds.length > 50) errors.categoryIds = "tooMany";
+  if (draft.memberIds.length > 50) errors.memberIds = "tooMany";
+  if (draft.amountMin != null && draft.amountMax != null && draft.amountMin > draft.amountMax) {
+    errors.amountMax = "amountOrder";
   }
-
-  // ID count limits
-  if (draft.categoryIds.length > 50) {
-    errors.categoryIds = "Maximum 50 categories allowed.";
-  }
-  if (draft.memberIds.length > 50) {
-    errors.memberIds = "Maximum 50 members allowed.";
-  }
-
   return { ok: Object.keys(errors).length === 0, errors };
 }
 
 /**
- * Count how many applied filters differ from their defaults.
- * Used for the "Filters (n)" badge.
+ * Number of real filters (the "Filters (n)" badge). View settings never count: sort, page, page
+ * size, and the date range, which always shows on its own trigger.
  */
-export function isDateRangeTooWide(from: string, to: string, maxDays = 30): boolean {
-  if (!from || !to) return false;
-  const msPerDay = 1000 * 60 * 60 * 24;
-  return Math.floor((new Date(to).getTime() - new Date(from).getTime()) / msPerDay) > maxDays;
-}
-
-// Re-export from shared local-date module
-export { getCurrentMonthRange, getPresetRange } from "@/lib/date-range";
-
 export function countActiveFilters(applied: TransactionDraft): number {
   let count = 0;
   if (applied.q) count++;
   if (applied.type !== "all") count++;
   if (applied.categoryIds.length > 0) count++;
   if (applied.memberIds.length > 0) count++;
-  if (applied.dateFrom) count++;
-  if (applied.dateTo) count++;
-  if (applied.sortBy !== "date") count++;
-  if (applied.sortDir !== "desc") count++;
-  if (applied.page !== 1) count++;
-  if (applied.pageSize !== 30) count++;
+  if (applied.amountMin != null || applied.amountMax != null) count++;
   return count;
 }
+
+/** True when anything differs from the default view, the date range included. */
+export function isDefaultView(applied: TransactionDraft, ctx: QueryContext = {}): boolean {
+  const d = defaultDraft(ctx);
+  return (
+    countActiveFilters(applied) === 0 &&
+    applied.dateFrom === d.dateFrom &&
+    applied.dateTo === d.dateTo
+  );
+}
+
+export { detectRangeToken };

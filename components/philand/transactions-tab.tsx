@@ -18,7 +18,11 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { DateDropdown, FilterBadge, FilterPanel, Pagination, StatusChip, TypePopover } from "@/components/philand/data-table";
+import { FilterBadge, Pagination, StatusChip, TypePopover } from "@/components/philand/data-table";
+import { DateRangePicker } from "@/components/philand/filters/date-range-picker";
+import { SearchBox } from "@/components/philand/filters/search-box";
+import { AmountFilter } from "@/components/philand/filters/amount-filter";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CategoryPopover, MemberPopover } from "@/components/philand/data-table";
 import { TransactionDetailDrawer } from "@/components/philand/transaction-detail-drawer";
 import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
@@ -38,24 +42,26 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useBulkTransactionMutation, useTransactionsQuery } from "@/modules/transaction/hooks";
 import { useCategoriesForBudgets } from "@/modules/category/hooks";
-import { useBudgetMembersQuery } from "@/modules/budget/hooks";
+import { useBudgetMembersQuery, useBudgetQuery } from "@/modules/budget/hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import type { TransactionApplied, TransactionDraft } from "@/lib/types/transaction-search";
-import { useQueryForm } from "@/hooks/use-query-form";
+import { useListQuery } from "@/hooks/use-list-query";
 import {
+  PAGE_SIZES,
   countActiveFilters,
   defaultDraft,
-  getCurrentMonthRange,
-  isDateRangeTooWide,
+  draftForRange,
+  isDefaultView,
   parseUrlParams,
   serializeToUrl,
   validateDraft,
+  type QueryContext,
 } from "@/lib/query-params/transactions";
-import { DatePreset, getPresetRange } from "@/lib/date-range";
 import type { Transaction, TransactionListParams } from "@/services/transaction-service";
 import { transactionKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import { Feature } from "@/components/ui/feature";
+import { isFeatureEnabled } from "@/lib/features";
 import { TransferDialog } from "./transfer-dialog";
 import { amountSign, amountToneClass, iconToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
 import { formatIsoDate, formatShortDate } from "@/lib/format";
@@ -102,33 +108,24 @@ export function TransactionsTab({
   const [transferOpen, setTransferOpen] = useState(false);
   const toast = useToast();
 
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
-
-  // ── Query form state (draft / applied) ─────────────────────────────────
-  const { draft, applied, setDraft, applySearch, resetDraft, hydrateFromUrl, hasDraftChanges } =
-    useQueryForm<TransactionDraft>({
-      defaultFactory: defaultDraft,
-      parseUrl: parseUrlParams,
-      serialize: serializeToUrl,
-      validate: validateDraft,
-    });
-
-  // Hydrate from URL on first render and on browser back/forward
-  useEffect(() => {
-    hydrateFromUrl();
-    // Apply "This Month" if no date params in URL
-    const sp = new URLSearchParams(window.location.search);
-    if (!sp.get("from") && !sp.get("to")) {
-      const range = getCurrentMonthRange();
-      setDraft({ dateFrom: range.from, dateTo: range.to });
-      const d = { ...defaultDraft(), dateFrom: range.from, dateTo: range.to };
-      applySearchWithDraft(d);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // ── Query state: every change applies immediately (no draft step) ────────
+  const { data: budget, isError: budgetError } = useBudgetQuery(budgetId || null);
+  const periodStartDay = budgetId ? budget?.periodStartDay : undefined;
+  // Wait for the budget so "this period" is computed from its own start day, not guessed.
+  const ready = !budgetId || Boolean(budget) || budgetError;
+  const qctx = useMemo<QueryContext>(() => ({ periodStartDay }), [periodStartDay]);
+  const parse = useCallback((sp: URLSearchParams) => parseUrlParams(sp, qctx), [qctx]);
+  const serialize = useCallback(
+    (v: TransactionDraft, sp: URLSearchParams) => serializeToUrl(v, sp, qctx),
+    [qctx],
+  );
+  const defaults = useCallback(() => defaultDraft(qctx), [qctx]);
+  const { query: applied, update, replace, reset } = useListQuery<TransactionDraft>({
+    defaults,
+    parse,
+    serialize,
+    persistInUrl: persistFiltersInUrl,
+  });
 
   // ── React Query ─────────────────────────────────────────────────────────
   const queryParams: TransactionListParams = useMemo(
@@ -141,16 +138,22 @@ export function TransactionsTab({
       memberIds: applied.memberIds.length > 0 ? applied.memberIds : undefined,
       dateFrom: applied.dateFrom || undefined,
       dateTo: applied.dateTo || undefined,
+      amountMin: applied.amountMin,
+      amountMax: applied.amountMax,
       sortBy: applied.sortBy,
       sortDir: applied.sortDir,
       page: applied.page,
       pageSize: applied.pageSize,
+      includeSummary: true,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [applied, budgetId, budgetIds],
   );
 
-  const { data, isLoading, isError } = useTransactionsQuery(queryParams);
+  const validation = useMemo(() => validateDraft(applied), [applied]);
+  const { data, isLoading, isError, refetch, isFetching } = useTransactionsQuery(queryParams, {
+    enabled: ready && validation.ok,
+  });
 
   const categories = useCategoriesForBudgets(budgetId ? [budgetId] : (budgetIds ?? []));
   const { data: members = [] } = useBudgetMembersQuery(budgetId || null);
@@ -173,19 +176,11 @@ export function TransactionsTab({
   // ── Derived UI state ────────────────────────────────────────────────────
   const activeFilterCount = useMemo(() => countActiveFilters(applied), [applied]);
 
-  // Summary totals (client-side over the current page, per spec)
-  const filteredIncome = useMemo(
-    () => transactions.filter((tx) => tx.type === "income").reduce((s, tx) => s + tx.amount, 0),
-    [transactions],
-  );
-  const filteredExpense = useMemo(
-    () => transactions.filter((tx) => tx.type === "expense").reduce((s, tx) => s + tx.amount, 0),
-    [transactions],
-  );
-
-  // Validation
-  const validationErrors = useMemo(() => validateDraft(draft).errors, [draft]);
-  const isDateRangeValid = !isDateRangeTooWide(draft.dateFrom, draft.dateTo);
+  // Totals cover the WHOLE filtered set (server summary), not just this page.
+  const summary = data?.summary;
+  const filteredIncome = summary?.income ?? 0;
+  const filteredExpense = summary?.expense ?? 0;
+  const filteredTransfer = (summary?.transferIn ?? 0) + (summary?.transferOut ?? 0);
 
   // ── Local UI state ──────────────────────────────────────────────────────
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -196,85 +191,20 @@ export function TransactionsTab({
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── Handlers ────────────────────────────────────────────────────────────
-  function handleSearch() {
-    const result = applySearch();
-    if (!result.ok) {
-      // Surface validation error as toast
-      const firstError = Object.values(result.errors)[0];
-      if (firstError) toast.error(firstError);
-    }
-  }
-
-  function handleRefresh() {
-    // Re-apply current URL without draft mutation
-    hydrateFromUrl();
-    // Refetch by forcing page to 1 and re-applying (URL is the source of truth)
-    const sp = new URLSearchParams(searchParams.toString());
-    const fresh = parseUrlParams(sp);
-    setDraft(fresh);
-    // Directly trigger a re-render that React Query will pick up via query key
-    startTransition(() => {
-      router.replace(window.location.search ? `${pathname}?${sp.toString()}` : pathname, {
-        scroll: false,
-      });
-    });
-  }
-
-  // ── applySearchWithDraft ────────────────────────────────────────────────
-  function applySearchWithDraft(d: TransactionDraft) {
-    const v = validateDraft(d);
-    if (!v.ok) {
-      toast.error(Object.values(v.errors)[0]);
-      return false;
-    }
-    setDraft(d);
-    const sp = new URLSearchParams(window.location.search);
-    serializeToUrl(d, sp);
-    startTransition(() => {
-      router.replace(sp.toString() ? `${pathname}?${sp.toString()}` : pathname, { scroll: false });
-    });
-    return true;
-  }
-
-  function handlePageChange(p: number) {
-    setDraft({ page: p });
-    const next = { ...applied, page: p };
-    const sp = new URLSearchParams(searchParams.toString());
-    serializeToUrl(next, sp);
-    startTransition(() => {
-      router.replace(sp.toString() ? `${pathname}?${sp.toString()}` : pathname, { scroll: false });
-    });
-  }
-
-  function handlePageSizeChange(s: number) {
-    setDraft({ pageSize: s, page: 1 });
-    const next = { ...applied, pageSize: s, page: 1 };
-    const sp = new URLSearchParams(searchParams.toString());
-    serializeToUrl(next, sp);
-    startTransition(() => {
-      router.replace(sp.toString() ? `${pathname}?${sp.toString()}` : pathname, { scroll: false });
-    });
+  function handleSort(key: TransactionDraft["sortBy"]) {
+    const dir = applied.sortBy === key && applied.sortDir === "desc" ? "asc" : "desc";
+    update({ sortBy: key, sortDir: dir });
   }
 
   function handleClearFilters() {
-    const fresh = defaultDraft();
-    setDraft(fresh);
-    const sp = new URLSearchParams();
-    // Clear tab only, keep budget id in URL if needed
-    serializeToUrl(fresh, sp);
-    startTransition(() => {
-      router.replace(sp.toString() ? `${pathname}?${sp.toString()}` : pathname, { scroll: false });
-    });
-  }
-
-  function handleSort(key: TransactionDraft["sortBy"]) {
-    const newDir = applied.sortBy === key && applied.sortDir === "desc" ? "asc" : "desc";
-    setDraft({ sortBy: key, sortDir: newDir });
-    const next: TransactionApplied = { ...applied, sortBy: key, sortDir: newDir as "asc" | "desc" };
-    const sp = new URLSearchParams(searchParams.toString());
-    serializeToUrl(next, sp);
-    startTransition(() => {
-      router.replace(sp.toString() ? `${pathname}?${sp.toString()}` : pathname, { scroll: false });
+    // Clear the filters but stay on the date range the user chose.
+    update({
+      q: "",
+      type: "all",
+      categoryIds: [],
+      memberIds: [],
+      amountMin: undefined,
+      amountMax: undefined,
     });
   }
 
@@ -307,34 +237,83 @@ export function TransactionsTab({
     );
   }
 
-  // Build a summary of filters that differ between draft and applied (for "Edited" pills)
-  const editedFields = useMemo(() => {
-    const edited: string[] = [];
-    if (draft.q !== applied.q) edited.push("q");
-    if (draft.type !== applied.type) edited.push("type");
-    if (JSON.stringify(draft.categoryIds) !== JSON.stringify(applied.categoryIds)) edited.push("categoryIds");
-    if (JSON.stringify(draft.memberIds) !== JSON.stringify(applied.memberIds)) edited.push("memberIds");
-    if (draft.dateFrom !== applied.dateFrom) edited.push("dateFrom");
-    if (draft.dateTo !== applied.dateTo) edited.push("dateTo");
-    return edited;
-  }, [draft, applied]);
+  const meId = profile?.id;
+  const peopleLabels = {
+    trigger: t("people.trigger"),
+    title: t("people.title"),
+    clear: t("clearFilter"),
+    selected: t("selected"),
+    empty: t("people.empty"),
+    emptyHint: t("people.emptyHint"),
+    onlyMe: t("people.onlyMe"),
+  };
+  const amountLabels = {
+    trigger: t("amount.trigger"),
+    title: t("amount.title"),
+    min: t("amount.min"),
+    max: t("amount.max"),
+    clear: t("clearFilter"),
+    apply: t("amount.apply"),
+    order: t("amount.order"),
+  };
+  const typeOptions = [
+    { value: "all" as const, label: t("allTypes") },
+    { value: "expense" as const, label: t("expense") },
+    { value: "income" as const, label: t("income") },
+    ...(isFeatureEnabled("transfers") ? [{ value: "transfer" as const, label: t("transfer") }] : []),
+  ];
+
+  const filterControls = (inline: boolean) => (
+    <>
+      <TypePopover<"all" | "expense" | "income" | "transfer">
+        value={applied.type}
+        options={typeOptions}
+        onChange={(v) => update({ type: v })}
+        labels={{ title: t("filterTypeTitle"), all: t("allTypes") }}
+      />
+      {members.length > 0 && (
+        <MemberPopover
+          value={applied.memberIds}
+          onChange={(ids) => update({ memberIds: ids })}
+          members={members}
+          labels={peopleLabels}
+          meId={meId}
+        />
+      )}
+      <CategoryPopover
+        value={applied.categoryIds}
+        onChange={(ids) => update({ categoryIds: ids })}
+        categories={categories}
+      />
+      <AmountFilter
+        min={applied.amountMin}
+        max={applied.amountMax}
+        onChange={(lo, hi) => update({ amountMin: lo, amountMax: hi })}
+        labels={amountLabels}
+        inline={inline}
+      />
+    </>
+  );
+
+  const rangeValue = { range: applied.range, from: applied.dateFrom, to: applied.dateTo };
+  const rangeError = validation.errors.dateTo;
+  const defaultView = isDefaultView(applied, qctx);
+  const resetAll = () => replace(defaults());
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
     <div className="space-y-4">
       {/* ── Toolbar ─────────────────────────────────────────────────────── */}
 
-      {/* Row 1: Search + Add */}
+      {/* Row 1: search (applies as you type) + actions */}
       <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <Input
-            value={draft.q}
-            onChange={(e) => setDraft({ q: e.target.value })}
-            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
-            className="pl-9"
-            placeholder={t("searchPlaceholder")}
-          />
-        </div>
+        <SearchBox
+          className="flex-1"
+          value={applied.q}
+          onCommit={(q) => update({ q })}
+          placeholder={t("searchPlaceholder")}
+          clearLabel={t("clearFilter")}
+        />
         {budgetId && !readOnly && (
           <Feature flag="transfers">
             <Button size="sm" variant="outline" onClick={() => setTransferOpen(true)} data-testid="open-transfer">
@@ -351,126 +330,129 @@ export function TransactionsTab({
         )}
       </div>
 
-      {/* Row 2: FilterPanel + Refresh + Search */}
-      <FilterPanel
-        open={filtersOpen}
-        onToggle={() => setFiltersOpen((p) => !p)}
-        activeFilterCount={activeFilterCount}
-      >
-        {/* Type popover (single-select radio, matches Member/Category pill style) */}
-        <TypePopover<"all" | "expense" | "income">
-          value={draft.type === "all" ? "all" : (draft.type as "expense" | "income")}
-          options={[
-            { value: "all" as const, label: t("allTypes") },
-            { value: "expense" as const, label: t("expense") },
-            { value: "income" as const, label: t("income") },
-          ]}
-          onChange={(v) => applySearchWithDraft({ ...draft, type: v })}
-          labels={{ title: t("filterTypeTitle") ?? "Filter by type", all: t("allTypes") }}
+      {/* Row 2: the date range is always visible; the other filters sit beside it (a sheet on phones) */}
+      <div className="flex flex-wrap items-center gap-2" data-testid="filter-bar">
+        <DateRangePicker
+          value={rangeValue}
+          periodStartDay={periodStartDay}
+          onChange={(v) => update({ range: v.range, dateFrom: v.from, dateTo: v.to })}
         />
-
-        {/* Member popover */}
-        <MemberPopover
-          value={draft.memberIds}
-          onChange={(ids) => applySearchWithDraft({ ...draft, memberIds: ids })}
-          members={members}
-        />
-
-        {/* Category popover */}
-        <CategoryPopover
-          value={draft.categoryIds}
-          onChange={(ids) => applySearchWithDraft({ ...draft, categoryIds: ids })}
-          categories={categories}
-        />
-
-        {/* Date dropdown */}
-        <DateDropdown
-          from={draft.dateFrom}
-          to={draft.dateTo}
-          onSelect={(preset) => {
-            const range = getPresetRange(preset);
-            if (range) {
-              applySearchWithDraft({ ...draft, dateFrom: range.from, dateTo: range.to });
-            }
-          }}
-          onCustomChange={(from, to) =>
-            applySearchWithDraft({ ...draft, dateFrom: from, dateTo: to })
-          }
-          validationError={validationErrors.dateTo}
-        />
-
-        {/* Spacer */}
+        <div className="hidden flex-wrap items-center gap-2 sm:flex">{filterControls(false)}</div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-9 sm:hidden"
+          onClick={() => setSheetOpen(true)}
+          data-testid="open-filter-sheet"
+        >
+          {t("filters")}
+          {activeFilterCount > 0 && (
+            <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
+              {activeFilterCount}
+            </span>
+          )}
+        </Button>
         <div className="flex-1" />
-
-        {/* Refresh + Search — right side */}
-        <Button size="sm" variant="outline" onClick={handleRefresh} disabled={isLoading}>
-          <RefreshCw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
-          <span className="hidden sm:inline ml-1.5">{t("refresh")}</span>
+        <Button
+          size="sm"
+          variant="outline"
+          className="hidden h-9 sm:inline-flex"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          aria-label={t("refresh")}
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
+          <span className="ml-1.5">{t("refresh")}</span>
         </Button>
-        <Button size="sm" onClick={handleSearch} disabled={isLoading || !isDateRangeValid}>
-          <Search className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline ml-1.5">{t("search")}</span>
-        </Button>
+      </div>
 
-      </FilterPanel>
+      {rangeError && (
+        <p className="flex items-center gap-1.5 text-xs font-medium text-destructive" role="alert">
+          <AlertCircle className="h-3.5 w-3.5" />
+          {t(`range.errors.${rangeError}`)}
+        </p>
+      )}
 
       {/* Applied filters — always visible, so a hidden filter can never explain "missing" rows */}
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5" data-testid="applied-filters">
-          {applied.type && applied.type !== "all" && (
-            <FilterBadge
-              label={applied.type}
-              onClear={() =>
-                applySearchWithDraft({ ...draft, type: "all" })
-              }
-            />
+          {applied.type !== "all" && (
+            <FilterBadge label={t(applied.type)} onClear={() => update({ type: "all" })} />
           )}
           {applied.categoryIds.map((id) => (
             <FilterBadge
               key={id}
               label={categoryMap.get(id)?.name ?? id}
-              onClear={() =>
-                applySearchWithDraft({
-                  ...draft,
-                  categoryIds: applied.categoryIds.filter((c) => c !== id),
-                })
-              }
+              onClear={() => update({ categoryIds: applied.categoryIds.filter((c) => c !== id) })}
             />
           ))}
-          {applied.memberIds.map((id) => {
-            const member = memberMap.get(id);
-            return (
-              <FilterBadge
-                key={id}
-                label={member?.displayName ?? id}
-                onClear={() =>
-                  applySearchWithDraft({
-                    ...draft,
-                    memberIds: applied.memberIds.filter((m) => m !== id),
-                  })
-                }
-              />
-            );
-          })}
-          {applied.dateFrom && (
+          {applied.memberIds.map((id) => (
             <FilterBadge
-              label={applied.dateTo ? `${formatIsoDate(applied.dateFrom)} – ${formatIsoDate(applied.dateTo)}` : `≥ ${formatIsoDate(applied.dateFrom)}`}
-              onClear={() =>
-                applySearchWithDraft({ ...draft, dateFrom: "", dateTo: "" })
-              }
+              key={id}
+              label={memberMap.get(id)?.displayName ?? id}
+              onClear={() => update({ memberIds: applied.memberIds.filter((m) => m !== id) })}
+            />
+          ))}
+          {(applied.amountMin != null || applied.amountMax != null) && (
+            <FilterBadge
+              label={`${applied.amountMin != null ? fmt(applied.amountMin, currency) : "…"} – ${
+                applied.amountMax != null ? fmt(applied.amountMax, currency) : "…"
+              }`}
+              onClear={() => update({ amountMin: undefined, amountMax: undefined })}
             />
           )}
-          {applied.dateTo && !applied.dateFrom && (
-            <FilterBadge
-              label={`≤ ${formatIsoDate(applied.dateTo)}`}
-              onClear={() =>
-                applySearchWithDraft({ ...draft, dateTo: "" })
-              }
-            />
-          )}
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {t("clearFilters")}
+          </button>
         </div>
       )}
 
+      {/* Mobile: filters and sorting in one sheet; changes apply as you make them */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="max-w-sm">
+          <SheetHeader>
+            <SheetTitle>{t("filters")}</SheetTitle>
+            <SheetClose onClose={() => setSheetOpen(false)} />
+          </SheetHeader>
+          <div className="flex-1 space-y-4 overflow-y-auto p-5">
+            <div className="flex flex-wrap items-center gap-2">{filterControls(true)}</div>
+            <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+              {t("sort.label")}
+              <select
+                value={`${applied.sortBy}:${applied.sortDir}`}
+                onChange={(e) => {
+                  const [sortBy, sortDir] = e.target.value.split(":") as [
+                    TransactionDraft["sortBy"],
+                    TransactionDraft["sortDir"],
+                  ];
+                  update({ sortBy, sortDir });
+                }}
+                className="h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground"
+              >
+                {(["date:desc", "date:asc", "amount:desc", "amount:asc", "description:asc", "description:desc"] as const).map(
+                  (v) => (
+                    <option key={v} value={v}>
+                      {t(`sort.${v.replace(":", "_")}`)}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+          </div>
+          <div className="flex items-center gap-2 border-t border-border/60 p-4">
+            <Button variant="outline" className="flex-1" onClick={resetAll} disabled={defaultView}>
+              {t("resetAll")}
+            </Button>
+            <Button className="flex-1" onClick={() => setSheetOpen(false)}>
+              {t("showResults", { count: meta.totalRows })}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Sticky SummaryStrip — above table */}
       {transactions.length > 0 && (
@@ -485,8 +467,13 @@ export function TransactionsTab({
               ↓ {fmt(filteredExpense, currency)}
             </span>
           )}
+          {filteredTransfer > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
+              ⇄ {fmt(filteredTransfer, currency)}
+            </span>
+          )}
           <span className="ml-auto text-xs text-muted-foreground">
-            {meta.totalRows} result{meta.totalRows !== 1 ? "s" : ""}
+            {t("results", { count: meta.totalRows })}
           </span>
         </div>
       )}
@@ -519,7 +506,10 @@ export function TransactionsTab({
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
             <AlertCircle className="h-5 w-5 text-destructive" />
           </div>
-          <p className="text-sm text-muted-foreground">{t("empty")}</p>
+          <p className="text-sm text-muted-foreground">{t("loadError")}</p>
+          <Button size="sm" variant="outline" onClick={() => refetch()}>
+            {t("refresh")}
+          </Button>
         </div>
       ) : transactions.length === 0 ? (
         /* Empty state */
@@ -531,11 +521,22 @@ export function TransactionsTab({
             <p className="text-sm font-semibold text-foreground">{t("empty.title")}</p>
             <p className="text-xs text-muted-foreground">{t("empty.body")}</p>
           </div>
-          {activeFilterCount > 0 && (
-            <Button size="sm" variant="outline" onClick={handleClearFilters}>
-              {t("empty.clear")}
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {activeFilterCount > 0 && (
+              <Button size="sm" variant="outline" onClick={handleClearFilters}>
+                {t("empty.clear")}
+              </Button>
+            )}
+            {applied.range !== "all" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => replace(draftForRange({ ...applied, page: 1 }, "all", qctx))}
+              >
+                {t("empty.allTime")}
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="surface-panel overflow-hidden rounded-2xl">
@@ -778,9 +779,9 @@ export function TransactionsTab({
               totalPages={meta.totalPages}
               totalRows={meta.totalRows}
               pageSize={applied.pageSize}
-              onPage={handlePageChange}
-              onPageSize={handlePageSizeChange}
-              pageSizeOptions={[10, 30, 50, 100]}
+              onPage={(p) => update({ page: p })}
+              onPageSize={(sz) => update({ pageSize: sz })}
+              pageSizeOptions={PAGE_SIZES}
             />
           </div>
         </div>

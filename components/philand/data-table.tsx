@@ -15,7 +15,6 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { detectDatePreset } from "@/lib/date-range";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -382,162 +381,41 @@ export function FilterBadge({ label, onClear }: { label: string; onClear: () => 
 }
 
 // ---------------------------------------------------------------------------
-// Date dropdown with presets
-// ---------------------------------------------------------------------------
-
-type DatePreset = "today" | "last7Days" | "thisMonth" | "custom";
-
-const DATE_PRESET_LABELS: Record<DatePreset, string> = {
-  today: "Today",
-  last7Days: "Last 7 days",
-  thisMonth: "This Month",
-  custom: "Custom range",
-};
-
-export function DateDropdown({
-  from,
-  to,
-  onSelect,
-  onCustomChange,
-  validationError,
-}: {
-  from: string;
-  to: string;
-  onSelect: (preset: DatePreset) => void;
-  onCustomChange: (from: string, to: string) => void;
-  validationError?: string;
-}) {
-  const currentPreset = detectDatePreset(from, to);
-
-  const [open, setOpen] = useState(false);
-  const [showCustom, setShowCustom] = useState(currentPreset === "custom");
-
-  function handlePreset(p: DatePreset) {
-    if (p === "custom") {
-      setShowCustom(true);
-      onSelect("custom");
-    } else {
-      setShowCustom(false);
-      setOpen(false);
-      onSelect(p);
-    }
-  }
-
-  const triggerLabel = currentPreset && currentPreset !== "custom"
-    ? DATE_PRESET_LABELS[currentPreset]
-    : showCustom
-    ? "Custom range"
-    : DATE_PRESET_LABELS.thisMonth;
-
-  const isCustomActive = !!from && !!to && currentPreset === "custom";
-  const isActive = currentPreset !== null && currentPreset !== "custom";
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted",
-            open && "ring-1 ring-ring bg-muted/60",
-            (isActive || isCustomActive) && "border-primary/30 bg-primary/5 text-primary"
-          )}
-        >
-          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>{triggerLabel}</span>
-          <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={6} className="w-60 p-0">
-        <div className="border-b border-border bg-muted/40 px-3 py-2">
-          <p className="text-xs font-semibold text-foreground">Date range</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            {isActive || isCustomActive
-              ? `Active: ${triggerLabel}`
-              : "Pick a window up to 30 days"}
-          </p>
-        </div>
-        <div className="flex flex-col p-1">
-          {(Object.keys(DATE_PRESET_LABELS) as DatePreset[]).map((preset) => {
-            const isSelected = currentPreset === preset && preset !== "custom";
-            return (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => handlePreset(preset)}
-                className={cn(
-                  "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors",
-                  "hover:bg-muted",
-                  isSelected && "bg-primary/10 text-primary font-medium"
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
-                    isSelected
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input bg-background group-hover:border-muted-foreground/50"
-                  )}
-                  aria-hidden="true"
-                >
-                  {isSelected && <span className="block h-1.5 w-1.5 rounded-full bg-current" />}
-                </span>
-                <span className="flex-1 text-left">{DATE_PRESET_LABELS[preset]}</span>
-              </button>
-            );
-          })}
-        </div>
-        {showCustom && (
-          <div className="border-t border-border bg-muted/30 px-3 py-2.5">
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Custom window
-            </p>
-            <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-2">
-                <span className="w-10 text-[11px] font-medium text-muted-foreground">From</span>
-                <input
-                  type="date"
-                  value={from}
-                  onChange={(e) => onCustomChange(e.target.value, to)}
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-              </label>
-              <label className="flex items-center gap-2">
-                <span className="w-10 text-[11px] font-medium text-muted-foreground">To</span>
-                <input
-                  type="date"
-                  value={to}
-                  onChange={(e) => onCustomChange(from, e.target.value)}
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-              </label>
-              {validationError && (
-                <p className="flex items-center gap-1 text-[11px] font-medium text-destructive">
-                  <X className="h-3 w-3" />
-                  {validationError}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Member popover with checkbox list
 // ---------------------------------------------------------------------------
+
+export interface PeopleLabels {
+  trigger: string;
+  title: string;
+  clear: string;
+  selected: string;
+  empty: string;
+  emptyHint: string;
+  onlyMe?: string;
+}
 
 export function MemberPopover({
   value,
   onChange,
   members,
+  labels,
+  meId,
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   members: { userId: string; displayName: string; avatar?: string | null }[];
+  labels?: PeopleLabels;
+  /** When set (and labelled), the list starts with a one-tap "only me". */
+  meId?: string;
 }) {
+  const L: PeopleLabels = labels ?? {
+    trigger: "Members",
+    title: "Filter by member",
+    clear: "Clear",
+    selected: "selected",
+    empty: "No members yet",
+    emptyHint: "Invite teammates to filter by them.",
+  };
   const [open, setOpen] = useState(false);
 
   function toggle(id: string) {
@@ -562,7 +440,7 @@ export function MemberPopover({
           )}
         >
           <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>Members</span>
+          <span>{L.trigger}</span>
           {value.length > 0 && (
             <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
               {value.length}
@@ -574,31 +452,43 @@ export function MemberPopover({
       <PopoverContent align="start" sideOffset={6} className="w-64 p-0">
         <div className="border-b border-border bg-muted/40 px-3 py-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-foreground">Filter by member</p>
+            <p className="text-xs font-semibold text-foreground">{L.title}</p>
             {value.length > 0 && (
               <button
                 type="button"
                 onClick={() => onChange([])}
                 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-primary"
               >
-                Clear
+                {L.clear}
               </button>
             )}
           </div>
           {value.length > 0 && (
             <p className="mt-0.5 text-[10px] text-muted-foreground">
-              {value.length} selected
+              {value.length} {L.selected}
             </p>
           )}
         </div>
         {safeMembers.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-1 px-3 py-6 text-center">
             <UsersIcon className="h-5 w-5 text-muted-foreground/60" />
-            <p className="text-xs font-medium text-foreground">No members yet</p>
-            <p className="text-[11px] text-muted-foreground">Invite teammates to filter by them.</p>
+            <p className="text-xs font-medium text-foreground">{L.empty}</p>
+            <p className="text-[11px] text-muted-foreground">{L.emptyHint}</p>
           </div>
         ) : (
           <div className="max-h-64 overflow-y-auto p-1">
+            {meId && L.onlyMe && safeMembers.some((m) => m.userId === meId) && (
+              <button
+                type="button"
+                onClick={() => onChange(value.length === 1 && value[0] === meId ? [] : [meId])}
+                className={cn(
+                  "mb-1 w-full rounded-md border border-dashed border-primary/40 px-2 py-1.5 text-left text-sm font-medium text-primary transition-colors hover:bg-primary/5",
+                  value.length === 1 && value[0] === meId && "bg-primary/10",
+                )}
+              >
+                {L.onlyMe}
+              </button>
+            )}
             {safeMembers.map((m) => {
               const checked = value.includes(m.userId);
               return (

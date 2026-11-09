@@ -1,25 +1,30 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
-import { Receipt, Search } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Receipt, Search, SlidersHorizontal, X } from "lucide-react";
 import { MoneyAmount } from "@/components/ui/money-amount";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   CategoryPopover,
-  DateDropdown,
   FilterBadge,
-  FilterPanel,
   MemberPopover,
+  Pagination,
   TypePopover,
+  type PeopleLabels,
 } from "@/components/philand/data-table";
-import { useExpensesQuery, useParticipantsQuery } from "@/modules/sharing/hooks";
+import { DateRangePicker } from "@/components/philand/filters/date-range-picker";
+import { SearchBox } from "@/components/philand/filters/search-box";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useExpensesPageQuery, useParticipantsQuery } from "@/modules/sharing/hooks";
 import { useParticipantNameLookup } from "@/modules/sharing/participant-name-lookup";
+import { useListQuery } from "@/hooks/use-list-query";
 import { cn } from "@/lib/utils";
+import { validateRange } from "@/lib/date-range";
 import type { Expense } from "@/services/sharing-service";
 
 type SharingExpensesListProps = {
@@ -31,10 +36,51 @@ type SharingExpensesListProps = {
 };
 
 type Scope = "all" | "shared" | "personal";
+type SortKey = "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
+const SORTS: SortKey[] = ["date_desc", "date_asc", "amount_desc", "amount_asc"];
 
-interface DateRange {
-  from: string; // YYYY-MM-DD
-  to: string;   // YYYY-MM-DD
+/** Filter / paging state. Lives in memory: the sharing page owns the URL (tabs, invite links). */
+export interface ExpenseListState {
+  q: string;
+  /** Range token ("all", "month:0", …) or "custom". */
+  range: string;
+  dateFrom: string;
+  dateTo: string;
+  paidByIds: string[];
+  shareIds: string[];
+  categoryIds: string[];
+  scope: Scope;
+  sort: SortKey;
+  page: number;
+  pageSize: number;
+}
+
+const PAGE_SIZES = [20, 50, 100];
+
+// A shared budget is usually a trip or an event, so it starts on everything; the picker still
+// offers the usual presets.
+const defaultState = (): ExpenseListState => ({
+  q: "",
+  range: "all",
+  dateFrom: "",
+  dateTo: "",
+  paidByIds: [],
+  shareIds: [],
+  categoryIds: [],
+  scope: "all",
+  sort: "date_desc",
+  page: 1,
+  pageSize: 50,
+});
+
+export function countActiveExpenseFilters(s: ExpenseListState): number {
+  return (
+    (s.q.trim() ? 1 : 0) +
+    (s.scope !== "all" ? 1 : 0) +
+    s.paidByIds.length +
+    s.shareIds.length +
+    s.categoryIds.length
+  );
 }
 
 // Subtle category stripes — defaults to accent so the row reads as
@@ -55,6 +101,13 @@ function formatDateHeader(dateStr: string, t: (key: string) => string): string {
   if (dateOnly.getTime() === yesterday.getTime()) return t("time.yesterday");
   if (dateOnly >= weekAgo) return t("time.thisWeek");
   return t("time.older");
+}
+
+/** "Nov 5" / "5 thg 11": a bucket label like "This week" alone does not say which day a row is. */
+function shortDate(ymd: string, locale: string): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  if (!y || !m || !d) return ymd;
+  return new Date(y, m - 1, d).toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
 
 function getDateKey(dateStr: string): string {
@@ -84,15 +137,6 @@ function buildLegSummary(expense: Expense, max = 3): string {
   return rest > 0 ? parts.join(" · ") + ` +${rest}` : parts.join(" · ");
 }
 
-function inDateRange(expenseDate: string, range: DateRange | null): boolean {
-  if (!range) return true;
-  if (!range.from && !range.to) return true;
-  // expenseDate is YYYY-MM-DD; compare lexicographically
-  if (range.from && expenseDate < range.from) return false;
-  if (range.to && expenseDate > range.to) return false;
-  return true;
-}
-
 export function SharingExpensesList({
   budgetId,
   onExpenseClick,
@@ -101,77 +145,83 @@ export function SharingExpensesList({
   isPrivate = false,
 }: SharingExpensesListProps) {
   const t = useTranslations("sharing");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [scope, setScope] = useState<Scope>("all");
-  const [memberIds, setMemberIds] = useState<string[]>([]);
-  const [categoryIds, setCategoryIds] = useState<string[]>([]);
-  const [dateRange, setDateRange] = useState<DateRange>({ from: "", to: "" });
+  const tl = useTranslations("sharing.list");
+  const locale = useLocale();
 
-  const { data: expenses, isLoading } = useExpensesQuery(budgetId);
+  const parse = useCallback(() => defaultState(), []);
+  const serialize = useCallback(() => {}, []);
+  const { query, update, replace, reset } = useListQuery<ExpenseListState>({
+    defaults: defaultState,
+    parse,
+    serialize,
+    persistInUrl: false,
+  });
+
+  const rangeError = validateRange(query.dateFrom, query.dateTo);
+  const { data, isLoading, isError, refetch, isFetching } = useExpensesPageQuery(
+    budgetId,
+    {
+      q: query.q,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+      paidByIds: query.paidByIds,
+      shareParticipantIds: query.shareIds,
+      categoryIds: query.categoryIds,
+      scope: query.scope,
+      sortBy: query.sort.startsWith("amount") ? "amount" : "date",
+      sortDir: query.sort.endsWith("asc") ? "asc" : "desc",
+      page: query.page,
+      pageSize: query.pageSize,
+    },
+    { enabled: !rangeError },
+  );
+  const expenses = data?.items;
+  const meta = data?.meta;
+
   const { data: participants = [] } = useParticipantsQuery(budgetId);
   const { resolve: resolveName } = useParticipantNameLookup(budgetId);
 
-  // Build the member / category option lists from the participants
-  // payload and the loaded expenses. We use the loaded expenses as the
-  // category source because the sharing service doesn't expose a
-  // /categories endpoint; the id alone is the best we can do until the
-  // gateway adds the lookup.
+  // `paidBy` / a leg's `userId` is the participant id, so that is what the pickers return.
   const memberOptions = useMemo(
     () =>
       participants.map((p) => ({
-        // `paidBy` on an expense is the user id. Participants are returned
-        // with both `userId` (when known) and `participantId` (always).
-        // Prefer userId so the MemberPopover checkbox can be matched
-        // against the expense's `paidBy`.
         userId: p.userId ?? p.participantId,
         displayName: p.displayName ?? p.userId ?? p.participantId,
         avatar: null as string | null,
       })),
     [participants],
   );
+  // The sharing service has no categories endpoint, so options come from what is on screen.
+  const [seenCategories, setSeenCategories] = useState<Map<string, string>>(new Map());
   const categoryOptions = useMemo(() => {
-    const map = new Map<string, { id: string; name: string }>();
+    const map = new Map(seenCategories);
     for (const e of expenses ?? []) {
-      if (e.categoryId && !map.has(e.categoryId)) {
-        // Sharing service doesn't return category names yet; fall back
-        // to a short id so the chip is still readable.
-        map.set(e.categoryId, { id: e.categoryId, name: e.categoryId.slice(0, 8) });
-      }
+      if (e.categoryId && !map.has(e.categoryId)) map.set(e.categoryId, e.categoryId.slice(0, 8));
     }
-    return Array.from(map.values());
-  }, [expenses]);
-
-  const filtered = useMemo(() => {
-    if (!expenses) return [];
-    const q = searchQuery.trim().toLowerCase();
-    const hasScope = scope !== "all";
-    const hasMember = memberIds.length > 0;
-    const hasCategory = categoryIds.length > 0;
-    const hasSearch = q.length > 0;
-    const hasDate = dateRange.from !== "" || dateRange.to !== "";
-    if (!hasScope && !hasMember && !hasCategory && !hasSearch && !hasDate) return expenses;
-
-    return expenses.filter((e) => {
-      if (hasScope) {
-        if (scope === "shared" && !isSharedExpense(e)) return false;
-        if (scope === "personal" && isSharedExpense(e)) return false;
-      }
-      if (hasMember && !memberIds.includes(e.paidBy)) return false;
-      if (hasCategory && (!e.categoryId || !categoryIds.includes(e.categoryId))) {
-        return false;
-      }
-      if (hasSearch) {
-        const hay = `${e.description} ${e.paidBy} ${resolveName(e.paidBy)}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      if (hasDate && !inDateRange(e.expenseDate, dateRange)) return false;
-      return true;
+    return Array.from(map, ([id, name]) => ({ id, name }));
+  }, [expenses, seenCategories]);
+  // remember options across filter changes so a selected category never disappears from the list
+  const rememberCategories = useCallback((ids: string[]) => {
+    setSeenCategories((prev) => {
+      const next = new Map(prev);
+      for (const id of ids) if (!next.has(id)) next.set(id, id.slice(0, 8));
+      return next;
     });
-  }, [expenses, searchQuery, scope, memberIds, categoryIds, dateRange, resolveName]);
+  }, []);
+
+  const peopleLabels = (key: "paidBy" | "hasShare"): PeopleLabels => ({
+    trigger: tl(`${key}.trigger`),
+    title: tl(`${key}.title`),
+    clear: t("filterClear"),
+    selected: "✓",
+    empty: tl(`${key}.empty`),
+    emptyHint: tl(`${key}.emptyHint`),
+    ...(key === "paidBy" ? { onlyMe: tl("paidBy.onlyMe") } : {}),
+  });
 
   const grouped = useMemo(() => {
     const map = new Map<string, { header: string; key: string; items: Expense[] }>();
-    for (const expense of filtered) {
+    for (const expense of expenses ?? []) {
       const key = getDateKey(expense.expenseDate);
       const header = formatDateHeader(expense.expenseDate, t);
       const groupKey = `${header}|${key}`;
@@ -181,27 +231,68 @@ export function SharingExpensesList({
       map.get(groupKey)!.items.push(expense);
     }
     return Array.from(map.values());
-  }, [filtered]);
+  }, [expenses, t]);
 
-  const activeFilterCount =
-    (scope !== "all" ? 1 : 0) +
-    memberIds.length +
-    categoryIds.length +
-    (dateRange.from ? 1 : 0) +
-    (dateRange.to ? 1 : 0) +
-    (searchQuery.trim() ? 1 : 0);
-
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = countActiveExpenseFilters(query);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const rangeValue = { range: query.range, from: query.dateFrom, to: query.dateTo };
+  const allTime = query.range === "all" && !query.dateFrom && !query.dateTo;
 
   function clearFilters() {
-    setScope("all");
-    setMemberIds([]);
-    setCategoryIds([]);
-    setDateRange({ from: "", to: "" });
-    setSearchQuery("");
+    update({ q: "", paidByIds: [], shareIds: [], categoryIds: [], scope: "all" });
   }
 
-  if (isLoading) {
+  const sortSelect = (
+    <select
+      aria-label={tl("sort.label")}
+      value={query.sort}
+      onChange={(e) => update({ sort: e.target.value as SortKey })}
+      className="h-8 rounded-lg border border-input bg-background px-2 text-xs text-foreground"
+    >
+      {SORTS.map((v) => (
+        <option key={v} value={v}>
+          {tl(`sort.${v}`)}
+        </option>
+      ))}
+    </select>
+  );
+
+  const filterControls = (
+    <>
+      <MemberPopover
+        value={query.paidByIds}
+        onChange={(ids) => update({ paidByIds: ids })}
+        members={memberOptions}
+        labels={peopleLabels("paidBy")}
+      />
+      <MemberPopover
+        value={query.shareIds}
+        onChange={(ids) => update({ shareIds: ids })}
+        members={memberOptions}
+        labels={peopleLabels("hasShare")}
+      />
+      <CategoryPopover
+        value={query.categoryIds}
+        onChange={(ids) => {
+          rememberCategories(ids);
+          update({ categoryIds: ids });
+        }}
+        categories={categoryOptions}
+      />
+      <TypePopover<Scope>
+        value={query.scope}
+        options={[
+          { value: "all" as const, label: t("filterAll") },
+          { value: "shared" as const, label: t("filterShared") },
+          { value: "personal" as const, label: t("filterPersonal") },
+        ]}
+        onChange={(v) => update({ scope: v })}
+        labels={{ title: t("filterScope"), all: t("filterAll") }}
+      />
+    </>
+  );
+
+  if (isLoading && !data) {
     return (
       <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
         <Skeleton className="mb-3 h-5 w-32" />
@@ -221,7 +312,8 @@ export function SharingExpensesList({
     );
   }
 
-  if (!expenses || expenses.length === 0) {
+  // Nothing at all in this budget (all time, no filter): show the "add the first one" state.
+  if (data && meta?.totalRows === 0 && activeFilterCount === 0 && allTime) {
     return (
       <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
         <EmptyState
@@ -235,122 +327,159 @@ export function SharingExpensesList({
     );
   }
 
+  const chips = (
+    <>
+      {query.scope !== "all" && (
+        <FilterBadge
+          label={query.scope === "shared" ? t("filterShared") : t("filterPersonal")}
+          onClear={() => update({ scope: "all" })}
+        />
+      )}
+      {query.paidByIds.map((id) => (
+        <FilterBadge
+          key={`p-${id}`}
+          label={`${tl("paidBy.trigger")}: ${resolveName(id)}`}
+          onClear={() => update({ paidByIds: query.paidByIds.filter((v) => v !== id) })}
+        />
+      ))}
+      {query.shareIds.map((id) => (
+        <FilterBadge
+          key={`s-${id}`}
+          label={`${tl("hasShare.trigger")}: ${resolveName(id)}`}
+          onClear={() => update({ shareIds: query.shareIds.filter((v) => v !== id) })}
+        />
+      ))}
+      {query.categoryIds.map((id) => (
+        <FilterBadge
+          key={`c-${id}`}
+          label={categoryOptions.find((c) => c.id === id)?.name ?? id}
+          onClear={() => update({ categoryIds: query.categoryIds.filter((v) => v !== id) })}
+        />
+      ))}
+    </>
+  );
+
   return (
     <section className="surface-panel animate-fade-in-up p-4 sm:p-5">
-      {/* Search + filter panel (matches the transactions-tab toolbar). */}
       <div className="mb-3 space-y-2.5">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("budget.searchPlaceholder") ?? "Search..."}
-              className="w-full rounded-xl border border-border/60 bg-background pl-9 pr-3 py-2 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+        <SearchBox
+          value={query.q}
+          onCommit={(q) => update({ q })}
+          placeholder={t("budget.searchPlaceholder")}
+          clearLabel={t("filterClear")}
+        />
+
+        <div className="flex flex-wrap items-center gap-2" data-testid="filter-bar">
+          <DateRangePicker
+            value={rangeValue}
+            onChange={(v) => update({ range: v.range, dateFrom: v.from, dateTo: v.to })}
+          />
+          <div className="hidden flex-wrap items-center gap-2 sm:flex">{filterControls}</div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="sm:hidden"
+            onClick={() => setSheetOpen(true)}
+          >
+            <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+            {tl("filters")}
+            {activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+          </Button>
+          <div className="ml-auto hidden sm:block">{sortSelect}</div>
         </div>
 
-        <FilterPanel
-          open={filtersOpen}
-          onToggle={() => setFiltersOpen((p) => !p)}
-          activeFilterCount={activeFilterCount}
-        >
-          <MemberPopover
-            value={memberIds}
-            onChange={setMemberIds}
-            members={memberOptions}
-          />
-          <CategoryPopover
-            value={categoryIds}
-            onChange={setCategoryIds}
-            categories={categoryOptions}
-          />
-          <TypePopover<Scope>
-            value={scope}
-            options={[
-              { value: "all" as const, label: t("filterAll") ?? "All" },
-              { value: "shared" as const, label: t("filterShared") ?? "Shared" },
-              { value: "personal" as const, label: t("filterPersonal") ?? "Personal" },
-            ]}
-            onChange={(v) => setScope(v)}
-            labels={{ title: t("filterScope") ?? "Filter by scope", all: t("filterAll") ?? "All" }}
-          />
-          <DateDropdown
-            from={dateRange.from}
-            to={dateRange.to}
-            onSelect={(preset) => {
-              // Reuse the same getPresetRange logic the transactions-tab
-              // uses. We don't import the helper directly to keep the
-              // sharing module dependency-light.
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const fmt = (d: Date) => d.toISOString().slice(0, 10);
-              if (preset === "today") {
-                setDateRange({ from: fmt(today), to: fmt(today) });
-              } else if (preset === "last7Days") {
-                const from = new Date(today);
-                from.setDate(from.getDate() - 6);
-                setDateRange({ from: fmt(from), to: fmt(today) });
-              } else if (preset === "thisMonth") {
-                const first = new Date(today.getFullYear(), today.getMonth(), 1);
-                setDateRange({ from: fmt(first), to: fmt(today) });
-              } else {
-                setDateRange((r) => ({ ...r }));
-              }
-            }}
-            onCustomChange={(from, to) => setDateRange({ from, to })}
-          />
-
-          {/* Active filter chips */}
-          {scope !== "all" && (
-            <FilterBadge
-              label={scope}
-              onClear={() => setScope("all")}
-            />
-          )}
-          {memberIds.map((id) => (
-            <FilterBadge
-              key={id}
-              label={resolveName(id)}
-              onClear={() => setMemberIds((m) => m.filter((v) => v !== id))}
-            />
-          ))}
-          {categoryIds.map((id) => (
-            <FilterBadge
-              key={id}
-              label={categoryOptions.find((c) => c.id === id)?.name ?? id}
-              onClear={() => setCategoryIds((c) => c.filter((v) => v !== id))}
-            />
-          ))}
-          {dateRange.from && (
-            <FilterBadge
-              label={`From ${dateRange.from}`}
-              onClear={() => setDateRange((r) => ({ ...r, from: "" }))}
-            />
-          )}
-          {dateRange.to && (
-            <FilterBadge
-              label={`To ${dateRange.to}`}
-              onClear={() => setDateRange((r) => ({ ...r, to: "" }))}
-            />
-          )}
-        </FilterPanel>
+        {(activeFilterCount > 0 || rangeError) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {chips}
+            {activeFilterCount > 0 && (
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={clearFilters}>
+                <X className="mr-1 h-3 w-3" />
+                {tl("resetAll")}
+              </Button>
+            )}
+            {rangeError && (
+              <span role="alert" className="text-xs text-destructive">
+                {t("filterDateRange")}: {rangeError}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      {grouped.length === 0 ? (
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="max-w-sm">
+          <SheetHeader>
+            <SheetTitle>{tl("filters")}</SheetTitle>
+            <SheetClose onClose={() => setSheetOpen(false)} />
+          </SheetHeader>
+          <div className="flex-1 space-y-4 overflow-y-auto p-5">
+            <div className="flex flex-wrap items-center gap-2">{filterControls}</div>
+            <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+              {tl("sort.label")}
+              {sortSelect}
+            </label>
+          </div>
+          <div className="flex items-center gap-2 border-t border-border/60 p-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => reset()}
+              disabled={activeFilterCount === 0 && allTime && query.sort === "date_desc"}
+            >
+              {tl("resetAll")}
+            </Button>
+            <Button className="flex-1" onClick={() => setSheetOpen(false)}>
+              {tl("showResults", { count: meta?.totalRows ?? 0 })}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Result bar: count and total cover every match, not only this page */}
+      {meta && meta.totalRows > 0 && (
+        <div className="mb-3 flex items-center gap-3 rounded-xl border border-border bg-muted/60 px-4 py-2 text-xs text-muted-foreground">
+          <span>{tl("results", { count: meta.totalRows })}</span>
+          <span className="ml-auto inline-flex items-center gap-1.5">
+            {tl("total")}
+            <MoneyAmount
+              value={meta.totalAmount}
+              currency="VND"
+              size="sm"
+              masked={isGuest && isPrivate}
+            />
+          </span>
+        </div>
+      )}
+
+      {isError ? (
+        <EmptyState
+          icon={<Search className="h-6 w-6" />}
+          title={tl("loadError")}
+          actionLabel={tl("retry")}
+          onAction={() => refetch()}
+        />
+      ) : grouped.length === 0 ? (
         <EmptyState
           icon={<Search className="h-6 w-6" />}
           title={t("budget.noMatches")}
-          description={t("budget.noMatchesDesc", { query: searchQuery })}
+          description={
+            query.q.trim()
+              ? t("budget.noMatchesDesc", { query: query.q })
+              : tl("noMatchesFilters")
+          }
+          actionLabel={allTime ? undefined : tl("emptyAllTime")}
+          onAction={
+            allTime
+              ? undefined
+              : () => replace({ ...query, range: "all", dateFrom: "", dateTo: "", page: 1 })
+          }
         />
       ) : (
-        <div className="space-y-5">
+        <div className={cn("space-y-5", isFetching && "opacity-70 transition-opacity")}>
           {grouped.map((group) => (
             <div key={group.key} className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {group.header}
+                {group.header} · {shortDate(group.key.split("|")[1], locale)}
               </p>
               <div className="divide-y divide-border/40 rounded-xl border border-border/60 bg-card/40 overflow-hidden">
                 {group.items.map((expense) => {
@@ -416,6 +545,20 @@ export function SharingExpensesList({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {meta && meta.totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination
+            page={query.page}
+            totalPages={meta.totalPages}
+            totalRows={meta.totalRows}
+            pageSize={query.pageSize}
+            onPage={(p) => update({ page: p })}
+            onPageSize={(sz) => update({ pageSize: sz })}
+            pageSizeOptions={PAGE_SIZES}
+          />
         </div>
       )}
     </section>

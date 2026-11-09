@@ -324,5 +324,36 @@
     "total": "Tổng chi: {amount}",
     "nobody": "Mọi người đã thanh toán xong.",
     "line": "{from} trả {to}: {amount}"
+  },
+  "list": {
+    "paidBy": {
+      "trigger": "Người trả",
+      "title": "Lọc theo người đã trả",
+      "empty": "Chưa có người tham gia",
+      "emptyHint": "Thêm người để lọc theo họ.",
+      "onlyMe": "Của tôi"
+    },
+    "hasShare": {
+      "trigger": "Có phần của",
+      "title": "Lọc theo người có phần chia",
+      "empty": "Chưa có người tham gia",
+      "emptyHint": "Thêm người để lọc theo họ."
+    },
+    "resetAll": "Xoá tất cả",
+    "results": "{count} khoản chi",
+    "total": "Tổng",
+    "loadError": "Không tải được danh sách khoản chi.",
+    "retry": "Thử lại",
+    "emptyAllTime": "Xem toàn bộ thời gian",
+    "noMatchesFilters": "Không có khoản chi nào khớp bộ lọc",
+    "filters": "Bộ lọc",
+    "showResults": "Xem {count} kết quả",
+    "sort": {
+      "label": "Sắp xếp",
+      "date_desc": "Mới nhất trước",
+      "date_asc": "Cũ nhất trước",
+      "amount_desc": "Số tiền lớn nhất",
+      "amount_asc": "Số tiền nhỏ nhất"
+    }
   }
 }

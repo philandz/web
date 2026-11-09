@@ -53,6 +53,16 @@ export interface TransactionListParams {
   sortDir?: "asc" | "desc";
   page?: number;
   pageSize?: number;
+  /** Ask the server for totals over the whole filtered set. */
+  includeSummary?: boolean;
+}
+
+export interface ListSummary {
+  count: number;
+  income: number;
+  expense: number;
+  transferIn: number;
+  transferOut: number;
 }
 
 export interface PageMeta {
@@ -65,6 +75,8 @@ export interface PageMeta {
 export interface PagedTransactions {
   items: Transaction[];
   meta: PageMeta;
+  /** Present only when `includeSummary` was requested. */
+  summary?: ListSummary;
 }
 
 export interface BulkImportRow {
@@ -249,6 +261,7 @@ function buildQuery(params: TransactionListParams): string {
   if (params.sortDir)   p.set("sort_dir", params.sortDir);
   if (params.page)      p.set("page", String(params.page));
   if (params.pageSize)  p.set("page_size", String(params.pageSize));
+  if (params.includeSummary) p.set("include_summary", "true");
   const qs = p.toString();
   return qs ? `?${qs}` : "";
 }
@@ -264,8 +277,28 @@ export const transactionService = {
     const url = budgetId
       ? `${BASE}/budgets/${budgetId}/entries${qs}`
       : `${BASE}/entries${qs}`;
-    const raw = await apiClient.get<{ entries: RawEntry[]; meta: RawMeta }>(url);
-    return { items: (raw.entries ?? []).map(mapEntry), meta: mapMeta(raw.meta) };
+    const raw = await apiClient.get<{
+      entries: RawEntry[];
+      meta: RawMeta;
+      summary?: {
+        count: number;
+        income: number;
+        expense: number;
+        transfer_in: number;
+        transfer_out: number;
+      };
+    }>(url);
+    return {
+      items: (raw.entries ?? []).map(mapEntry),
+      meta: mapMeta(raw.meta),
+      summary: raw.summary && {
+        count: raw.summary.count,
+        income: raw.summary.income,
+        expense: raw.summary.expense,
+        transferIn: raw.summary.transfer_in,
+        transferOut: raw.summary.transfer_out,
+      },
+    };
   },
 
   async getTransaction(transactionId: string): Promise<Transaction> {
