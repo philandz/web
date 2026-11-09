@@ -7,11 +7,15 @@ import {
 import { mediaService } from "@/services/media-service";
 import { budgetKeys, planKeys, transactionKeys } from "@/lib/query-keys";
 
-export function useTransactionsQuery(params: TransactionListParams = {}) {
+export function useTransactionsQuery(
+  params: TransactionListParams = {},
+  options: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: transactionKeys.list(params),
     queryFn: () => transactionService.listTransactions(params),
     placeholderData: (prev) => prev,
+    enabled: options.enabled ?? true,
   });
 }
 

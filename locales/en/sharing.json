@@ -324,5 +324,36 @@
     "total": "Total spent: {amount}",
     "nobody": "Everyone is settled.",
     "line": "{from} pays {to}: {amount}"
+  },
+  "list": {
+    "paidBy": {
+      "trigger": "Paid by",
+      "title": "Filter by who paid",
+      "empty": "No participants yet",
+      "emptyHint": "Add people to filter by them.",
+      "onlyMe": "Only mine"
+    },
+    "hasShare": {
+      "trigger": "Has a share",
+      "title": "Filter by who owes a share",
+      "empty": "No participants yet",
+      "emptyHint": "Add people to filter by them."
+    },
+    "resetAll": "Clear all",
+    "results": "{count, plural, one {# expense} other {# expenses}}",
+    "total": "Total",
+    "loadError": "Couldn't load expenses.",
+    "retry": "Retry",
+    "emptyAllTime": "Show all time",
+    "noMatchesFilters": "No expenses match these filters",
+    "filters": "Filters",
+    "showResults": "Show {count, plural, one {# result} other {# results}}",
+    "sort": {
+      "label": "Sort",
+      "date_desc": "Newest first",
+      "date_asc": "Oldest first",
+      "amount_desc": "Largest amount",
+      "amount_asc": "Smallest amount"
+    }
   }
 }

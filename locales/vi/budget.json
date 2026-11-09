@@ -22,7 +22,8 @@
     "emptySubtitle": "Tạo ngân sách đầu tiên để bắt đầu theo dõi tài chính",
     "noOrg": "Chọn tổ chức để xem ngân sách",
     "count": "{count, plural, =0 {Không có ngân sách} other {# ngân sách}}",
-    "refresh": "Làm mới"
+    "refresh": "Làm mới",
+    "clearSearch": "Xoá tìm kiếm"
   },
   "card": {
     "balance": "Số dư",
@@ -171,7 +172,8 @@
     "empty": {
       "title": "Không tìm thấy giao dịch nào.",
       "body": "Thử điều chỉnh tìm kiếm hoặc bộ lọc.",
-      "clear": "Xóa bộ lọc"
+      "clear": "Xóa bộ lọc",
+      "allTime": "Xem tất cả thời gian"
     },
     "filters": "Bộ lọc",
     "filterTypeTitle": "Lọc theo loại",
@@ -186,13 +188,71 @@
       "thisMonth": "Tháng này",
       "custom": "Tùy chỉnh"
     },
-    "maxRangeError": "Phạm vi chọn tối đa là 30 ngày.",
     "refresh": "Làm mới",
     "search": "Tìm kiếm",
     "importCsv": "Nhập CSV",
     "quickAdd": "Thêm nhanh",
     "addTransaction": "Thêm giao dịch",
-    "colBy": "Bởi"
+    "colBy": "Bởi",
+    "transfer": "Chuyển khoản",
+    "range": {
+      "title": "Khoảng ngày",
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua",
+      "last7": "7 ngày qua",
+      "last30": "30 ngày qua",
+      "thisWeek": "Tuần này",
+      "lastWeek": "Tuần trước",
+      "thisPeriod": "Kỳ này",
+      "lastPeriod": "Kỳ trước",
+      "thisMonth": "Tháng này",
+      "lastMonth": "Tháng trước",
+      "thisQuarter": "Quý này",
+      "lastQuarter": "Quý trước",
+      "thisYear": "Năm nay",
+      "lastYear": "Năm ngoái",
+      "all": "Tất cả",
+      "custom": "Tuỳ chọn",
+      "from": "Từ",
+      "to": "Đến",
+      "previous": "Khoảng trước",
+      "next": "Khoảng sau",
+      "maxHint": "Tối đa {days} ngày.",
+      "clamped": "Đã cắt còn {days} ngày.",
+      "errors": {
+        "invalid": "Ngày không hợp lệ.",
+        "order": "Ngày kết thúc nằm trước ngày bắt đầu.",
+        "tooWide": "Khoảng dài hơn 366 ngày. Hãy rút ngắn hoặc chọn Tất cả."
+      }
+    },
+    "people": {
+      "trigger": "Người nhập",
+      "title": "Lọc theo người nhập",
+      "empty": "Chưa có thành viên",
+      "emptyHint": "Mời thành viên để lọc theo họ.",
+      "onlyMe": "Chỉ của tôi"
+    },
+    "amount": {
+      "trigger": "Số tiền",
+      "title": "Lọc theo số tiền",
+      "min": "Từ",
+      "max": "Đến",
+      "apply": "Áp dụng",
+      "order": "Số nhỏ nhất lớn hơn số lớn nhất."
+    },
+    "sort": {
+      "label": "Sắp xếp",
+      "date_desc": "Ngày, mới nhất trước",
+      "date_asc": "Ngày, cũ nhất trước",
+      "amount_desc": "Số tiền, cao đến thấp",
+      "amount_asc": "Số tiền, thấp đến cao",
+      "description_asc": "Mô tả A–Z",
+      "description_desc": "Mô tả Z–A"
+    },
+    "resetAll": "Đặt lại tất cả",
+    "showResults": "Xem {count} giao dịch",
+    "results": "{count} giao dịch",
+    "loadError": "Không tải được giao dịch."
   },
   "txForm": {
     "createTitle": "Thêm giao dịch",
@@ -1077,7 +1137,16 @@
       "evRate": "{rate}% ({type}) từ {date}",
       "evRateDeleted": "Đã xoá kỳ lãi suất",
       "evRule": "miễn phí {allowance}/tháng, vượt thì phí {pct}%",
-      "evAdjust": "{from} → {to} {reason}"
+      "evAdjust": "{from} → {to} {reason}",
+      "payFilter": {
+        "kind": "Loại thanh toán",
+        "allKinds": "Tất cả loại",
+        "clear": "Xoá bộ lọc",
+        "count": "{count} khoản thanh toán",
+        "error": "Không tải được các khoản thanh toán.",
+        "retry": "Thử lại",
+        "noMatch": "Không có khoản thanh toán nào khớp bộ lọc."
+      }
     },
     "card": {
       "repaid": "Đã trả {pct}%",

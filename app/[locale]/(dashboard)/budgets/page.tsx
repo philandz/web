@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   ArrowUpDown,
   BarChart2, CreditCard, LayoutGrid,
-  PiggyBank, Plus, Search, Share2, Wallet,
+  PiggyBank, Plus, Share2, Wallet,
 } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
@@ -15,7 +15,7 @@ import { BudgetCard } from "@/components/philand/budget-card";
 import { CreateBudgetDialog } from "@/components/philand/create-budget-dialog";
 import { EmptyState } from "@/components/state/empty-state";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchBox } from "@/components/philand/filters/search-box";
 import { SelectNative } from "@/components/ui/select";
 import { routes } from "@/constants/routes";
 import {
@@ -196,15 +196,13 @@ export default function BudgetsPage() {
       <div className="space-y-2.5">
         {/* Row 1: search (full width) + secondary filters */}
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={filters.q ?? ""}
-              onChange={(e) => updateFilters({ q: e.target.value || undefined })}
-              className="pl-9"
-              placeholder={t("searchPlaceholder")}
-            />
-          </div>
+          <SearchBox
+            className="flex-1"
+            value={filters.q ?? ""}
+            onCommit={(q) => updateFilters({ q: q || undefined })}
+            placeholder={t("searchPlaceholder")}
+            clearLabel={t("clearSearch")}
+          />
           {/* Role + sort — visible on sm+, hidden on mobile to keep row clean */}
           <SelectNative
             value={filters.role ?? ""}

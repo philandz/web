@@ -11,6 +11,12 @@ export type DebtMethod =
   | "fixed_installments"
   | "no_schedule";
 export type DebtPaymentKind = "scheduled" | "prepayment" | "settlement";
+/** Optional server-side filters of the payment list (inclusive YYYY-MM-DD dates). */
+export interface DebtPaymentFilter {
+  dateFrom?: string;
+  dateTo?: string;
+  kind?: DebtPaymentKind;
+}
 export type PrepayEffect = "reduce_term" | "reduce_installment";
 export type DebtStatus = "active" | "settled" | "closed";
 
@@ -273,10 +279,15 @@ export const debtService = {
     a: string,
     body: { newOutstandingMinor: number; reason: string; occurredOn?: string; idempotencyKey: string },
   ) => rd<DebtAccount>(apiClient.post(`${acc(b, a)}/adjust`, wire(body))),
-  listPayments: (b: string, accountId = "", page = 0, pageSize = 50) =>
-    rd<{ payments?: DebtPayment[]; totalRows?: number }>(
-      apiClient.get(`${root(b)}/payments?account_id=${accountId}&page=${page}&page_size=${pageSize}`),
-    ).then((r) => ({ items: r.payments ?? [], totalRows: Number(r.totalRows ?? 0) }) as Paged<DebtPayment>),
+  listPayments: (b: string, accountId = "", page = 0, pageSize = 50, filter: DebtPaymentFilter = {}) => {
+    const qs = new URLSearchParams({ account_id: accountId, page: String(page), page_size: String(pageSize) });
+    if (filter.dateFrom) qs.set("date_from", filter.dateFrom);
+    if (filter.dateTo) qs.set("date_to", filter.dateTo);
+    if (filter.kind) qs.set("kind", filter.kind);
+    return rd<{ payments?: DebtPayment[]; totalRows?: number }>(
+      apiClient.get(`${root(b)}/payments?${qs.toString()}`),
+    ).then((r) => ({ items: r.payments ?? [], totalRows: Number(r.totalRows ?? 0) }) as Paged<DebtPayment>);
+  },
   listEvents: (b: string, accountId = "", page = 0, pageSize = 50) =>
     rd<{ events?: DebtEvent[]; totalRows?: number }>(
       apiClient.get(`${root(b)}/events?account_id=${accountId}&page=${page}&page_size=${pageSize}`),
