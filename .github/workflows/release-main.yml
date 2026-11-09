@@ -73,7 +73,7 @@ jobs:
             if [[ "$subject" =~ ^Develop$ ]]; then
               continue
             fi
-            if ! [[ "$subject" =~ ^(feat|fix|docs|style|refactor|test|chore|ci)(\([^\)]+\))?!?:\ .+ ]]; then
+            if ! [[ "$subject" =~ ^(feat|fix|docs|style|refactor|test|chore|ci|build|revert)(\([^\)]+\))?!?:\ .+ ]]; then
               echo "Invalid commit message: $subject"
               invalid=1
             fi
