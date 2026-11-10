@@ -72,13 +72,13 @@
     },
     "sharing_expense_added": {
       "title": "{actor_name} added an expense",
-      "grouped": "{count} new expenses",
-      "body": "{budget_name}"
+      "grouped": "{count} new shared expenses",
+      "body": "{description} · {amount, number} ₫"
     },
     "entry_comment_added": {
-      "title": "{actor_name} commented on an entry",
+      "title": "New comment on a transaction",
       "grouped": "{count} new comments",
-      "body": "{budget_name}"
+      "body": "{excerpt}"
     },
     "budget_member_added": {
       "title": "You were added to {budget_name}",
@@ -87,6 +87,15 @@
     "budget_member_role_changed": {
       "title": "Your role in {budget_name} changed",
       "body": ""
+    },
+    "sharing_settlement_marked": {
+      "title": "{actor_name} recorded a settlement",
+      "body": "{amount, number} ₫"
+    },
+    "sharing_comment_added": {
+      "title": "{actor_name} commented on a shared expense",
+      "grouped": "{count} new comments",
+      "body": "{excerpt}"
     }
   },
   "admin": {

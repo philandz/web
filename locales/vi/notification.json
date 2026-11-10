@@ -72,13 +72,13 @@
     },
     "sharing_expense_added": {
       "title": "{actor_name} đã thêm một khoản chi",
-      "grouped": "{count} khoản chi mới",
-      "body": "{budget_name}"
+      "grouped": "{count} khoản chi chung mới",
+      "body": "{description} · {amount, number} ₫"
     },
     "entry_comment_added": {
-      "title": "{actor_name} đã bình luận về một giao dịch",
+      "title": "Bình luận mới về một giao dịch",
       "grouped": "{count} bình luận mới",
-      "body": "{budget_name}"
+      "body": "{excerpt}"
     },
     "budget_member_added": {
       "title": "Bạn đã được thêm vào {budget_name}",
@@ -87,6 +87,15 @@
     "budget_member_role_changed": {
       "title": "Vai trò của bạn trong {budget_name} đã thay đổi",
       "body": ""
+    },
+    "sharing_settlement_marked": {
+      "title": "{actor_name} đã ghi nhận một khoản thanh toán",
+      "body": "{amount, number} ₫"
+    },
+    "sharing_comment_added": {
+      "title": "{actor_name} đã bình luận về một khoản chi chung",
+      "grouped": "{count} bình luận mới",
+      "body": "{excerpt}"
     }
   },
   "admin": {
