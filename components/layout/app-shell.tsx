@@ -3,6 +3,9 @@
 import { Menu } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 
+import { BannerStrip } from "@/components/notification/banner-strip";
+import { NotificationBell } from "@/components/notification/notification-bell";
+import { Feature } from "@/components/ui/feature";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { UserMenuContent } from "@/components/layout/user-menu-content";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -71,6 +74,16 @@ export function AppShell({ userType, profileName, profileAvatar, pageTitle, chil
       {/* Main content */}
       <main className="flex-1 overflow-x-hidden">
         <div className={cn("container py-6 pb-24 pt-20 md:pb-8 md:pt-6 px-4 sm:px-6", wide ? "max-w-6xl" : "max-w-5xl")}>
+          {userType !== "super_admin" ? (
+            <Feature flag="notifications">
+              <div className="mb-3 hidden justify-end md:flex">
+                <NotificationBell />
+              </div>
+              <div className="mb-4 empty:hidden">
+                <BannerStrip />
+              </div>
+            </Feature>
+          ) : null}
           {children}
         </div>
       </main>
@@ -104,6 +117,11 @@ export function AppShell({ userType, profileName, profileAvatar, pageTitle, chil
             )}
           </div>
         </button>
+        {userType !== "super_admin" ? (
+          <Feature flag="notifications">
+            <NotificationBell />
+          </Feature>
+        ) : null}
       </header>
 
       {/* Mobile: sidebar drawer (all user types) */}
