@@ -56,11 +56,11 @@
   "types": {
     "debt_payment_due": {
       "title": "Khoản nợ đến hạn sau {days} ngày",
-      "body": "{debt_name}: khoảng {amount} (ước tính)"
+      "body": "{debt_name}: khoảng {amount, number} ₫ (ước tính)"
     },
     "debt_payment_due_today": {
       "title": "Khoản nợ đến hạn hôm nay",
-      "body": "{debt_name}: khoảng {amount} (ước tính)"
+      "body": "{debt_name}: khoảng {amount, number} ₫ (ước tính)"
     },
     "debt_payment_overdue": {
       "title": "Khoản nợ đã quá hạn",
@@ -68,7 +68,7 @@
     },
     "debt_rate_period_ending": {
       "title": "Sắp hết kỳ lãi suất ưu đãi",
-      "body": "{debt_name}: lãi suất ưu đãi sắp kết thúc"
+      "body": "{debt_name}: lãi suất thay đổi vào ngày {date}"
     },
     "sharing_expense_added": {
       "title": "{actor_name} đã thêm một khoản chi",

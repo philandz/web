@@ -56,11 +56,11 @@
   "types": {
     "debt_payment_due": {
       "title": "Debt payment due in {days} days",
-      "body": "{debt_name}: about {amount} (estimated)"
+      "body": "{debt_name}: about {amount, number} ₫ (estimated)"
     },
     "debt_payment_due_today": {
       "title": "Debt payment due today",
-      "body": "{debt_name}: about {amount} (estimated)"
+      "body": "{debt_name}: about {amount, number} ₫ (estimated)"
     },
     "debt_payment_overdue": {
       "title": "Debt payment overdue",
@@ -68,7 +68,7 @@
     },
     "debt_rate_period_ending": {
       "title": "Interest rate period ending",
-      "body": "{debt_name}: the preferential rate ends soon"
+      "body": "{debt_name}: interest rate changes on {date}"
     },
     "sharing_expense_added": {
       "title": "{actor_name} added an expense",
