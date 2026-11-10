@@ -1,0 +1,139 @@
+{
+  "title": "Thông báo",
+  "subtitle": "Nhắc nhở, hoạt động và thông báo hệ thống.",
+  "bell": "Thông báo",
+  "bellWithCount": "Thông báo, {count} chưa đọc",
+  "markAllRead": "Đánh dấu đã đọc tất cả",
+  "viewAll": "Xem tất cả",
+  "loading": "Đang tải…",
+  "loadError": "Không tải được thông báo.",
+  "retry": "Thử lại",
+  "empty": "Bạn đã xem hết thông báo.",
+  "emptyUnread": "Không có thông báo chưa đọc.",
+  "tabAll": "Tất cả",
+  "tabUnread": "Chưa đọc",
+  "loadMore": "Tải thêm",
+  "unread": "Chưa đọc",
+  "archive": "Lưu trữ",
+  "dismiss": "Đóng",
+  "learnMore": "Xem chi tiết",
+  "settings": "Cài đặt thông báo",
+  "disabledTitle": "Thông báo chưa khả dụng",
+  "disabledBody": "Tính năng này chưa được bật cho tài khoản của bạn.",
+  "fallbackTitle": "Thông báo mới",
+  "settingsTitle": "Cài đặt thông báo",
+  "settingsSubtitle": "Chọn loại thông báo hiển thị trong hộp thư của bạn.",
+  "alwaysOn": "Luôn bật",
+  "mutedBudgets": "Ngân sách đã tắt thông báo",
+  "unmute": "Bật lại",
+  "saveError": "Không lưu được thay đổi.",
+  "categories": {
+    "activity": {
+      "label": "Hoạt động",
+      "hint": "Chi tiêu và bình luận trong ngân sách chia sẻ."
+    },
+    "membership": {
+      "label": "Thành viên",
+      "hint": "Được thêm vào ngân sách hoặc đổi vai trò."
+    },
+    "reminder": {
+      "label": "Nhắc nhở",
+      "hint": "Khoản nợ đến hạn hoặc quá hạn."
+    },
+    "alert": {
+      "label": "Cảnh báo",
+      "hint": "Ngưỡng chi tiêu và danh mục đầu tư."
+    },
+    "security": {
+      "label": "Bảo mật",
+      "hint": "Đăng nhập và bảo mật tài khoản. Không thể tắt."
+    },
+    "system": {
+      "label": "Thông báo hệ thống",
+      "hint": "Tin nhắn từ đội ngũ Philand."
+    }
+  },
+  "types": {
+    "debt_payment_due": {
+      "title": "Khoản nợ đến hạn sau {days} ngày",
+      "body": "{debt_name}: khoảng {amount} (ước tính)"
+    },
+    "debt_payment_due_today": {
+      "title": "Khoản nợ đến hạn hôm nay",
+      "body": "{debt_name}: khoảng {amount} (ước tính)"
+    },
+    "debt_payment_overdue": {
+      "title": "Khoản nợ đã quá hạn",
+      "body": "{debt_name}: quá hạn {days} ngày"
+    },
+    "debt_rate_period_ending": {
+      "title": "Sắp hết kỳ lãi suất ưu đãi",
+      "body": "{debt_name}: lãi suất ưu đãi sắp kết thúc"
+    },
+    "sharing_expense_added": {
+      "title": "{actor_name} đã thêm một khoản chi",
+      "grouped": "{count} khoản chi mới",
+      "body": "{budget_name}"
+    },
+    "entry_comment_added": {
+      "title": "{actor_name} đã bình luận về một giao dịch",
+      "grouped": "{count} bình luận mới",
+      "body": "{budget_name}"
+    },
+    "budget_member_added": {
+      "title": "Bạn đã được thêm vào {budget_name}",
+      "body": ""
+    },
+    "budget_member_role_changed": {
+      "title": "Vai trò của bạn trong {budget_name} đã thay đổi",
+      "body": ""
+    }
+  },
+  "admin": {
+    "title": "Thông báo hệ thống",
+    "subtitle": "Gửi thông báo tới người dùng bằng tiếng Việt và tiếng Anh.",
+    "newTitle": "Thông báo mới",
+    "editTitle": "Sửa thông báo",
+    "audience": "Đối tượng",
+    "audienceAll": "Tất cả người dùng",
+    "audienceUsers": "Người dùng cụ thể",
+    "severity": "Mức độ",
+    "severityInfo": "Thông tin",
+    "severityWarning": "Cảnh báo",
+    "severityCritical": "Nghiêm trọng (không thể đóng)",
+    "userIds": "ID người dùng",
+    "userIdsPlaceholder": "Các ID cách nhau bởi dấu phẩy",
+    "titleVi": "Tiêu đề (tiếng Việt)",
+    "bodyVi": "Nội dung (tiếng Việt)",
+    "titleEn": "Tiêu đề (tiếng Anh)",
+    "bodyEn": "Nội dung (tiếng Anh)",
+    "link": "Liên kết (đường dẫn tương đối, tuỳ chọn)",
+    "showBanner": "Hiển thị thêm dạng banner",
+    "saveDraft": "Lưu nháp",
+    "saveChanges": "Lưu thay đổi",
+    "cancel": "Huỷ",
+    "saved": "Đã lưu",
+    "published": "Đã phát hành",
+    "saveError": "Không lưu được.",
+    "loadError": "Không tải được danh sách thông báo.",
+    "retry": "Thử lại",
+    "empty": "Chưa có thông báo nào.",
+    "edit": "Sửa",
+    "publish": "Phát hành",
+    "archive": "Lưu trữ",
+    "readBy": "{count} người đã đọc",
+    "status": {
+      "draft": "Nháp",
+      "scheduled": "Đã lên lịch",
+      "published": "Đã phát hành",
+      "archived": "Đã lưu trữ",
+      "unspecified": "Không rõ"
+    },
+    "errors": {
+      "titles": "Nhập tiêu đề cho cả hai ngôn ngữ.",
+      "bodies": "Nhập nội dung cho cả hai ngôn ngữ.",
+      "link": "Liên kết phải là đường dẫn tương đối bắt đầu bằng /.",
+      "users": "Nhập ít nhất một ID người dùng hợp lệ."
+    }
+  }
+}

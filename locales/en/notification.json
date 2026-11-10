@@ -1,0 +1,139 @@
+{
+  "title": "Notifications",
+  "subtitle": "Reminders, activity and announcements.",
+  "bell": "Notifications",
+  "bellWithCount": "Notifications, {count} unread",
+  "markAllRead": "Mark all as read",
+  "viewAll": "View all",
+  "loading": "Loading…",
+  "loadError": "Could not load notifications.",
+  "retry": "Try again",
+  "empty": "You're all caught up.",
+  "emptyUnread": "No unread notifications.",
+  "tabAll": "All",
+  "tabUnread": "Unread",
+  "loadMore": "Load more",
+  "unread": "Unread",
+  "archive": "Archive",
+  "dismiss": "Dismiss",
+  "learnMore": "Learn more",
+  "settings": "Notification settings",
+  "disabledTitle": "Notifications are not available yet",
+  "disabledBody": "This feature is not enabled for your account.",
+  "fallbackTitle": "New notification",
+  "settingsTitle": "Notification settings",
+  "settingsSubtitle": "Choose which notifications appear in your inbox.",
+  "alwaysOn": "Always on",
+  "mutedBudgets": "Muted budgets",
+  "unmute": "Unmute",
+  "saveError": "Could not save your changes.",
+  "categories": {
+    "activity": {
+      "label": "Activity",
+      "hint": "Expenses and comments in shared budgets."
+    },
+    "membership": {
+      "label": "Membership",
+      "hint": "Being added to a budget or a role change."
+    },
+    "reminder": {
+      "label": "Reminders",
+      "hint": "Debt payments that are due or overdue."
+    },
+    "alert": {
+      "label": "Alerts",
+      "hint": "Spending and portfolio thresholds."
+    },
+    "security": {
+      "label": "Security",
+      "hint": "Sign-in and account security. Cannot be turned off."
+    },
+    "system": {
+      "label": "Announcements",
+      "hint": "Messages from the Philand team."
+    }
+  },
+  "types": {
+    "debt_payment_due": {
+      "title": "Debt payment due in {days} days",
+      "body": "{debt_name}: about {amount} (estimated)"
+    },
+    "debt_payment_due_today": {
+      "title": "Debt payment due today",
+      "body": "{debt_name}: about {amount} (estimated)"
+    },
+    "debt_payment_overdue": {
+      "title": "Debt payment overdue",
+      "body": "{debt_name}: overdue by {days} days"
+    },
+    "debt_rate_period_ending": {
+      "title": "Interest rate period ending",
+      "body": "{debt_name}: the preferential rate ends soon"
+    },
+    "sharing_expense_added": {
+      "title": "{actor_name} added an expense",
+      "grouped": "{count} new expenses",
+      "body": "{budget_name}"
+    },
+    "entry_comment_added": {
+      "title": "{actor_name} commented on an entry",
+      "grouped": "{count} new comments",
+      "body": "{budget_name}"
+    },
+    "budget_member_added": {
+      "title": "You were added to {budget_name}",
+      "body": ""
+    },
+    "budget_member_role_changed": {
+      "title": "Your role in {budget_name} changed",
+      "body": ""
+    }
+  },
+  "admin": {
+    "title": "Announcements",
+    "subtitle": "Broadcast messages to users, in Vietnamese and English.",
+    "newTitle": "New announcement",
+    "editTitle": "Edit announcement",
+    "audience": "Audience",
+    "audienceAll": "All users",
+    "audienceUsers": "Specific users",
+    "severity": "Severity",
+    "severityInfo": "Info",
+    "severityWarning": "Warning",
+    "severityCritical": "Critical (cannot be dismissed)",
+    "userIds": "User IDs",
+    "userIdsPlaceholder": "Comma-separated user ids",
+    "titleVi": "Title (Vietnamese)",
+    "bodyVi": "Message (Vietnamese)",
+    "titleEn": "Title (English)",
+    "bodyEn": "Message (English)",
+    "link": "Link (relative path, optional)",
+    "showBanner": "Also show as a banner",
+    "saveDraft": "Save draft",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "saved": "Saved",
+    "published": "Published",
+    "saveError": "Could not save.",
+    "loadError": "Could not load announcements.",
+    "retry": "Try again",
+    "empty": "No announcements yet.",
+    "edit": "Edit",
+    "publish": "Publish",
+    "archive": "Archive",
+    "readBy": "Read by {count}",
+    "status": {
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "published": "Published",
+      "archived": "Archived",
+      "unspecified": "Unknown"
+    },
+    "errors": {
+      "titles": "Enter a title in both languages.",
+      "bodies": "Enter a message in both languages.",
+      "link": "The link must be a relative path starting with /.",
+      "users": "Enter at least one valid user id."
+    }
+  }
+}
