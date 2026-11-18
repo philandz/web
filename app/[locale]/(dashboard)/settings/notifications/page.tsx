@@ -16,6 +16,50 @@ import {
 } from "@/modules/notification/hooks";
 import { NOTIFICATION_CATEGORIES, type PreferenceCell } from "@/services/notification-service";
 
+function ChannelSwitch({
+  label,
+  showLabel,
+  cell,
+  disabled,
+  alwaysOn,
+  ariaLabel,
+  onToggle,
+}: {
+  label: string;
+  showLabel: boolean;
+  cell: PreferenceCell;
+  disabled: boolean;
+  alwaysOn: string;
+  ariaLabel: string;
+  onToggle: (cell: PreferenceCell) => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      {showLabel ? <span className="text-[11px] text-muted-foreground">{label}</span> : null}
+      {cell.locked ? (
+        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+          <Lock className="h-3.5 w-3.5" />
+          {alwaysOn}
+        </span>
+      ) : (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={cell.enabled}
+          aria-label={ariaLabel}
+          onClick={() => onToggle(cell)}
+          disabled={disabled}
+          className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${cell.enabled ? "bg-primary" : "bg-muted"}`}
+        >
+          <span
+            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${cell.enabled ? "left-[22px]" : "left-0.5"}`}
+          />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function NotificationSettingsPage() {
   const t = useTranslations("notification");
   const toast = useToast();
@@ -27,9 +71,10 @@ export default function NotificationSettingsPage() {
     return <EmptyState title={t("disabledTitle")} description={t("disabledBody")} />;
   }
 
-  // Phase 1 delivers in-app only; email/telegram columns appear when those channels ship.
-  const cellFor = (category: string): PreferenceCell | undefined =>
-    prefs.data?.cells.find((c) => c.category === category && c.channel === "in_app");
+  // Email cells only come back when the email channel is configured on the server.
+  const cellFor = (category: string, channel: "in_app" | "email"): PreferenceCell | undefined =>
+    prefs.data?.cells.find((c) => c.category === category && c.channel === channel);
+  const hasEmail = prefs.data?.cells.some((c) => c.channel === "email") ?? false;
 
   function toggle(cell: PreferenceCell) {
     update.mutate([{ category: cell.category, channel: cell.channel, enabled: !cell.enabled }], {
@@ -39,7 +84,7 @@ export default function NotificationSettingsPage() {
 
   return (
     <section className="space-y-5 animate-fade-in-up">
-      <PageHeader title={t("settingsTitle")} description={t("settingsSubtitle")} icon={<BellRing className="h-5 w-5" />} />
+      <PageHeader title={t("settingsTitle")} description={hasEmail ? t("settingsEmailHint") : t("settingsSubtitle")} icon={<BellRing className="h-5 w-5" />} />
 
       {prefs.isLoading ? (
         <Skeleton className="h-64 w-full rounded-2xl" />
@@ -57,34 +102,39 @@ export default function NotificationSettingsPage() {
           <article className="surface-panel rounded-2xl p-2 md:p-3">
             <ul className="divide-y divide-border/60">
               {NOTIFICATION_CATEGORIES.map((category) => {
-                const cell = cellFor(category);
+                const cell = cellFor(category, "in_app");
                 if (!cell) return null;
+                const emailCell = cellFor(category, "email");
                 return (
                   <li key={category} className="flex items-center justify-between gap-4 px-3 py-3">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">{t(`categories.${category}.label`)}</p>
                       <p className="text-xs text-muted-foreground">{t(`categories.${category}.hint`)}</p>
                     </div>
-                    {cell.locked ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                        <Lock className="h-3.5 w-3.5" />
-                        {t("alwaysOn")}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={cell.enabled}
-                        aria-label={t(`categories.${category}.label`)}
-                        onClick={() => toggle(cell)}
+                    <div className="flex shrink-0 items-center gap-5">
+                      <ChannelSwitch
+                        label={t("channels.in_app")}
+                        showLabel={hasEmail}
+                        cell={cell}
                         disabled={update.isPending}
-                        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${cell.enabled ? "bg-primary" : "bg-muted"}`}
-                      >
-                        <span
-                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${cell.enabled ? "left-[22px]" : "left-0.5"}`}
-                        />
-                      </button>
-                    )}
+                        alwaysOn={t("alwaysOn")}
+                        ariaLabel={`${t(`categories.${category}.label`)} – ${t("channels.in_app")}`}
+                        onToggle={toggle}
+                      />
+                      {hasEmail ? (
+                        emailCell ? (
+                          <ChannelSwitch
+                            label={t("channels.email")}
+                            showLabel
+                            cell={emailCell}
+                            disabled={update.isPending}
+                            alwaysOn={t("alwaysOn")}
+                            ariaLabel={`${t(`categories.${category}.label`)} – ${t("channels.email")}`}
+                            onToggle={toggle}
+                          />
+                        ) : null
+                      ) : null}
+                    </div>
                   </li>
                 );
               })}

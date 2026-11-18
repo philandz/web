@@ -144,5 +144,10 @@
       "link": "The link must be a relative path starting with /.",
       "users": "Enter at least one valid user id."
     }
-  }
+  },
+  "channels": {
+    "in_app": "In app",
+    "email": "Email"
+  },
+  "settingsEmailHint": "Choose where each kind of notification reaches you. Email is off unless you turn it on."
 }

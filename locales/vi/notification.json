@@ -144,5 +144,10 @@
       "link": "Liên kết phải là đường dẫn tương đối bắt đầu bằng /.",
       "users": "Nhập ít nhất một ID người dùng hợp lệ."
     }
-  }
+  },
+  "channels": {
+    "in_app": "Trong ứng dụng",
+    "email": "Email"
+  },
+  "settingsEmailHint": "Chọn nơi nhận từng loại thông báo. Email mặc định tắt, chỉ gửi khi bạn bật."
 }
