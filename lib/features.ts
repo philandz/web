@@ -9,7 +9,8 @@ export type FeatureFlag =
   | "periodPlanning"
   | "sharingV2"
   | "debtV2"
-  | "uiRefresh";
+  | "uiRefresh"
+  | "notifications";
 
 // Literal `process.env.X` accesses are required so Next can inline them.
 const RAW: Record<FeatureFlag, string | undefined> = {
@@ -19,6 +20,7 @@ const RAW: Record<FeatureFlag, string | undefined> = {
   sharingV2: process.env.NEXT_PUBLIC_FEATURE_SHARING_V2,
   debtV2: process.env.NEXT_PUBLIC_FEATURE_DEBT_V2,
   uiRefresh: process.env.NEXT_PUBLIC_FEATURE_UI_REFRESH,
+  notifications: process.env.NEXT_PUBLIC_FEATURE_NOTIFICATIONS,
 };
 
 export function parseFlag(v: string | undefined): boolean {

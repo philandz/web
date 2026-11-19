@@ -18,6 +18,7 @@
     "organizationCenter": "Trung tâm tổ chức",
     "adminUsers": "Người Dùng",
     "adminOrgs": "Tổ Chức",
+    "adminNotifications": "Thông báo hệ thống",
     "adminBudgets": "Tất cả Budget",
     "profile": "Hồ sơ",
     "resetPassword": "Đặt lại mật khẩu",
@@ -133,6 +134,8 @@
     "quickHint": "Mở menu hồ sơ (góc dưới bên trái) để đổi ngôn ngữ và giao diện.",
     "preferencesTitle": "Tùy chọn",
     "preferencesDescription": "Các cấu hình khác sẽ được bổ sung trong các phiên bản tiếp theo.",
+    "notificationsOpen": "Mở",
+    "notificationsLink": "Cài đặt thông báo",
     "tenantContextTitle": "Ngữ cảnh tổ chức",
     "switchOrganization": "Chuyển tổ chức"
   },
