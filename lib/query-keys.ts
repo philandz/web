@@ -98,3 +98,14 @@ export const planKeys = {
   plan: (budgetId: string, offset: number) => [...planKeys.all, budgetId, "plan", offset] as const,
   budget: (budgetId: string) => [...planKeys.all, budgetId] as const,
 };
+
+export const notificationKeys = {
+  all: ["notifications"] as const,
+  inbox: (params: object) => [...notificationKeys.all, "inbox", params] as const,
+  inboxAll: () => [...notificationKeys.all, "inbox"] as const,
+  unread: () => [...notificationKeys.all, "unread-count"] as const,
+  banners: (locale: string) => [...notificationKeys.all, "banners", locale] as const,
+  preferences: () => [...notificationKeys.all, "preferences"] as const,
+  adminBroadcasts: (params: object) => [...notificationKeys.all, "admin-broadcasts", params] as const,
+  adminBroadcastsAll: () => [...notificationKeys.all, "admin-broadcasts"] as const,
+};

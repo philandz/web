@@ -21,4 +21,7 @@ export const routes = {
   budgetDetail: (id: string) => `/budgets/${id}`,
   sharingDetail: (id: string) => `/sharing/${id}`,
   transactions: "/transactions",
+  notifications: "/notifications",
+  notificationSettings: "/settings/notifications",
+  adminNotifications: "/admin/notifications",
 } as const;

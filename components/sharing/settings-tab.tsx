@@ -10,6 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { useToast } from "@/components/state/toast-provider";
 import { PrivateBudgetToggle } from "./private-budget-toggle";
+import { BudgetDeleteDialog } from "@/components/philand/budget-delete-dialog";
+import { useRouter } from "@/i18n/navigation";
+import { routes } from "@/constants/routes";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useSettlementQuery, useSharingStatusMutation } from "@/modules/sharing/hooks";
 
@@ -30,11 +33,14 @@ export function SettingsTab({ budgetId, initialBudget }: SettingsTabProps) {
   const [name, setName] = useState(initialBudget?.name ?? "");
   const [savingName, setSavingName] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const router = useRouter();
   const statusMutation = useSharingStatusMutation(budgetId);
   const { data: settlement } = useSettlementQuery(budgetId);
   const hasUnsettled = (settlement?.transfers ?? []).length > 0;
   const isArchived = budget?.status === "archived";
   const canManage = budget?.myRole === "owner" || budget?.myRole === "manager";
+  const canDelete = isOwner || budget?.myRole === "owner";
 
   function changeStatus(action: "archive" | "reopen") {
     statusMutation.mutate(action, {
@@ -161,8 +167,8 @@ export function SettingsTab({ budgetId, initialBudget }: SettingsTabProps) {
         }}
       />
 
-      {/* Delete budget — owner only, placeholder for T2.8 */}
-      {isOwner && (
+      {/* Delete budget — owner only; the backend cascades to expenses, legs, participants and links */}
+      {canDelete && budget && (
         <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-4">
           <div>
             <p className="text-sm font-medium text-destructive">
@@ -175,14 +181,24 @@ export function SettingsTab({ budgetId, initialBudget }: SettingsTabProps) {
           <Button
             variant="outline"
             size="sm"
-            disabled
-            title={t("settings.comingSoon")}
+            onClick={() => setDeleteOpen(true)}
+            aria-label={t("settings.deleteBudget")}
+            title={t("settings.deleteBudget")}
             className="border-destructive/30 text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       )}
+      {budget ? (
+        <BudgetDeleteDialog
+          open={deleteOpen}
+          budgetId={budgetId}
+          budgetName={budget.name}
+          onClose={() => setDeleteOpen(false)}
+          onSuccess={() => router.push(routes.budgets)}
+        />
+      ) : null}
     </div>
   );
 }

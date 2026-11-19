@@ -18,6 +18,7 @@
     "organizationCenter": "Organization Center",
     "adminUsers": "Users",
     "adminOrgs": "Organizations",
+    "adminNotifications": "Announcements",
     "adminBudgets": "All Budgets",
     "profile": "Profile",
     "resetPassword": "Reset password",
@@ -133,6 +134,8 @@
     "quickHint": "Open your profile menu (bottom-left) to update language and theme.",
     "preferencesTitle": "Preferences",
     "preferencesDescription": "More workspace settings will appear here in upcoming iterations.",
+    "notificationsOpen": "Open",
+    "notificationsLink": "Notification settings",
     "tenantContextTitle": "Organization context",
     "switchOrganization": "Switch organization"
   },

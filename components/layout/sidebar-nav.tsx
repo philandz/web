@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { isFeatureEnabled } from "@/lib/features";
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import {
@@ -12,6 +13,7 @@ import {
   Users,
   Wallet,
   ArrowLeftRight,
+  Megaphone,
 } from "lucide-react";
 
 import { UserMenuContent } from "@/components/layout/user-menu-content";
@@ -121,6 +123,7 @@ export function SidebarNav({
   const isAdminOrgs = pathname.includes("admin/organizations");
   const isAdminSettings = pathname.includes("/admin/settings");
   const isAdminBudgets = pathname.includes("/admin/budgets");
+  const isAdminNotifications = pathname.includes("/admin/notifications");
   const isBudgets = pathname === "/budgets" || pathname.startsWith("/budgets/");
   const isTransactions = pathname === "/transactions";
 
@@ -163,6 +166,14 @@ export function SidebarNav({
               active={isAdminBudgets}
               onClick={() => router.push(routes.adminBudgets)}
             />
+            {isFeatureEnabled("notifications") ? (
+              <NavItem
+                icon={Megaphone}
+                label={tShell("adminNotifications")}
+                active={isAdminNotifications}
+                onClick={() => router.push(routes.adminNotifications)}
+              />
+            ) : null}
             <NavItem
               icon={SettingsIcon}
               label={tShell("settings")}

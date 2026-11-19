@@ -6,6 +6,8 @@ import { Paintbrush2, Settings2, SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { routes } from "@/constants/routes";
+import { isFeatureEnabled } from "@/lib/features";
 import { useRouter } from "@/i18n/navigation";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 
@@ -38,6 +40,15 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground">{t("quickHint")}</p>
         </div>
       </article>
+
+      {isFeatureEnabled("notifications") ? (
+        <article className="surface-panel flex items-center justify-between gap-3 rounded-2xl p-5 md:p-6">
+          <p className="text-base font-semibold text-foreground">{t("notificationsLink")}</p>
+          <Button variant="outline" size="sm" onClick={() => router.push(routes.notificationSettings)}>
+            {t("notificationsOpen")}
+          </Button>
+        </article>
+      ) : null}
 
       <article className="surface-panel rounded-2xl p-5 md:p-6">
         <div className="mb-2 flex items-start gap-3">

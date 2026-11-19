@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { useBurnRateQuery } from "@/modules/budget/hooks";
 import { useEntrySummaryQuery } from "@/modules/transaction/hooks";
@@ -64,6 +64,7 @@ export function BudgetDetailHeader({
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const router = useRouter();
 
   // Use budget-level role (budget.myRole) as the authoritative source for
   // edit/delete permissions. Falls back to org-level owner role for invest
@@ -313,6 +314,7 @@ export function BudgetDetailHeader({
         budgetId={budget.id}
         budgetName={budget.name}
         onClose={() => setDeleteOpen(false)}
+        onSuccess={() => router.push(routes.budgets)}
       />
     </div>
   );
