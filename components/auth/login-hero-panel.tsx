@@ -2,14 +2,23 @@
 
 import Image from "next/image";
 import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const VIDEO_URL = "https://v2.philand.io.vn/api/public/cat.mp4";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Balance card
 // ─────────────────────────────────────────────────────────────────────────────
+/** Illustrative figure in the product's own currency and the reader's number format. */
+const SAMPLE_BALANCE_VND = 48_250_000;
+
 function BalanceCard({ t }: { t: ReturnType<typeof useTranslations> }) {
+  const locale = useLocale();
+  const sample = new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(SAMPLE_BALANCE_VND);
   return (
     <motion.div
       className="relative overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.045] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] backdrop-blur-md"
@@ -33,7 +42,7 @@ function BalanceCard({ t }: { t: ReturnType<typeof useTranslations> }) {
         </span>
       </div>
 
-      <p className="text-[27px] font-semibold tracking-tight text-white">$84,921.00</p>
+      <p className="text-[27px] font-semibold tracking-tight text-white">{sample}</p>
 
       <div className="mt-4 space-y-1.5">
         <div className="flex justify-between text-[11px] text-white/30">

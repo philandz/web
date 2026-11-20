@@ -43,6 +43,8 @@ function useInvalidateAfterWrite() {
   const qc = useQueryClient();
   return () => {
     qc.invalidateQueries({ queryKey: transactionKeys.lists() });
+    // Balance / "spent this month" in the budget header come from the summary.
+    qc.invalidateQueries({ queryKey: [...transactionKeys.all, "summary"] });
     qc.invalidateQueries({ queryKey: planKeys.all });
     qc.invalidateQueries({ queryKey: budgetKeys.all });
   };
@@ -86,7 +88,7 @@ export function useDeleteTransactionMutation() {
 }
 
 export function useBulkTransactionMutation() {
-  const qc = useQueryClient();
+  const invalidate = useInvalidateAfterWrite();
   return useMutation({
     mutationFn: (action:
       | { kind: "category"; ids: string[]; categoryId: string }
@@ -101,7 +103,7 @@ export function useBulkTransactionMutation() {
       }
       return transactionService.bulkDelete(action.ids);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: transactionKeys.lists() }),
+    onSuccess: invalidate,
   });
 }
 
@@ -146,11 +148,11 @@ export function useRemoveAttachmentMutation() {
 }
 
 export function useBulkImportMutation(budgetId: string) {
-  const qc = useQueryClient();
+  const invalidate = useInvalidateAfterWrite();
   return useMutation({
     mutationFn: (rows: import("@/services/transaction-service").BulkImportRow[]) =>
       transactionService.bulkImportTransactions(budgetId, rows),
-    onSuccess: () => qc.invalidateQueries({ queryKey: transactionKeys.lists() }),
+    onSuccess: invalidate,
   });
 }
 

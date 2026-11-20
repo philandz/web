@@ -14,6 +14,8 @@ import { SelectNative } from "@/components/ui/select";
 import { useBudgetsQuery } from "@/modules/budget/hooks";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { useRouter } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { routes } from "@/constants/routes";
 
 export default function DashboardPage() {
   const t = useTranslations("dashboard.dashboard");
@@ -83,7 +85,11 @@ export default function DashboardPage() {
       ) : selectedBudget ? (
         <OverviewTab budget={selectedBudget} />
       ) : (
-        <EmptyState title={tShell("budgets")} description="No budgets found in this organization." />
+        <EmptyState
+          title={t("emptyTitle")}
+          description={t("emptyBody")}
+          action={<Button onClick={() => router.push(`${routes.budgets}?create=1`)}>{t("emptyAction")}</Button>}
+        />
       )}
     </div>
   );

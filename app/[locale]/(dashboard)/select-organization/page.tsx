@@ -10,11 +10,13 @@ import { SectionLoadingState } from "@/components/state/section-loading-state";
 import { StaggerItem } from "@/components/motion/stagger-item";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { routes } from "@/constants/routes";
 import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { useOrganizationsQuery } from "@/modules/auth/hooks";
+import { PendingInvitations } from "@/components/tenant/pending-invitations";
+import { useMyInvitationsQuery } from "@/modules/tenant/hooks";
 
 export default function SelectOrganizationPage() {
   const t = useTranslations("dashboard.selectOrganization");
@@ -29,11 +31,24 @@ export default function SelectOrganizationPage() {
   }, [router, selectedOrgId]);
 
   const orgQuery = useOrganizationsQuery();
+  const invitations = useMyInvitationsQuery();
+  const tInv = useTranslations("dashboard.invitations");
 
   const handleEnterWorkspace = (orgId: string) => {
     selectOrganization(orgId);
     router.push(routes.root);
   };
+
+  // Nothing to choose: one organization and no invitation waiting → go straight in.
+  const onlyOrgId =
+    !orgQuery.isLoading && orgQuery.organizations.length === 1 ? orgQuery.organizations[0].id : null;
+  const noInvitations = invitations.isSuccess && invitations.data.length === 0;
+  useEffect(() => {
+    if (!selectedOrgId && onlyOrgId && (noInvitations || invitations.isError)) {
+      selectOrganization(onlyOrgId);
+      router.replace(routes.root);
+    }
+  }, [selectedOrgId, onlyOrgId, noInvitations, invitations.isError, selectOrganization, router]);
 
   return (
     <section className="py-4 sm:py-6">
@@ -45,6 +60,8 @@ export default function SelectOrganizationPage() {
         </StaggerItem>
 
         <StaggerItem delay={70} className="space-y-4">
+          <PendingInvitations onAccepted={handleEnterWorkspace} />
+
           {!orgQuery.isLoading && orgQuery.organizations.length > 0 ? (
             <Card className="surface-muted">
               <CardContent className="pt-5 text-sm text-muted-foreground">
@@ -66,10 +83,9 @@ export default function SelectOrganizationPage() {
                   <Building2 className="h-5 w-5 text-highlight" />
                   {org.name}
                 </CardTitle>
-                <CardDescription>{t("organizationId", { id: org.id })}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-start justify-between gap-3 pt-2 sm:flex-row sm:items-center">
-                <Badge variant="secondary">{t("role", { role: org.role })}</Badge>
+                <Badge variant="secondary">{t("role", { role: tInv(`roles.${org.role}`) })}</Badge>
                 <Button className="bg-highlight text-slate-900 hover:bg-highlight/90" onClick={() => handleEnterWorkspace(org.id)}>
                   {t("enterWorkspace")} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>

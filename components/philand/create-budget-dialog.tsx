@@ -35,6 +35,7 @@ export function CreateBudgetDialog({ open, orgId, onClose }: CreateBudgetDialogP
   const [type, setType] = useState<BudgetType>("standard");
   const [currency, setCurrency] = useState("VND");
   const [templateId, setTemplateId] = useState("");
+  const typeTemplates = templates.filter((tpl) => tpl.type === type);
   const [periodStartDay, setPeriodStartDay] = useState("1");
   const [expectedIncome, setExpectedIncome] = useState("");
   const planning = isFeatureEnabled("periodPlanning") && type === "standard";
@@ -47,15 +48,26 @@ export function CreateBudgetDialog({ open, orgId, onClose }: CreateBudgetDialogP
 
   function pickType(next: BudgetType) {
     setType(next);
+    setTemplateId("");
     setCurrency((c) => coerceCurrency(next, c));
     setStep(2);
   }
 
+  /** Seeded templates have fixed ids, so their names can be translated; others keep their own. */
+  function templateName(tpl: { id: string; name: string }) {
+    const key = `templates.${tpl.id.slice(-2)}`;
+    return tpl.id.startsWith("00000000-0000-0000-0000-") && t.has(key) ? t(key) : tpl.name;
+  }
+
   function handleTemplateChange(id: string) {
+    const previous = templates.find((tpl) => tpl.id === templateId);
     setTemplateId(id);
-    if (id) {
-      const tpl = templates.find((t) => t.id === id);
-      if (tpl) setName(tpl.name);
+    const tpl = templates.find((x) => x.id === id);
+    // Only fill the name while it is empty or still the previous template's name,
+    // never over something the user typed.
+    const current = name.trim();
+    if (tpl && (!current || (previous && current === templateName(previous)))) {
+      setName(templateName(tpl));
     }
   }
 
@@ -139,13 +151,13 @@ export function CreateBudgetDialog({ open, orgId, onClose }: CreateBudgetDialogP
             ) : null}
           </div>
 
-          {templates.length > 0 ? (
+          {typeTemplates.length > 0 ? (
             <div className="space-y-1.5">
               <Label>{t("template")}</Label>
               <SelectNative value={templateId} onValueChange={handleTemplateChange}>
                 <option value="">{t("templateNone")}</option>
-                {templates.map((tpl) => (
-                  <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
+                {typeTemplates.map((tpl) => (
+                  <option key={tpl.id} value={tpl.id}>{templateName(tpl)}</option>
                 ))}
               </SelectNative>
             </div>

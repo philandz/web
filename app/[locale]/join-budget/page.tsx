@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Loader2, ShieldAlert, Check, ArrowRight } from "lucide-react";
 
@@ -44,11 +45,12 @@ function Card({
 // ---------------------------------------------------------------------------
 
 function LoadingState() {
+  const t = useTranslations("sharing.join");
   return (
     <Card>
       <div className="flex flex-col items-center gap-4 py-4 text-center">
         <Loader2 className="h-10 w-10 animate-spin text-teal-600" />
-        <p className="text-sm text-muted-foreground">Verifying invite…</p>
+        <p className="text-sm text-muted-foreground">{t("verifying")}</p>
       </div>
     </Card>
   );
@@ -60,6 +62,7 @@ function LoadingState() {
 
 function InvalidState() {
   const router = useRouter();
+  const t = useTranslations("sharing.join");
 
   return (
     <Card>
@@ -69,17 +72,17 @@ function InvalidState() {
         </div>
         <div className="space-y-1">
           <h2 className="text-lg font-semibold text-foreground">
-            This invite link isn&apos;t valid
+            {t("invalidTitle")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Ask the person who shared it for a new link.
+            {t("invalidBody")}
           </p>
         </div>
         <button
           onClick={() => router.push("/")}
           className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:bg-muted/70"
         >
-          Go to Philandz
+          {t("goHome")}
         </button>
       </div>
     </Card>
@@ -102,6 +105,7 @@ function ValidFormState({
   returnTo: string | null;
 }) {
   const router = useRouter();
+  const t = useTranslations("sharing.join");
   const joinMutation = useJoinAsGuestMutation();
 
   const [displayName, setDisplayName] = useState("");
@@ -110,7 +114,7 @@ function ValidFormState({
   const nameLen = displayName.trim().length;
   const nameError =
     touched && (nameLen < 2 || nameLen > 60)
-      ? "Display name must be 2–60 characters"
+      ? t("nameError")
       : null;
 
   const isValid = nameLen >= 2 && nameLen <= 60;
@@ -147,10 +151,10 @@ function ValidFormState({
           </div>
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-foreground">
-              Welcome, {displayName.trim()}!
+              {t("welcome", { name: displayName.trim() })}
             </h2>
             <p className="text-sm text-muted-foreground">
-              You&apos;re in. Redirecting to the trip…
+              {t("redirecting")}
             </p>
           </div>
         </div>
@@ -169,8 +173,7 @@ function ValidFormState({
         {/* Budget info pill */}
         <div className="flex items-center justify-center gap-2">
           <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-            {preview.currency} · {preview.memberCount}{" "}
-            {preview.memberCount === 1 ? "member" : "members"}
+            {preview.currency} · {t("members", { count: preview.memberCount })}
           </span>
         </div>
 
@@ -180,7 +183,7 @@ function ValidFormState({
             htmlFor="display-name"
             className="text-sm font-medium text-foreground"
           >
-            Your display name
+            {t("nameLabel")}
           </label>
           <div className="relative">
             <input
@@ -190,7 +193,7 @@ function ValidFormState({
               onChange={(e) => setDisplayName(e.target.value)}
               onBlur={() => setTouched(true)}
               disabled={isJoining}
-              placeholder="e.g. Alex"
+              placeholder={t("namePlaceholder")}
               maxLength={60}
               className="w-full rounded-xl border border-border bg-background px-3 py-2 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             />
@@ -212,11 +215,11 @@ function ValidFormState({
           {isJoining ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Joining…
+              {t("joining")}
             </>
           ) : (
             <>
-              Join this trip
+              {t("join")}
               <ArrowRight className="h-4 w-4" />
             </>
           )}

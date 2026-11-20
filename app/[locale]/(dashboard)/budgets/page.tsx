@@ -100,7 +100,8 @@ export default function BudgetsPage() {
   const searchParams = useSearchParams();
   const tenant = useTenantContext();
 
-  const [showCreate, setShowCreate] = useState(false);
+  // `?create=1` (from the empty dashboard) opens the create dialog straight away.
+  const [showCreate, setShowCreate] = useState(() => searchParams.get("create") === "1");
 
   const filters = parseBudgetFilters(searchParams);
 

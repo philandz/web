@@ -38,6 +38,15 @@ interface RawOrganizationsResponse {
 
 const BASE_PATH = "/api/identity";
 
+export interface MyInvitation {
+  id: string;
+  orgId: string;
+  orgName: string;
+  inviterName: string;
+  orgRole: AppOrgRole;
+  expiresAt: number;
+}
+
 export const identityService = {
   async register(input: { email: string; password: string; displayName: string }): Promise<RegisterResult> {
     // `keepalive: true` lets the request outlive a same-tab navigation so the
@@ -160,6 +169,32 @@ export const identityService = {
       status: m.status === "invited" ? "invited" : "active",
       joinedAt: m.joined_at,
     }));
+  },
+
+  /** Pending invitations addressed to the signed-in user's email. */
+  async listMyInvitations(): Promise<MyInvitation[]> {
+    const raw = await apiClient.get<{
+      invitations?: Array<{
+        id: string;
+        org_id: string;
+        org_name?: string;
+        inviter_name?: string;
+        org_role?: string;
+        expires_at?: number;
+      }>;
+    }>(`${BASE_PATH}/me/invitations`);
+    return (raw.invitations ?? []).map((i) => ({
+      id: i.id,
+      orgId: i.org_id,
+      orgName: i.org_name ?? "",
+      inviterName: i.inviter_name ?? "",
+      orgRole: normalizeOrgRole(i.org_role ?? "member"),
+      expiresAt: i.expires_at ?? 0,
+    }));
+  },
+
+  async answerMyInvitation(invitationId: string, answer: "accept" | "decline"): Promise<void> {
+    await apiClient.post(`${BASE_PATH}/me/invitations/${encodeURIComponent(invitationId)}/${answer}`, {});
   },
 
   async inviteMember(orgId: string, input: { inviteeEmail: string; orgRole: AppOrgRole }): Promise<InvitationResult> {

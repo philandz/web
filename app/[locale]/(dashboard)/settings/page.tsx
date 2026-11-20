@@ -14,6 +14,7 @@ import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 export default function SettingsPage() {
   const t = useTranslations("dashboard.settings");
   const tShell = useTranslations("dashboard.shell");
+  const tInv = useTranslations("dashboard.invitations");
   const router = useRouter();
   const tenant = useTenantContext();
 
@@ -64,9 +65,7 @@ export default function SettingsPage() {
         <div className="surface-muted mt-3 rounded-xl p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-foreground">{t("tenantContextTitle")}</p>
-            <Badge variant="secondary" className="capitalize">
-              {tenant.orgRole}
-            </Badge>
+            <Badge variant="secondary">{tInv(`roles.${tenant.orgRole ?? "member"}`)}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">{tenant.selectedOrganization?.name ?? tShell("noOrganization")}</p>
 

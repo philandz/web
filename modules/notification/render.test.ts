@@ -10,7 +10,13 @@ const MESSAGES: Record<string, string> = {
   "types.sharing_expense_added.title": "New expense",
   "types.sharing_expense_added.grouped": "{count} new expenses",
   "types.broken.title": "Needs {missing}",
+  "types.entry_comment_added.title": "{actor_name} commented on {entry_description}",
+  "types.budget_member_added.title": "{actor_name} added you to {budget_name}",
+  "types.budget_member_added.body": "Your role: {role_label}",
   fallbackTitle: "Notification",
+  someone: "A member",
+  aTransaction: "a transaction",
+  "roles.contributor": "Contributor",
 };
 
 const t = Object.assign(
@@ -38,6 +44,8 @@ function item(over: Partial<InboxItem>): InboxItem {
     fallbackText: "fallback",
     link: "",
     budgetId: "",
+    actorUserId: "",
+    actorName: "",
     groupCount: 1,
     createdAt: 0,
     isRead: false,
@@ -79,5 +87,37 @@ describe("renderNotification", () => {
     expect(
       renderNotification(t, item({ kind: "system", title: "Maintenance", body: "Tonight" }))
     ).toEqual({ title: "Maintenance", body: "Tonight" });
+  });
+
+  it("names the actor from the inbox lookup and the transaction from params", () => {
+    expect(
+      renderNotification(
+        t,
+        item({
+          type: "entry.comment_added",
+          actorName: "Bình",
+          params: { entry_description: "Tiền điện", excerpt: "hi" },
+        })
+      ).title
+    ).toBe("Bình commented on Tiền điện");
+  });
+
+  it("falls back to generic words when the actor or transaction is unknown", () => {
+    expect(renderNotification(t, item({ type: "entry.comment_added" })).title).toBe(
+      "A member commented on a transaction"
+    );
+  });
+
+  it("translates the role", () => {
+    expect(
+      renderNotification(
+        t,
+        item({
+          type: "budget.member_added",
+          actorName: "Anh",
+          params: { budget_name: "Home", role: "contributor" },
+        })
+      )
+    ).toEqual({ title: "Anh added you to Home", body: "Your role: Contributor" });
   });
 });
