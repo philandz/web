@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Menu } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 
 import { BannerStrip } from "@/components/notification/banner-strip";
+import { PendingInvitations } from "@/components/tenant/pending-invitations";
 import { NotificationBell } from "@/components/notification/notification-bell";
 import { Feature } from "@/components/ui/feature";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
@@ -14,7 +16,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import type { AppUserType } from "@/lib/identity-normalize";
 import { useTenantContext } from "@/modules/tenant/use-tenant-context";
 import { cn } from "@/lib/utils";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 interface AppShellProps {
   userType: AppUserType;
@@ -26,10 +28,14 @@ interface AppShellProps {
 }
 
 export function AppShell({ userType, profileName, profileAvatar, pageTitle, children, wide }: AppShellProps) {
+  const tA11y = useTranslations("common.a11y");
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const selectOrganization = useAuthStore((state) => state.selectOrganization);
   const tenant = useTenantContext();
+  const pathname = usePathname();
+  // The organization picker lists invitations itself.
+  const showInvitations = userType !== "super_admin" && !pathname.includes("select-organization");
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -74,11 +80,18 @@ export function AppShell({ userType, profileName, profileAvatar, pageTitle, chil
       {/* Main content */}
       <main className="flex-1 overflow-x-hidden">
         <div className={cn("container py-6 pb-24 pt-20 md:pb-8 md:pt-6 px-4 sm:px-6", wide ? "max-w-6xl" : "max-w-5xl")}>
+          {showInvitations ? (
+            <PendingInvitations
+              className="mb-4"
+              onAccepted={(orgId) => {
+                selectOrganization(orgId);
+                router.push(routes.root);
+              }}
+            />
+          ) : null}
           {userType !== "super_admin" ? (
             <Feature flag="notifications">
-              <div className="mb-3 hidden justify-end md:flex">
-                <NotificationBell />
-              </div>
+              {/* Desktop reaches the inbox from the sidebar; phones keep the bell in the top bar. */}
               <div className="mb-4 empty:hidden">
                 <BannerStrip />
               </div>
@@ -93,7 +106,7 @@ export function AppShell({ userType, profileName, profileAvatar, pageTitle, chil
         <button
           onClick={() => setMobileSidebarOpen(true)}
           className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          aria-label="Open navigation"
+          aria-label={tA11y("openNavigation")}
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -101,7 +114,7 @@ export function AppShell({ userType, profileName, profileAvatar, pageTitle, chil
           type="button"
           onClick={() => setMobileMenuOpen(true)}
           className="flex flex-1 items-center gap-2.5 overflow-hidden rounded-xl px-1.5 py-1 text-left hover:bg-muted/60 transition-colors"
-          aria-label="Open profile menu"
+          aria-label={tA11y("openProfile")}
         >
           <UserAvatar name={profileName} src={profileAvatar} size={30} fallbackClassName="text-[10px]" />
           <div className="min-w-0">

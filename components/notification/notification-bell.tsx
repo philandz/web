@@ -12,6 +12,7 @@ import {
   useArchiveMutation,
   useInboxQuery,
   useMarkAllReadMutation,
+  useMarkReadMutation,
   useUnreadCountQuery,
 } from "@/modules/notification/hooks";
 import { useOpenNotification } from "@/modules/notification/use-open-item";
@@ -27,6 +28,7 @@ export function NotificationBell() {
   const inbox = useInboxQuery({ filter: "all", locale }, PREVIEW_LIMIT);
   const markAll = useMarkAllReadMutation();
   const archive = useArchiveMutation();
+  const markRead = useMarkReadMutation();
   const openItem = useOpenNotification(() => setOpen(false));
 
   const total = unread.data?.total ?? 0;
@@ -85,7 +87,14 @@ export function NotificationBell() {
           ) : (
             <ul className="space-y-0.5 p-1">
               {items.map((item) => (
-                <NotificationRow key={`${item.kind}-${item.id}`} item={item} onOpen={openItem} onArchive={onArchive} compact />
+                <NotificationRow
+                  key={`${item.kind}-${item.id}`}
+                  item={item}
+                  onOpen={openItem}
+                  onArchive={onArchive}
+                  onMarkRead={(i) => markRead.mutate(i.kind === "system" ? { broadcastIds: [i.id] } : { itemIds: [i.id] })}
+                  compact
+                />
               ))}
             </ul>
           )}

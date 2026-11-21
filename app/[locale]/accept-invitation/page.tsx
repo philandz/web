@@ -12,7 +12,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { isApiError } from "@/lib/http/errors";
 import { identityService } from "@/services/identity-service";
 
-type PageState = "loading" | "success" | "success-authenticated" | "failed" | "missing-token";
+type PageState = "ready" | "joining" | "success" | "success-authenticated" | "failed" | "missing-token";
 
 export default function AcceptInvitationPage() {
   const t = useTranslations("auth.acceptInvitation");
@@ -23,25 +23,24 @@ export default function AcceptInvitationPage() {
   const isAuthenticated = useAuthStore((state) => Boolean(state.token));
   const setOrganizations = useAuthStore((state) => state.setOrganizations);
 
-  const [state, setState] = useState<PageState>(token ? "loading" : "missing-token");
+  // Nothing happens until the person confirms: link scanners in mail clients open links
+  // too, and must not be able to accept on their behalf.
+  const [state, setState] = useState<PageState>(token ? "ready" : "missing-token");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showRegisterCta, setShowRegisterCta] = useState(false);
 
-  useEffect(() => {
-    if (!token) return;
-
+  function accept() {
+    if (!token || state === "joining") return;
+    setState("joining");
     identityService
       .acceptInvitation(token)
       .then(async () => {
-        if (isAuthenticated) {
-          // Refresh the org list so the new org appears in the auth store,
-          // then redirect straight to the workspace picker.
+        // Read the store now, not at first render: the session may hydrate after mount.
+        if (useAuthStore.getState().token) {
           try {
-            const fresh = await identityService.organizations();
-            setOrganizations(fresh);
+            setOrganizations(await identityService.organizations());
           } catch {
-            // Non-fatal — store refresh failed but join succeeded.
-            // The user will see the new org after their next login.
+            // Non-fatal: the new organization shows up after the next sign-in.
           }
           setState("success-authenticated");
         } else {
@@ -49,16 +48,15 @@ export default function AcceptInvitationPage() {
         }
       })
       .catch((err: unknown) => {
-        const message = isApiError(err) ? err.message : t("error");
-        const isNoAccount = isApiError(err) && err.code === "failed_precondition";
-        setErrorMessage(message);
+        const code = isApiError(err) ? err.code.toLowerCase() : "";
+        const isNoAccount = code === "failed_precondition";
+        setErrorMessage(isNoAccount ? t("errorNoAccount") : t("error"));
         setShowRegisterCta(isNoAccount);
         setState("failed");
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }
 
-  // Redirect authenticated users after a brief moment so they can read the message.
+  // Redirect signed-in users after a brief moment so they can read the message.
   useEffect(() => {
     if (state !== "success-authenticated") return;
     const id = setTimeout(() => router.replace(routes.selectOrganization), 1500);
@@ -68,8 +66,22 @@ export default function AcceptInvitationPage() {
   return (
     <AuthShell title={t("title")} subtitle={t("subtitle")}>
       <div className="space-y-4">
-        {state === "loading" ? (
-          <InlineAlert tone="info">{t("loading")}</InlineAlert>
+        {state === "ready" || state === "joining" ? (
+          <>
+            <p className="text-sm text-muted-foreground">{t("confirmHint")}</p>
+            <button
+              type="button"
+              onClick={accept}
+              disabled={state === "joining"}
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+              data-testid="accept-invitation"
+            >
+              {state === "joining" ? t("loading") : t("confirm")}
+            </button>
+            {!isAuthenticated ? (
+              <p className="text-center text-xs text-muted-foreground">{t("signInLater")}</p>
+            ) : null}
+          </>
         ) : state === "success-authenticated" ? (
           <InlineAlert tone="success">{t("successAuthenticated")}</InlineAlert>
         ) : state === "success" ? (

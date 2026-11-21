@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -128,6 +129,7 @@ interface PortfolioSummaryCardProps {
 }
 
 function PortfolioSummaryCard({ summary }: PortfolioSummaryCardProps) {
+  const t = useTranslations("budget.portfolio");
   const totalValue = summary?.totalCurrentValue ?? 0;
   const totalCost = summary?.totalOpenCostBasis ?? 0;
   const realized = summary?.totalRealizedPnl ?? 0;
@@ -140,17 +142,17 @@ function PortfolioSummaryCard({ summary }: PortfolioSummaryCardProps) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
-          <Wallet className="h-5 w-5" /> Portfolio summary
+          <Wallet className="h-5 w-5" /> {t("summaryTitle")}
         </CardTitle>
-        {isLegacy && <Badge variant="outline">backfilled</Badge>}
+        {isLegacy && <Badge variant="outline">{t("summaryBackfilled")}</Badge>}
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Kpi label="Total value" value={totalValue} currency={summary?.currency} />
-          <Kpi label="Cost basis" value={totalCost} currency={summary?.currency} />
-          <Kpi label="Realized P&L" value={realized} currency={summary?.currency} />
-          <Kpi label="Unrealized P&L" value={unrealized} currency={summary?.currency} />
-          <Kpi label="Return" value={totalPnl} pct={totalReturnPct} currency={summary?.currency} />
+          <Kpi label={t("kpiTotalValue")} value={totalValue} currency={summary?.currency} />
+          <Kpi label={t("kpiCostBasis")} value={totalCost} currency={summary?.currency} />
+          <Kpi label={t("kpiRealized")} value={realized} currency={summary?.currency} />
+          <Kpi label={t("kpiUnrealized")} value={unrealized} currency={summary?.currency} />
+          <Kpi label={t("kpiReturn")} value={totalPnl} pct={totalReturnPct} currency={summary?.currency} />
         </div>
       </CardContent>
     </Card>
@@ -213,12 +215,13 @@ function formatMinor(minor: number | undefined): string {
 // ---------------------------------------------------------------------------
 
 function EmptyState() {
+  const t = useTranslations("budget.portfolio");
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
         <PiggyBank className="h-10 w-10 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          No assets yet. Add a savings account, fixed deposit, gold lot, or stock lot to start.
+          {t("emptyAssets")}
         </p>
       </CardContent>
     </Card>

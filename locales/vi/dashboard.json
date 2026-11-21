@@ -32,7 +32,8 @@
     "profileActions": "Tùy chọn hồ sơ",
     "openSidebar": "Mở thanh bên",
     "closeSidebar": "Đóng thanh bên",
-    "budgets": "Ngân sách"
+    "budgets": "Ngân sách",
+    "notifications": "Thông báo"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -54,14 +55,17 @@
     "expenses": "Chi phí",
     "savings": "Tiết kiệm",
     "balance": "Số dư tổng",
-    "byCategory": "Theo danh mục"
+    "byCategory": "Theo danh mục",
+    "emptyTitle": "Chào mừng bạn đến với Philand",
+    "emptyBody": "Tạo ngân sách đầu tiên để bắt đầu theo dõi thu chi. Bạn có thể dùng mẫu có sẵn danh mục.",
+    "emptyAction": "Tạo ngân sách đầu tiên"
   },
   "selectOrganization": {
     "context": "Ngữ cảnh người dùng thường",
     "title": "Chọn tổ chức",
     "subtitle": "Tài khoản của bạn có thể thuộc nhiều tổ chức. Hãy chọn một ngữ cảnh trước khi vào ứng dụng.",
     "loadError": "Không thể tải danh sách tổ chức. Vui lòng tải lại và thử lại.",
-    "invitedHint": "Bạn có {count, plural, one {# lời mời tổ chức} other {# lời mời tổ chức}}. Hãy chọn một để tiếp tục.",
+    "invitedHint": "Bạn thuộc {count} tổ chức. Chọn một để tiếp tục.",
     "organizationId": "Mã tổ chức: {id}",
     "role": "Vai trò: {role}",
     "enterWorkspace": "Vào không gian làm việc",
@@ -240,5 +244,21 @@
     "sharingCount": "{count} quỹ đang hoạt động",
     "debt": "Dư nợ",
     "debtNext": "Kỳ tới {date} · {amount}"
+  },
+  "invitations": {
+    "title": "{inviter} mời bạn tham gia {org}",
+    "titleNoInviter": "Bạn được mời tham gia {org}",
+    "role": "Vai trò: {role}",
+    "roles": {
+      "owner": "Chủ sở hữu",
+      "admin": "Quản trị viên",
+      "member": "Thành viên",
+      "none": "Thành viên"
+    },
+    "accept": "Tham gia",
+    "decline": "Từ chối",
+    "accepted": "Đã tham gia tổ chức",
+    "declined": "Đã từ chối lời mời",
+    "error": "Không xử lý được lời mời. Lời mời có thể đã hết hạn."
   }
 }

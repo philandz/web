@@ -13,8 +13,10 @@ import {
   Users,
   Wallet,
   ArrowLeftRight,
+  Bell,
   Megaphone,
 } from "lucide-react";
+import { useUnreadCountQuery } from "@/modules/notification/hooks";
 
 import { UserMenuContent } from "@/components/layout/user-menu-content";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -47,12 +49,15 @@ function NavItem({
   active,
   onClick,
   soon,
+  badge,
 }: {
   icon: React.ElementType;
   label: string;
   active?: boolean;
   onClick?: () => void;
   soon?: boolean;
+  /** Unread count shown as a pill; 0 or undefined hides it. */
+  badge?: number;
 }) {
   return (
     <button
@@ -76,7 +81,14 @@ function NavItem({
           Soon
         </span>
       ) : null}
-      {active ? (
+      {badge ? (
+        <span
+          className="inline-flex min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-semibold leading-5 text-white"
+          data-testid="nav-badge"
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      ) : active ? (
         <span className="h-1.5 w-1.5 rounded-full bg-primary" />
       ) : null}
     </button>
@@ -126,6 +138,9 @@ export function SidebarNav({
   const isAdminNotifications = pathname.includes("/admin/notifications");
   const isBudgets = pathname === "/budgets" || pathname.startsWith("/budgets/");
   const isTransactions = pathname === "/transactions";
+  const isNotifications = pathname === "/notifications";
+  const notificationsOn = userType !== "super_admin" && isFeatureEnabled("notifications");
+  const unread = useUnreadCountQuery(notificationsOn);
 
   const selectedOrg = organizations.find((o) => o.id === selectedOrgId) ?? organizations[0] ?? null;
 
@@ -203,6 +218,15 @@ export function SidebarNav({
               active={isTransactions}
               onClick={() => onNavigateTransactions ? onNavigateTransactions() : router.push(routes.transactions)}
             />
+            {notificationsOn ? (
+              <NavItem
+                icon={Bell}
+                label={tShell("notifications")}
+                active={isNotifications}
+                badge={unread.data?.total}
+                onClick={() => router.push(routes.notifications)}
+              />
+            ) : null}
           </>
         ) : null}
       </nav>

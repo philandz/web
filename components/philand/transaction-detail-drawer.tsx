@@ -309,6 +309,7 @@ export function TransactionDetailDrawer({
   readOnly = false,
 }: TransactionDetailDrawerProps) {
   const t = useTranslations("budget.txDetail");
+  const tCommon = useTranslations("common");
   const toast = useToast();
   const profile = useAuthStore((s) => s.profile);
   const deleteMutation = useDeleteTransactionMutation();
@@ -480,7 +481,7 @@ export function TransactionDetailDrawer({
                       {creator.displayName}
                       {creatorIsMe && (
                         <span className="ml-1.5 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                          You
+                          {tCommon("you")}
                         </span>
                       )}
                     </span>

@@ -41,6 +41,9 @@ export interface InboxItem {
   fallbackText: string;
   link: string;
   budgetId: string;
+  /** Who caused it (empty for system broadcasts and reminders). */
+  actorUserId: string;
+  actorName: string;
   groupCount: number;
   createdAt: number;
   isRead: boolean;
@@ -129,6 +132,8 @@ interface RawItem {
   fallback_text?: string;
   link?: string;
   budget_id?: string;
+  actor_user_id?: string;
+  actor_name?: string;
   group_count?: number;
   created_at: number;
   is_read?: boolean;
@@ -192,6 +197,8 @@ export function mapItem(r: RawItem): InboxItem {
     fallbackText: r.fallback_text ?? "",
     link: safeLink(r.link),
     budgetId: r.budget_id ?? "",
+    actorUserId: r.actor_user_id ?? "",
+    actorName: r.actor_name ?? "",
     groupCount: r.group_count && r.group_count > 1 ? r.group_count : 1,
     createdAt: r.created_at,
     isRead: Boolean(r.is_read),
@@ -259,6 +266,8 @@ function toBroadcastBody(i: BroadcastInput) {
 export interface InboxParams {
   filter?: "all" | "unread";
   kind?: NotificationKind;
+  /** Narrow to one category; "system" means broadcasts only. */
+  category?: NotificationCategory;
   cursor?: string;
   limit?: number;
   locale?: string;

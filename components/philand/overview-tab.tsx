@@ -100,7 +100,15 @@ const COLORS = [
   "#06b6d4",
 ];
 
-function CategoryDonut({ slices, currency }: { slices: DonutSlice[]; currency: string }) {
+function CategoryDonut({
+  slices,
+  currency,
+  centerLabel,
+}: {
+  slices: DonutSlice[];
+  currency: string;
+  centerLabel: string;
+}) {
   const total = slices.reduce((s, x) => s + x.value, 0);
   if (total === 0) return null;
 
@@ -161,21 +169,21 @@ function CategoryDonut({ slices, currency }: { slices: DonutSlice[]; currency: s
             fontSize="9"
             fill="hsl(var(--muted-foreground))"
           >
-            categories
+            {centerLabel}
           </text>
         </svg>
       </div>
 
       {/* Legend */}
-      <ul className="flex-1 space-y-2">
+      <ul className="w-full min-w-0 flex-1 space-y-2">
         {arcs.map((a, i) => (
-          <li key={i} className="flex items-center gap-2 text-xs">
+          <li key={i} className="flex min-w-0 items-center gap-2 text-xs">
             <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: a.color }} />
-            <span className="flex-1 truncate text-muted-foreground">{a.label}</span>
-            <span className="font-semibold tabular-nums text-foreground">
+            <span className="min-w-0 flex-1 truncate text-muted-foreground">{a.label}</span>
+            <span className="shrink-0 font-semibold tabular-nums text-foreground">
               {fmt(a.value, currency)}
             </span>
-            <span className="w-8 text-right text-muted-foreground">
+            <span className="w-8 shrink-0 text-right text-muted-foreground">
               {Math.round((a.value / total) * 100)}%
             </span>
           </li>
@@ -372,11 +380,6 @@ export function OverviewTab({ budget }: OverviewTabProps) {
     else setViewMonth((m) => m + 1);
   }
 
-  const monthLabel = useMemo(
-    () => new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "long", year: "numeric" }).format(new Date(viewYear, viewMonth)),
-    [viewYear, viewMonth],
-  );
-
   const { data: envelope } = useBurnRateQuery(budget.id);
   const { data: txData } = useTransactionsQuery({
     budgetId: budget.id,
@@ -461,7 +464,6 @@ export function OverviewTab({ budget }: OverviewTabProps) {
               <div className="mb-4 flex items-start justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">{t("spendingTrend")}</h2>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{monthLabel}</p>
                 </div>
                 {/* Month navigation */}
                 <div className="flex items-center gap-1">
@@ -469,7 +471,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
                     type="button"
                     onClick={prevMonth}
                     className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    aria-label="Previous month"
+                    aria-label={t("prevMonth")}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -481,7 +483,7 @@ export function OverviewTab({ budget }: OverviewTabProps) {
                     onClick={nextMonth}
                     disabled={isCurrentMonth}
                     className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    aria-label="Next month"
+                    aria-label={t("nextMonth")}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -496,7 +498,11 @@ export function OverviewTab({ budget }: OverviewTabProps) {
                 {t("byCategory")}
               </h2>
               {slices.length > 0 ? (
-                <CategoryDonut slices={slices} currency={budget.currency} />
+                <CategoryDonut
+                  slices={slices}
+                  currency={budget.currency}
+                  centerLabel={t("categoriesCount", { count: slices.length })}
+                />
               ) : (
                 <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
                   {t("noCategories")}
@@ -509,9 +515,9 @@ export function OverviewTab({ budget }: OverviewTabProps) {
           {recentTx.length > 0 && (
             <section className="surface-panel rounded-2xl p-5">
               <h2 className="mb-1 text-sm font-semibold text-foreground">
-                Recent Transactions
+                {t("recentTransactions")}
               </h2>
-              <p className="mb-4 text-xs text-muted-foreground">Last {recentTx.length} entries</p>
+              <p className="mb-4 text-xs text-muted-foreground">{t("lastEntries", { count: recentTx.length })}</p>
               <div className="divide-y divide-border/50">
                 {recentTx.map((tx) => (
                   <RecentTxRow key={tx.id} tx={tx} currency={budget.currency} />

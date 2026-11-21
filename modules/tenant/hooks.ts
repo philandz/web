@@ -26,6 +26,8 @@ export function useInviteMemberMutation(orgId: string) {
       identityService.inviteMember(orgId, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["identity", "org-members", orgId, token] });
+      // The "pending invitations" list shows the new invite right away.
+      queryClient.invalidateQueries({ queryKey: ["identity", "org-invitations", orgId, token] });
     }
   });
 }
@@ -126,5 +128,30 @@ export function useLeaveOrgMutation(orgId: string) {
     onSuccess: () => {
       leaveOrganization(orgId);
     }
+  });
+}
+
+/** Invitations waiting for the signed-in user; answered in the app, no email link needed. */
+export function useMyInvitationsQuery(enabled = true) {
+  const token = useAuthStore((state) => state.token);
+  return useQuery({
+    queryKey: ["identity", "my-invitations", token],
+    queryFn: () => identityService.listMyInvitations(),
+    enabled: enabled && Boolean(token),
+    refetchOnWindowFocus: true,
+    staleTime: 30_000,
+  });
+}
+
+export function useAnswerInvitationMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, answer }: { id: string; answer: "accept" | "decline" }) =>
+      identityService.answerMyInvitation(id, answer),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["identity", "my-invitations"] });
+      // Accepting adds an organization to the switcher.
+      queryClient.invalidateQueries({ queryKey: ["identity", "organizations"] });
+    },
   });
 }

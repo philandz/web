@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
@@ -165,11 +166,11 @@ function RolesMatrix() {
 // Invite dialog (with invite link display after success)
 // ---------------------------------------------------------------------------
 
-function InviteDialog({ orgId, onClose }: { orgId: string; onClose: () => void }) {
+function InviteDialog({ orgId, onClose, initialEmail = "" }: { orgId: string; onClose: () => void; initialEmail?: string }) {
   const t = useTranslations("dashboard.organization");
   const toast = useToast();
   const mutation = useInviteMemberMutation(orgId);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [role, setRole] = useState<AppOrgRole>("member");
   const [inviteLink, setInviteLink] = useState<string | null>(null);
 
@@ -594,9 +595,11 @@ function InvitationRow({
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-foreground">{inv.inviteeEmail}</p>
-        <p className="text-xs text-muted-foreground capitalize">{inv.orgRole}</p>
+        <p className="text-xs text-muted-foreground">
+          {inv.orgRole === "owner" ? t("roleOwner") : inv.orgRole === "admin" ? t("roleAdmin") : t("roleMember")}
+        </p>
       </div>
-      <Badge variant="secondary" className="shrink-0 capitalize hidden sm:inline-flex">
+      <Badge variant="secondary" className="shrink-0 hidden sm:inline-flex">
         {t("statusInvited")}
       </Badge>
       <div className="flex shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -682,7 +685,10 @@ export default function OrganizationPage() {
   const tenant = useTenantContext();
   const currentUserId = useAuthStore((state) => state.profile?.id);
 
-  const [showInvite, setShowInvite] = useState(false);
+  // `?invite=<email>` (from a budget's "invite to the organization" link) opens the dialog prefilled.
+  const searchParams = useSearchParams();
+  const inviteParam = searchParams.get("invite");
+  const [showInvite, setShowInvite] = useState(inviteParam !== null);
   const [changeRoleMember, setChangeRoleMember] = useState<OrgMember | null>(null);
   const [removeMember, setRemoveMember] = useState<OrgMember | null>(null);
   const [showLeave, setShowLeave] = useState(false);
@@ -712,7 +718,7 @@ export default function OrganizationPage() {
         actions={(
           <Badge
             variant="outline"
-            className={`self-start capitalize md:self-auto ${roleBadgeClass(tenant.orgRole)}`}
+            className={`self-start md:self-auto ${roleBadgeClass(tenant.orgRole)}`}
           >
             {roleLabel(tenant.orgRole, t)}
           </Badge>
@@ -776,13 +782,13 @@ export default function OrganizationPage() {
                   <div className="flex shrink-0 items-center gap-2">
                     <Badge
                       variant="outline"
-                      className={`hidden capitalize sm:inline-flex ${roleBadgeClass(member.role)}`}
+                      className={`hidden sm:inline-flex ${roleBadgeClass(member.role)}`}
                     >
                       {roleLabel(member.role, t)}
                     </Badge>
 
                     {member.status === "invited" ? (
-                      <Badge variant="secondary" className="hidden capitalize sm:inline-flex">
+                      <Badge variant="secondary" className="hidden sm:inline-flex">
                         {t("statusInvited")}
                       </Badge>
                     ) : null}
@@ -893,7 +899,11 @@ export default function OrganizationPage() {
 
       {/* Dialogs */}
       {showInvite ? (
-        <InviteDialog orgId={tenant.selectedOrgId} onClose={() => setShowInvite(false)} />
+        <InviteDialog
+          orgId={tenant.selectedOrgId}
+          initialEmail={inviteParam ?? ""}
+          onClose={() => setShowInvite(false)}
+        />
       ) : null}
 
       {changeRoleMember ? (

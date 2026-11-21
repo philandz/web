@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { routes } from "@/constants/routes";
 import { MoreHorizontal, UserPlus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -105,7 +107,9 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                 </div>
                 <div className="max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-muted/30">
                   {filteredMembers.length === 0 ? (
-                    <p className="p-3 text-center text-sm text-muted-foreground">{t("noMembersFound")}</p>
+                    <p className="p-3 text-center text-sm text-muted-foreground">
+                      {search.trim() ? t("noMembersFound") : t("noOtherOrgMembers")}
+                    </p>
                   ) : (
                     filteredMembers.map((m) => (
                       <button
@@ -126,6 +130,17 @@ function InviteMemberDialog({ open, onClose, budgetId, orgId, existingMembers }:
                     ))
                   )}
                 </div>
+                {/* Budgets can only add people already in the organization: show the way there. */}
+                <p className="text-xs text-muted-foreground">
+                  {t("notInOrg")}{" "}
+                  <Link
+                    href={`${routes.organization}?invite=${encodeURIComponent(search.includes("@") ? search.trim() : "")}`}
+                    className="font-medium text-primary hover:underline"
+                    onClick={onClose}
+                  >
+                    {t("inviteToOrg")}
+                  </Link>
+                </p>
               </>
             )}
           </div>

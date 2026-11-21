@@ -22,7 +22,8 @@
     "cancel": "Cancel",
     "signOut": "Sign out",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "close": "Close"
   },
   "states": {
     "loading": "Loading...",
@@ -31,5 +32,34 @@
   },
   "amountInput": {
     "invalid": "Enter a valid amount (e.g. 50k, 1tr5, 120000)"
-  }
+  },
+  "table": {
+    "range": "{from}–{to} of {total}",
+    "rows": "Rows",
+    "rowsPerPage": "Rows per page",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "clearDates": "Clear dates",
+    "removeFilter": "Remove filter",
+    "members": "Members",
+    "filterByMember": "Filter by member",
+    "clear": "Clear",
+    "selected": "selected",
+    "selectedCount": "{count} selected",
+    "noMembers": "No members yet",
+    "noMembersHint": "Invite teammates to filter by them.",
+    "category": "Category",
+    "filterByCategory": "Filter by category",
+    "noCategories": "No categories yet",
+    "noCategoriesHint": "Create a category to filter by it.",
+    "filter": "Filter",
+    "selectAll": "Select all",
+    "selectRow": "Select row"
+  },
+  "a11y": {
+    "openNavigation": "Open navigation",
+    "openProfile": "Open profile menu"
+  },
+  "you": "You",
+  "none": "None"
 }
