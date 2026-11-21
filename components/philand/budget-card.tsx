@@ -241,7 +241,7 @@ export function BudgetCard({ budget, onClick, fund, sharingSummary }: BudgetCard
             className="ml-auto font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100"
             aria-hidden
           >
-            View&nbsp;→
+            {t("view")}&nbsp;→
           </span>
         </div>
       </CardContent>

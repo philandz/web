@@ -22,7 +22,8 @@
     "cancel": "Hủy",
     "signOut": "Đăng xuất",
     "prev": "Trước",
-    "next": "Sau"
+    "next": "Sau",
+    "close": "Đóng"
   },
   "states": {
     "loading": "Đang tải...",
@@ -31,5 +32,34 @@
   },
   "amountInput": {
     "invalid": "Nhập số tiền hợp lệ (ví dụ: 50k, 1tr5, 120000)"
-  }
+  },
+  "table": {
+    "range": "{from}–{to} trên {total}",
+    "rows": "Số dòng",
+    "rowsPerPage": "Số dòng mỗi trang",
+    "prevPage": "Trang trước",
+    "nextPage": "Trang sau",
+    "clearDates": "Xoá khoảng ngày",
+    "removeFilter": "Bỏ bộ lọc",
+    "members": "Thành viên",
+    "filterByMember": "Lọc theo thành viên",
+    "clear": "Xoá",
+    "selected": "đã chọn",
+    "selectedCount": "Đã chọn {count}",
+    "noMembers": "Chưa có thành viên",
+    "noMembersHint": "Mời thêm người để lọc theo họ.",
+    "category": "Danh mục",
+    "filterByCategory": "Lọc theo danh mục",
+    "noCategories": "Chưa có danh mục",
+    "noCategoriesHint": "Tạo danh mục để lọc theo nó.",
+    "filter": "Bộ lọc",
+    "selectAll": "Chọn tất cả",
+    "selectRow": "Chọn dòng"
+  },
+  "a11y": {
+    "openNavigation": "Mở menu",
+    "openProfile": "Mở menu tài khoản"
+  },
+  "you": "Bạn",
+  "none": "Không có"
 }

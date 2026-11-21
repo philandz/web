@@ -6,6 +6,7 @@ import {
   notificationService,
   type BroadcastInput,
   type BroadcastStatus,
+  type NotificationCategory,
   type NotificationKind,
   type PreferenceCell,
 } from "@/services/notification-service";
@@ -25,7 +26,10 @@ export function useUnreadCountQuery(enabled = true) {
   });
 }
 
-export function useInboxQuery(params: { filter: "all" | "unread"; kind?: NotificationKind; locale: string }, limit = 20) {
+export function useInboxQuery(
+  params: { filter: "all" | "unread"; kind?: NotificationKind; category?: NotificationCategory; locale: string },
+  limit = 20
+) {
   return useInfiniteQuery({
     queryKey: notificationKeys.inbox({ ...params, limit }),
     queryFn: ({ pageParam }) => notificationService.listInbox({ ...params, limit, cursor: pageParam }),

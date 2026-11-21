@@ -13,7 +13,16 @@
     "successRedirecting": "Đang chuyển hướng…",
     "openBudget": "Mở chia sẻ chi tiêu",
     "displayNameTooShort": "Tên hiển thị phải có ít nhất 2 ký tự",
-    "displayNameTooLong": "Tên hiển thị không được quá 60 ký tự"
+    "displayNameTooLong": "Tên hiển thị không được quá 60 ký tự",
+    "invalidBody": "Hãy xin người đã chia sẻ một link mới.",
+    "nameError": "Tên hiển thị cần từ 2 đến 60 ký tự",
+    "welcome": "Chào mừng {name}!",
+    "redirecting": "Bạn đã tham gia. Đang chuyển tới chuyến đi…",
+    "members": "{count} thành viên",
+    "nameLabel": "Tên hiển thị của bạn",
+    "namePlaceholder": "VD: Minh",
+    "joining": "Đang tham gia…",
+    "join": "Tham gia"
   },
   "budget": {
     "title": "Chia sẻ chi tiêu",

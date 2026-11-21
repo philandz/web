@@ -76,17 +76,17 @@
       "body": "{description} · {amount, number} ₫"
     },
     "entry_comment_added": {
-      "title": "Bình luận mới về một giao dịch",
-      "grouped": "{count} bình luận mới",
+      "title": "{actor_name} đã bình luận về {entry_description}",
+      "grouped": "{count} bình luận mới về {entry_description}",
       "body": "{excerpt}"
     },
     "budget_member_added": {
-      "title": "Bạn đã được thêm vào {budget_name}",
-      "body": ""
+      "title": "{actor_name} đã thêm bạn vào {budget_name}",
+      "body": "Vai trò của bạn: {role_label}"
     },
     "budget_member_role_changed": {
-      "title": "Vai trò của bạn trong {budget_name} đã thay đổi",
-      "body": ""
+      "title": "{actor_name} đã đổi vai trò của bạn trong {budget_name}",
+      "body": "Vai trò mới: {role_label}"
     },
     "sharing_settlement_marked": {
       "title": "{actor_name} đã ghi nhận một khoản thanh toán",
@@ -143,11 +143,37 @@
       "bodies": "Nhập nội dung cho cả hai ngôn ngữ.",
       "link": "Liên kết phải là đường dẫn tương đối bắt đầu bằng /.",
       "users": "Nhập ít nhất một ID người dùng hợp lệ."
-    }
+    },
+    "publishConfirmTitle": "Phát hành thông báo này?",
+    "publishConfirmBody": "Thông báo sẽ được gửi tới {audience} ngay lập tức và không thể thu hồi (chỉ có thể lưu trữ).",
+    "audienceSummaryAll": "tất cả người dùng",
+    "audienceSummaryUsers": "{count} người dùng",
+    "previewWithBanner": "Hiện trong hộp thư và dạng banner đầu trang",
+    "previewInboxOnly": "Chỉ hiện trong hộp thư",
+    "publishNow": "Phát hành ngay"
   },
   "channels": {
     "in_app": "Trong ứng dụng",
     "email": "Email"
   },
-  "settingsEmailHint": "Chọn nơi nhận từng loại thông báo. Email mặc định tắt, chỉ gửi khi bạn bật."
+  "settingsEmailHint": "Chọn nơi nhận từng loại thông báo. Email mặc định tắt, chỉ gửi khi bạn bật.",
+  "someone": "Một thành viên",
+  "aTransaction": "một giao dịch",
+  "roles": {
+    "owner": "Chủ sở hữu",
+    "manager": "Quản lý",
+    "contributor": "Đóng góp",
+    "viewer": "Xem"
+  },
+  "filterAll": "Tất cả loại",
+  "markRead": "Đánh dấu đã đọc",
+  "open": "Mở",
+  "groups": {
+    "today": "Hôm nay",
+    "yesterday": "Hôm qua",
+    "thisWeek": "Tuần này",
+    "earlier": "Trước đó"
+  },
+  "emptyCategory": "Chưa có thông báo nào thuộc loại này.",
+  "emptyHint": "Khi có người thêm bạn vào ngân sách, bình luận hay sắp đến hạn trả nợ, bạn sẽ thấy ở đây."
 }

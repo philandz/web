@@ -37,7 +37,8 @@
     "myBalance": "Số dư của tôi",
     "totalSpent": "Tổng đã chi",
     "memberCount": "{count, plural, other {# thành viên}}",
-    "debtOwed": "Dư nợ"
+    "debtOwed": "Dư nợ",
+    "view": "Xem"
   },
   "create": {
     "pickType": "Bạn muốn tạo gì?",
@@ -70,7 +71,14 @@
     "periodStartDay": "Kỳ ngân sách bắt đầu ngày",
     "periodStartDayHint": "Ngày trong tháng ngân sách được làm mới, ví dụ ngày nhận lương.",
     "expectedIncome": "Thu nhập dự kiến mỗi tháng",
-    "expectedIncomeHint": "Dùng để đổi tỷ lệ của mẫu thành số tiền kế hoạch."
+    "expectedIncomeHint": "Dùng để đổi tỷ lệ của mẫu thành số tiền kế hoạch.",
+    "templates": {
+      "01": "Gia đình 50/30/20",
+      "02": "Thu nhập tự do hằng tháng",
+      "03": "Chia tiền chuyến đi / sự kiện",
+      "04": "Theo dõi trả nợ",
+      "05": "Quỹ khẩn cấp"
+    }
   },
   "dialogs": {
     "edit": {
@@ -146,7 +154,15 @@
     "noTransactions": "Chưa có giao dịch",
     "emptyTitle": "Chưa có giao dịch",
     "emptySubtitle": "Thêm giao dịch đầu tiên để xem thống kê chi tiêu.",
-    "noCategories": "Chưa có chi tiêu theo danh mục"
+    "noCategories": "Chưa có chi tiêu theo danh mục",
+    "trendTitle": "Chi tiêu 12 tháng gần nhất",
+    "trendSubtitle": "Tổng chi mỗi tháng",
+    "categoriesCount": "danh mục",
+    "recentTransactions": "Giao dịch gần đây",
+    "viewAll": "Xem tất cả",
+    "lastEntries": "{count} giao dịch mới nhất",
+    "prevMonth": "Tháng trước",
+    "nextMonth": "Tháng sau"
   },
   "transactions": {
     "searchPlaceholder": "Tìm giao dịch...",
@@ -173,7 +189,9 @@
       "title": "Không tìm thấy giao dịch nào.",
       "body": "Thử điều chỉnh tìm kiếm hoặc bộ lọc.",
       "clear": "Xóa bộ lọc",
-      "allTime": "Xem tất cả thời gian"
+      "allTime": "Xem tất cả thời gian",
+      "newTitle": "Chưa có giao dịch nào",
+      "newBody": "Thêm giao dịch đầu tiên, hoặc nhập nhiều dòng cùng lúc."
     },
     "filters": "Bộ lọc",
     "filterTypeTitle": "Lọc theo loại",
@@ -252,7 +270,11 @@
     "resetAll": "Đặt lại tất cả",
     "showResults": "Xem {count} giao dịch",
     "results": "{count} giao dịch",
-    "loadError": "Không tải được giao dịch."
+    "loadError": "Không tải được giao dịch.",
+    "moreAddOptions": "Cách thêm khác",
+    "addTransactionHint": "Một giao dịch, đầy đủ thông tin",
+    "quickAddHint": "Nhập nhiều dòng như bảng tính",
+    "importCsvHint": "Tải lên file CSV (sao kê, Excel)"
   },
   "txForm": {
     "createTitle": "Thêm giao dịch",
@@ -425,7 +447,10 @@
     "save": "Lưu",
     "saving": "Đang lưu...",
     "you": "Bạn",
-    "pendingInvite": "Chờ xác nhận"
+    "pendingInvite": "Chờ xác nhận",
+    "noOtherOrgMembers": "Tổ chức chưa có ai khác để thêm.",
+    "notInOrg": "Người cần thêm chưa có trong tổ chức?",
+    "inviteToOrg": "Mời vào tổ chức"
   },
   "settings": {
     "generalTitle": "Thông tin chung",
@@ -597,7 +622,11 @@
     "saving": "Đang lưu...",
     "saveSuccess": "Đã lưu giao dịch",
     "saveError": "Không thể lưu giao dịch",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "descriptionPlaceholder": "VD: Ăn trưa",
+    "amountPlaceholder": "VD: 50k",
+    "removeRow": "Xoá dòng",
+    "hint": "Số tiền gõ tắt được: 50k, 1tr5. Dòng thiếu mô tả hoặc số tiền sẽ được bỏ qua."
   },
   "bulkImport": {
     "title": "Nhập giao dịch",
@@ -749,7 +778,8 @@
     "formQuantityPlaceholder": "VD: 1 hoặc 37.5",
     "formUnitChi": "chỉ",
     "formUnitLuong": "lượng",
-    "formUnitGram": "gram"
+    "formUnitGram": "gram",
+    "emptyAssets": "Chưa có tài sản. Thêm tài khoản tiết kiệm, sổ tiết kiệm, vàng hoặc cổ phiếu để bắt đầu."
   },
   "transfer": {
     "title": "Chuyển tiền giữa các budget",

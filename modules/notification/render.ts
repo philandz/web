@@ -25,6 +25,26 @@ function scalarParams(params: Record<string, unknown>): Record<string, string | 
   return out;
 }
 
+const ROLES = new Set(["owner", "manager", "contributor", "viewer"]);
+
+/**
+ * Message values: the producer's params plus what the messages may always rely on —
+ * `actor_name` (from the inbox lookup when the producer did not send one), a readable
+ * `entry_description` and a translated `role_label`.
+ */
+export function templateValues(t: Translator, item: InboxItem): Record<string, string | number> {
+  const values = scalarParams(item.params);
+  const text = (k: string) => (typeof values[k] === "string" ? (values[k] as string).trim() : "");
+  const role = text("role").toLowerCase();
+  return {
+    ...values,
+    count: item.groupCount,
+    actor_name: text("actor_name") || item.actorName || t("someone"),
+    entry_description: text("entry_description") || t("aTransaction"),
+    role_label: ROLES.has(role) ? t(`roles.${role}`) : role,
+  };
+}
+
 /**
  * Personal notifications are rendered client-side from `type` + `params` through the
  * `notification.types.<type>` messages; unknown types (a newer producer than this web build)
@@ -38,7 +58,7 @@ export function renderNotification(t: Translator, item: InboxItem): RenderedNoti
   const base = `types.${typeKey(item.type)}`;
   if (t.has(`${base}.title`)) {
     try {
-      const values = { ...scalarParams(item.params), count: item.groupCount };
+      const values = templateValues(t, item);
       const groupedKey = `${base}.grouped`;
       const title =
         item.groupCount > 1 && t.has(groupedKey) ? t(groupedKey, values) : t(`${base}.title`, values);
