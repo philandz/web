@@ -1,6 +1,6 @@
 "use client";
 
-import { Megaphone } from "lucide-react";
+import { Info, Megaphone, TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -10,6 +10,7 @@ import { InlineAlert } from "@/components/state/inline-alert";
 import { useToast } from "@/components/state/toast-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getFormErrorMessage } from "@/lib/form-errors";
@@ -49,6 +50,71 @@ function toDraft(b: Broadcast): BroadcastDraft {
   };
 }
 
+/** What users will get, shown before a broadcast goes out (it cannot be unsent). */
+function PublishDialog({
+  broadcast,
+  pending,
+  onCancel,
+  onConfirm,
+}: {
+  broadcast: Broadcast;
+  pending: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const t = useTranslations("notification.admin");
+  const audience =
+    broadcast.audience === "users"
+      ? t("audienceSummaryUsers", { count: broadcast.audienceUserIds.length })
+      : t("audienceSummaryAll");
+  const tone =
+    broadcast.severity === "critical"
+      ? "border-destructive/40 bg-destructive/10"
+      : broadcast.severity === "warning"
+        ? "border-amber-500/40 bg-amber-500/10"
+        : "border-border bg-muted/40";
+  const Icon = broadcast.severity === "info" ? Info : TriangleAlert;
+  return (
+    <Dialog open onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("publishConfirmTitle")}</DialogTitle>
+          <DialogDescription>{t("publishConfirmBody", { audience })}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 py-1" data-testid="broadcast-preview">
+          {[
+            { lang: "VI", title: broadcast.titleVi, body: broadcast.bodyVi },
+            { lang: "EN", title: broadcast.titleEn, body: broadcast.bodyEn },
+          ].map((v) => (
+            <div key={v.lang} className={`flex gap-3 rounded-xl border p-3 ${tone}`}>
+              <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  <span className="mr-2 rounded bg-background px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{v.lang}</span>
+                  {v.title}
+                </p>
+                <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{v.body}</p>
+              </div>
+            </div>
+          ))}
+          <p className="text-xs text-muted-foreground">
+            {broadcast.showBanner ? t("previewWithBanner") : t("previewInboxOnly")}
+            {broadcast.link ? ` · ${broadcast.link}` : ""}
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel} disabled={pending}>
+            {t("cancel")}
+          </Button>
+          <Button onClick={onConfirm} disabled={pending} data-testid="confirm-publish">
+            {t("publishNow")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function AdminNotificationsPage() {
   const t = useTranslations("notification.admin");
   const tStatus = useTranslations("notification.admin.status");
@@ -57,6 +123,7 @@ export default function AdminNotificationsPage() {
   const create = useCreateBroadcastMutation();
   const update = useUpdateBroadcastMutation();
   const publish = usePublishBroadcastMutation();
+  const [confirming, setConfirming] = useState<Broadcast | null>(null);
   const archive = useArchiveBroadcastMutation();
 
   const [draft, setDraft] = useState<BroadcastDraft>(EMPTY);
@@ -217,7 +284,10 @@ export default function AdminNotificationsPage() {
                   <Badge>{tStatus(b.status)}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {t("readBy", { count: b.readCount })} · {b.audience}
+                  {t("readBy", { count: b.readCount })} ·{" "}
+                  {b.audience === "users"
+                    ? t("audienceSummaryUsers", { count: b.audienceUserIds.length })
+                    : t("audienceSummaryAll")}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
@@ -238,12 +308,7 @@ export default function AdminNotificationsPage() {
                   <Button
                     size="sm"
                     disabled={publish.isPending}
-                    onClick={() =>
-                      publish.mutate(b.id, {
-                        onSuccess: () => toast.success(t("published")),
-                        onError: (e) => toast.error(getFormErrorMessage(e, t("saveError"))),
-                      })
-                    }
+                    onClick={() => setConfirming(b)}
                   >
                     {t("publish")}
                   </Button>
@@ -263,6 +328,23 @@ export default function AdminNotificationsPage() {
           ))}
         </ul>
       )}
+
+      {confirming ? (
+        <PublishDialog
+          broadcast={confirming}
+          pending={publish.isPending}
+          onCancel={() => setConfirming(null)}
+          onConfirm={() =>
+            publish.mutate(confirming.id, {
+              onSuccess: () => {
+                toast.success(t("published"));
+                setConfirming(null);
+              },
+              onError: (e) => toast.error(getFormErrorMessage(e, t("saveError"))),
+            })
+          }
+        />
+      ) : null}
     </section>
   );
 }

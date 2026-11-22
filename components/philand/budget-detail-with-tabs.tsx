@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { routes } from "@/constants/routes";
@@ -8,20 +7,12 @@ import { cn } from "@/lib/utils";
 
 import { useBurnRateQuery, useBudgetMembersQuery } from "@/modules/budget/hooks";
 import { useCategoriesQuery } from "@/modules/category/hooks";
-import { useTransactionsQuery, useBulkTransactionMutation, useEntrySummaryQuery } from "@/modules/transaction/hooks";
+import { useTransactionsQuery, useEntrySummaryQuery } from "@/modules/transaction/hooks";
 
-import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
-import { QuickAddDrawer } from "@/components/philand/quick-add-drawer";
-import { TransactionDetailDrawer } from "@/components/philand/transaction-detail-drawer";
 import { CategoriesTab } from "@/components/philand/categories-tab";
 import { MembersTab } from "@/components/philand/members-tab";
 import { SettingsTab } from "@/components/philand/settings-tab";
 import { TransactionsTab } from "@/components/philand/transactions-tab";
-import { Input } from "@/components/ui/input";
-import { SelectNative } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { UserAvatar } from "@/components/ui/user-avatar";
-import { useToast } from "@/components/state/toast-provider";
 
 import { budgetTypeMeta } from "@/lib/budget-types";
 import { isFeatureEnabled } from "@/lib/features";
@@ -29,7 +20,6 @@ import { PeriodOverview } from "./period-overview";
 import { TransactionComposer } from "@/components/transaction-composer/transaction-composer";
 import { PlanTab } from "./plan-tab";
 import type { Budget, BudgetType } from "@/services/budget-service";
-import type { Transaction, TransactionKind, TransactionType, TransactionListParams } from "@/services/transaction-service";
 import { amountSign, amountToneClass, isInflow, isTransferKind } from "@/lib/transaction-kind";
 import { formatCompactMoney, formatShortDate } from "@/lib/format";
 import { getActiveLocale } from "@/lib/active-locale";
@@ -55,15 +45,6 @@ function fmtDate(dateStr: string) {
   return formatShortDate(dateStr);
 }
 
-function fmtDateFull(dateStr: string) {
-  return new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(new Date(dateStr));
-}
-
 function typeCfg(type: BudgetType) {
   const m = budgetTypeMeta(type);
   return { labelKey: m.labelKey, icon: m.emoji, ...m.hex };
@@ -78,41 +59,6 @@ function TypeIcon({ type }: { type: BudgetType }) {
     >
       <span className="text-[18px] leading-none">{cfg.icon}</span>
     </div>
-  );
-}
-
-function TxTypeChip({ type }: { type: TransactionKind }) {
-  const isIncome = type === "income";
-  if (isTransferKind(type)) {
-    return (
-      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-sky-500/25 bg-sky-500/10 px-2 py-[2px] text-[10px] font-bold text-sky-700 dark:text-sky-400">
-        ⇄ {type === "transfer_in" ? "Transfer in" : "Transfer out"}
-      </span>
-    );
-  }
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-[2px] text-[10px] font-bold",
-        isIncome
-          ? "border-income/25 bg-income/10 text-income"
-          : "border-expense/25 bg-expense/10 text-expense",
-      )}
-    >
-      {isIncome ? "↑" : "↓"} {isIncome ? "Income" : "Expense"}
-    </span>
-  );
-}
-
-function CatPill({ name, icon, color }: { name: string; icon: string; color: string }) {
-  return (
-    <span
-      className="inline-flex items-center gap-1 rounded-md border px-2 py-[2px] text-[11px] font-semibold"
-      style={{ background: `${color}18`, borderColor: `${color}33`, color }}
-    >
-      <span>{icon}</span>
-      {name}
-    </span>
   );
 }
 
@@ -144,7 +90,15 @@ function buildPath(values: number[], w: number, h: number) {
   return { line, area, pts };
 }
 
-function CategoryDonut({ slices, currency }: { slices: Array<{ id: string; label: string; value: number; color: string }>; currency: string }) {
+function CategoryDonut({
+  slices,
+  currency,
+  centerLabel,
+}: {
+  slices: Array<{ id: string; label: string; value: number; color: string }>;
+  currency: string;
+  centerLabel: string;
+}) {
   const total = slices.reduce((s, x) => s + x.value, 0);
   if (total <= 0) return null;
 
@@ -190,7 +144,7 @@ function CategoryDonut({ slices, currency }: { slices: Array<{ id: string; label
           {arcs.length}
         </text>
         <text x="70" y="79" textAnchor="middle" fontSize="9" fill="hsl(var(--muted-foreground))">
-          cats
+          {centerLabel}
         </text>
       </svg>
 
@@ -199,7 +153,7 @@ function CategoryDonut({ slices, currency }: { slices: Array<{ id: string; label
           <li key={a.id} className="flex items-center gap-2 text-[11px]">
             <span className="h-2 w-2 rounded-sm" style={{ background: a.color }} />
             <span className="min-w-0 flex-1 truncate text-muted-foreground">{a.label}</span>
-            <span className="font-bold tabular-nums text-foreground">{fmtShort(a.value, currency)}</span>
+            <span className="font-bold tabular-nums text-foreground">{fmt(a.value, currency)}</span>
             <span className="w-7 text-right text-muted-foreground">
               {Math.round((a.value / total) * 100)}%
             </span>
@@ -210,7 +164,15 @@ function CategoryDonut({ slices, currency }: { slices: Array<{ id: string; label
   );
 }
 
-function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency: string }) {
+function BudgetOverviewMock({
+  budgetId,
+  currency,
+  onViewAll,
+}: {
+  budgetId: string;
+  currency: string;
+  onViewAll: () => void;
+}) {
   const t = useTranslations("budget.overview");
   const { data: envelope } = useBurnRateQuery(budgetId);
   const { data: txData } = useTransactionsQuery({ budgetId, pageSize: 200, sortBy: "date", sortDir: "desc" });
@@ -294,17 +256,8 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
         <Panel className="p-[18px]">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <div className="text-[13px] font-bold text-foreground">Spending Trend</div>
-              <div className="mt-0.5 text-[11px] text-muted-foreground">
-                {new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "long", year: "numeric" }).format(new Date())}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <Button variant="ghost" size="sm" className="h-7 px-2">◀</Button>
-              <span className="rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
-                {new Intl.DateTimeFormat(localeToBCP47(getActiveLocale()), { month: "short", year: "numeric" }).format(new Date())}
-              </span>
-              <Button variant="ghost" size="sm" className="h-7 px-2">▶</Button>
+              <div className="text-[13px] font-bold text-foreground">{t("trendTitle")}</div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground">{t("trendSubtitle")}</div>
             </div>
           </div>
 
@@ -337,7 +290,7 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
 
         <Panel className="p-[18px]">
           <div className="mb-3 text-[13px] font-bold text-foreground">{t("byCategory")}</div>
-          {slices.length ? <CategoryDonut slices={slices} currency={currency} /> : (
+          {slices.length ? <CategoryDonut slices={slices} currency={currency} centerLabel={t("categoriesCount", { count: slices.length })} /> : (
             <div className="flex h-[160px] items-center justify-center text-sm text-muted-foreground">{t("noCategories")}</div>
           )}
         </Panel>
@@ -345,9 +298,16 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
 
       <Panel className="p-[18px]">
         <div className="mb-3 flex items-center justify-between">
-          <div className="text-[13px] font-bold text-foreground">Recent Transactions</div>
-          <span className="cursor-pointer text-[12px] font-semibold text-primary">View all →</span>
+          <div className="text-[13px] font-bold text-foreground">{t("recentTransactions")}</div>
+          {recent.length ? (
+            <button type="button" onClick={onViewAll} className="text-[12px] font-semibold text-primary hover:underline">
+              {t("viewAll")}
+            </button>
+          ) : null}
         </div>
+        {recent.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">{t("emptySubtitle")}</p>
+        ) : null}
         <div>
           {recent.map((tx, i) => {
             const isIncome = isInflow(tx.type);
@@ -360,430 +320,28 @@ function BudgetOverviewMock({ budgetId, currency }: { budgetId: string; currency
                   "grid h-[34px] w-[34px] place-items-center rounded-full text-[14px]",
                   isTransferKind(tx.type) ? "bg-sky-500/10 text-sky-700 dark:text-sky-400" : isIncome ? "bg-income/10 text-income" : "bg-expense/10 text-expense",
                 )}>
-                  {isTransferKind(tx.type) ? "⇄" : isIncome ? "↑" : "↓"}
+                  {isTransferKind(tx.type)
+                    ? "⇄"
+                    : (tx.categoryId && catById.get(tx.categoryId)?.icon) || (isIncome ? "↑" : "↓")}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-semibold text-foreground">{tx.description}</div>
-                  <div className="mt-0.5 text-[11px] text-muted-foreground">{fmtDate(tx.date)}</div>
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
+                    {fmtDate(tx.date)}
+                    {tx.categoryId && catById.get(tx.categoryId) ? ` · ${catById.get(tx.categoryId)!.name}` : ""}
+                  </div>
                 </div>
                 <div className={cn(
                   "text-[14px] font-extrabold tabular-nums",
                   isTransferKind(tx.type) ? amountToneClass(tx.type) : isIncome ? "text-income" : "text-expense",
                 )}>
-                  {amountSign(tx.type)}{fmtShort(tx.amount, currency)}
+                  {amountSign(tx.type)}{fmt(tx.amount, currency)}
                 </div>
               </div>
             );
           })}
         </div>
       </Panel>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Transactions (pixel-spec)
-// ---------------------------------------------------------------------------
-
-function BudgetTransactionsMock({ budget }: { budget: Budget }) {
-  const t = useTranslations("budget.transactions");
-  const toast = useToast();
-
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TransactionType | null>(null);
-  const [catFilter, setCatFilter] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [detailTx, setDetailTx] = useState<Transaction | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [hoverRow, setHoverRow] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<NonNullable<TransactionListParams["sortBy"]>>("date");
-  const [sortDir, setSortDir] = useState<NonNullable<TransactionListParams["sortDir"]>>("desc");
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 8;
-
-  const [createOpen, setCreateOpen] = useState(false);
-  const [quickOpen, setQuickOpen] = useState(false);
-  const [editTx, setEditTx] = useState<Transaction | undefined>(undefined);
-
-  const { data: txData, isLoading } = useTransactionsQuery({
-    budgetId: budget.id,
-    pageSize: 250,
-    sortBy: "date",
-    sortDir: "desc",
-  });
-  const transactions = txData?.items ?? [];
-
-  const { data: categories = [] } = useCategoriesQuery(budget.id);
-  const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
-
-  const bulkMutation = useBulkTransactionMutation();
-
-  let filtered = transactions.filter((tx) => {
-    if (search && !tx.description.toLowerCase().includes(search.toLowerCase())) return false;
-    if (typeFilter && tx.type !== typeFilter) return false;
-    if (catFilter && (tx.categoryId ?? "") !== catFilter) return false;
-    return true;
-  });
-
-  filtered = [...filtered].sort((a, b) => {
-    const av = (a as any)[sortKey];
-    const bv = (b as any)[sortKey];
-    const aVal = typeof av === "string" ? av.toLowerCase() : av;
-    const bVal = typeof bv === "string" ? bv.toLowerCase() : bv;
-    if (aVal === bVal) return 0;
-    const lt = aVal < bVal;
-    return sortDir === "asc" ? (lt ? -1 : 1) : (lt ? 1 : -1);
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const clampedPage = Math.min(page, totalPages);
-  const paged = filtered.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
-  const hasFilters = Boolean(search || typeFilter || catFilter);
-
-  const totalIncome = filtered.filter((x) => x.type === "income").reduce((s, x) => s + x.amount, 0);
-  const totalExpense = filtered.filter((x) => x.type === "expense").reduce((s, x) => s + x.amount, 0);
-
-  function clearFilters() {
-    setSearch("");
-    setTypeFilter(null);
-    setCatFilter("");
-    setPage(1);
-  }
-
-  function toggleSort(key: NonNullable<TransactionListParams["sortBy"]>) {
-    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortKey(key);
-      setSortDir("desc");
-    }
-    setPage(1);
-  }
-
-  function toggleSelect(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  function toggleAll() {
-    setSelected((prev) => (prev.size === paged.length ? new Set() : new Set(paged.map((x) => x.id))));
-  }
-
-  function handleBulkDelete() {
-    bulkMutation.mutate(
-      { kind: "delete", ids: Array.from(selected) },
-      {
-        onSuccess: () => {
-          toast.success(t("bulkDeleteSuccess"));
-          setSelected(new Set());
-          setDetailOpen(false);
-          setDetailTx(null);
-        },
-        onError: () => toast.error(t("bulkDeleteError")),
-      },
-    );
-  }
-
-  const SortIcon = ({ k }: { k: string }) => {
-    if (sortKey !== k) return <span className="text-[10px] text-muted-foreground">⇅</span>;
-    return <span className="text-[10px] text-primary">{sortDir === "asc" ? "↑" : "↓"}</span>;
-  };
-
-  const ThBtn = ({ label, k, align = "left" }: { label: string; k: NonNullable<TransactionListParams["sortBy"]>; align?: "left" | "right" }) => (
-    <button
-      type="button"
-      onClick={() => toggleSort(k)}
-      className={cn(
-        "inline-flex items-center gap-1 bg-transparent text-[11px] font-bold uppercase tracking-[.06em]",
-        sortKey === k ? "text-foreground" : "text-muted-foreground",
-        align === "right" && "justify-end",
-      )}
-    >
-      {label} <SortIcon k={k} />
-    </button>
-  );
-
-  return (
-    <div>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[180px] flex-1">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">🔍</span>
-          <Input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder={t("searchPlaceholder")}
-            className="h-9 pl-8"
-          />
-        </div>
-
-        <div className="flex items-center gap-0.5 rounded-xl border border-border bg-card p-[3px]">
-          {([
-            { id: "all", v: null, label: "All" },
-            { id: "income", v: "income" as const, label: "↑ Income" },
-            { id: "expense", v: "expense" as const, label: "↓ Expense" },
-          ] as const).map((opt) => {
-            const active = typeFilter === opt.v;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => {
-                  setTypeFilter(opt.v);
-                  setPage(1);
-                }}
-                className={cn(
-                  "h-7 rounded-lg px-3 text-xs font-semibold transition-all",
-                  active ? "shadow-soft" : "text-muted-foreground",
-                  active && opt.v === "income" && "bg-income/10 text-income",
-                  active && opt.v === "expense" && "bg-expense/10 text-expense",
-                  active && opt.v === null && "bg-muted text-foreground",
-                )}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <SelectNative
-          value={catFilter}
-          onValueChange={(v) => {
-            setCatFilter(v);
-            setPage(1);
-          }}
-          className="h-9 w-auto"
-        >
-          <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.icon} {c.name}
-            </option>
-          ))}
-        </SelectNative>
-
-        {hasFilters ? (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="h-8 px-2 text-xs font-semibold text-muted-foreground underline"
-          >
-            Clear
-          </button>
-        ) : null}
-
-        <div className="flex-1" />
-
-        <div className="inline-flex">
-          <Button
-            className="rounded-r-none bg-brand-gradient text-primary-foreground shadow-soft"
-            onClick={() => {
-              setEditTx(undefined);
-              setCreateOpen(true);
-            }}
-          >
-            + New Entry
-          </Button>
-          <Button
-            className="rounded-l-none bg-brand-gradient text-primary-foreground shadow-soft"
-            onClick={() => setQuickOpen(true)}
-            title="Bulk import"
-          >
-            ▾
-          </Button>
-        </div>
-      </div>
-
-      {hasFilters ? (
-        <div className="mb-3 flex items-center gap-2">
-          <div className="rounded-full border border-income/25 bg-income/10 px-3 py-1 text-xs font-semibold text-income">
-            ↑ {fmtShort(totalIncome, budget.currency)} income
-          </div>
-          <div className="rounded-full border border-expense/25 bg-expense/10 px-3 py-1 text-xs font-semibold text-expense">
-            ↓ {fmtShort(totalExpense, budget.currency)} expense
-          </div>
-          <div className="text-xs text-muted-foreground">{filtered.length} results</div>
-        </div>
-      ) : null}
-
-      {selected.size > 0 ? (
-        <div className="mb-2 flex items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 py-2.5">
-          <div className="grid h-[18px] w-[18px] place-items-center rounded-[5px] bg-primary text-[10px] font-extrabold text-primary-foreground">
-            {selected.size}
-          </div>
-          <span className="text-sm font-semibold text-foreground">{selected.size} selected</span>
-          <Button
-            variant="outline"
-            className="ml-auto h-[30px] border-expense/30 text-expense hover:bg-expense/10"
-            disabled={bulkMutation.isPending}
-            onClick={handleBulkDelete}
-          >
-            🗑 Delete selected
-          </Button>
-          <button type="button" className="h-8 px-2 text-xs font-semibold text-muted-foreground" onClick={() => setSelected(new Set())}>
-            Cancel
-          </button>
-        </div>
-      ) : null}
-
-      <Panel className="overflow-hidden">
-        {isLoading ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>
-        ) : paged.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 px-5 py-14 text-center">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-muted text-[22px]">↕</div>
-            <div className="text-[14px] font-bold text-foreground">{t("empty")}</div>
-            <div className="text-[13px] text-muted-foreground">
-              {hasFilters ? "Try adjusting your filters." : "Add your first transaction to get started."}
-            </div>
-            {!hasFilters ? (
-              <Button onClick={() => { setEditTx(undefined); setCreateOpen(true); }} className="bg-brand-gradient text-primary-foreground shadow-soft">
-                + New Entry
-              </Button>
-            ) : null}
-          </div>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-muted">
-                <th className="w-10 px-3 py-2.5">
-                  <input
-                    type="checkbox"
-                    checked={selected.size === paged.length && paged.length > 0}
-                    onChange={toggleAll}
-                    className="cursor-pointer"
-                  />
-                </th>
-                <th className="px-3 py-2.5 text-left"><ThBtn label="Date" k="date" /></th>
-                <th className="px-3 py-2.5 text-left">
-                  <span className="text-[11px] font-bold uppercase tracking-[.06em] text-muted-foreground">Type</span>
-                </th>
-                <th className="px-3 py-2.5 text-left"><ThBtn label="Description" k="description" /></th>
-                <th className="px-3 py-2.5 text-left">
-                  <span className="text-[11px] font-bold uppercase tracking-[.06em] text-muted-foreground">Category</span>
-                </th>
-                <th className="px-3 py-2.5 text-right"><ThBtn label="Amount" k="amount" align="right" /></th>
-                <th className="px-3 py-2.5 text-left">
-                  <span className="text-[11px] font-bold uppercase tracking-[.06em] text-muted-foreground">By</span>
-                </th>
-                <th className="w-[60px]" />
-              </tr>
-            </thead>
-            <tbody>
-              {paged.map((tx) => {
-                const isActive = detailOpen && detailTx?.id === tx.id;
-                const isHover = hoverRow === tx.id;
-                const isIncome = isInflow(tx.type);
-                const cat = tx.categoryId ? categoryMap.get(tx.categoryId) : null;
-                return (
-                  <tr
-                    key={tx.id}
-                    onClick={() => {
-                      setDetailTx(tx);
-                      setDetailOpen(true);
-                    }}
-                    onMouseEnter={() => setHoverRow(tx.id)}
-                    onMouseLeave={() => setHoverRow(null)}
-                    className={cn(
-                      "border-b border-border transition-colors",
-                      isActive ? "bg-primary/5" : isHover ? "bg-muted" : "bg-transparent",
-                      "cursor-pointer",
-                    )}
-                  >
-                    <td className="px-3 py-[11px]" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        aria-label="Select row"
-                        checked={selected.has(tx.id)}
-                        onChange={() => toggleSelect(tx.id)}
-                        className="cursor-pointer"
-                      />
-                    </td>
-                    <td className="px-3 py-[11px] whitespace-nowrap text-xs tabular-nums text-muted-foreground">{fmtDate(tx.date)}</td>
-                    <td className="px-3 py-[11px]"><TxTypeChip type={tx.type} /></td>
-                    <td className="px-3 py-[11px] max-w-[220px]">
-                      <div className="truncate text-[13px] font-semibold text-foreground">{tx.description}</div>
-                      {tx.tags.length ? (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {tx.tags.slice(0, 2).map((tag) => (
-                            <span key={tag} className="rounded-full bg-muted px-2 py-[1px] text-[10px] font-semibold text-muted-foreground">#{tag}</span>
-                          ))}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-[11px]">
-                      {cat ? <CatPill name={cat.name} icon={cat.icon} color={cat.color} /> : <span className="text-xs text-muted-foreground">—</span>}
-                    </td>
-                    <td className="px-3 py-[11px] whitespace-nowrap text-right">
-                      <span className={cn(
-                        "text-[14px] font-extrabold tabular-nums tracking-[-.02em]",
-                        isTransferKind(tx.type) ? amountToneClass(tx.type) : isIncome ? "text-income" : "text-expense",
-                      )}>
-                        {amountSign(tx.type)}{fmtShort(tx.amount, budget.currency)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-[11px]">
-                      <UserAvatar name={tx.createdBy ?? ""} size={24} fallbackClassName="text-[10px]" />
-                    </td>
-                    <td className="px-2 py-[11px]">
-                      <div className={cn("flex gap-1 text-xs text-muted-foreground transition-opacity", isHover || isActive ? "opacity-100" : "opacity-0")}>
-                        {tx.isRecurring ? <span title="Recurring">↻</span> : null}
-                        {tx.hasAttachment ? <span title="Has attachment">📎</span> : null}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-
-        {paged.length > 0 ? (
-          <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
-            <span>
-              {(clampedPage - 1) * PAGE_SIZE + 1}–{Math.min(clampedPage * PAGE_SIZE, filtered.length)} of {filtered.length}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" className="h-7 w-7 p-0" disabled={clampedPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                ←
-              </Button>
-              <span className="px-2 text-xs font-semibold text-foreground">{clampedPage} / {totalPages}</span>
-              <Button variant="outline" size="sm" className="h-7 w-7 p-0" disabled={clampedPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-                →
-              </Button>
-            </div>
-          </div>
-        ) : null}
-      </Panel>
-
-      <TransactionDetailDrawer
-        open={detailOpen}
-        onClose={() => {
-          setDetailOpen(false);
-          setDetailTx(null);
-        }}
-        transaction={detailTx}
-        budgetId={budget.id}
-        currency={budget.currency}
-      />
-
-      <TransactionFormDrawer
-        open={createOpen}
-        onClose={() => { setCreateOpen(false); setEditTx(undefined); }}
-        budgetId={budget.id}
-        transaction={editTx}
-        currency={budget.currency}
-      />
-      <QuickAddDrawer
-        open={quickOpen}
-        onClose={() => setQuickOpen(false)}
-        budgetId={budget.id}
-        currency={budget.currency}
-      />
     </div>
   );
 }
@@ -807,7 +365,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
   const barColor = spendPct == null ? "hsl(var(--border))" : spendPct >= 100 ? "hsl(var(--expense))" : spendPct >= 80 ? "hsl(38 85% 50%)" : "hsl(var(--primary))";
 
   return (
-<div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+<div className="mx-auto w-full max-w-5xl">
       <Panel className="overflow-hidden">
         <div style={{ height: 3, background: `linear-gradient(90deg, ${cfg.stripe}, ${cfg.stripe}88)` }} />
 
@@ -821,11 +379,11 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
         </div>
 
         <div className="px-5 pb-0 pt-4">
-          <div className="mb-4 flex items-start gap-3.5">
+          <div className="mb-4 flex flex-wrap items-start gap-3.5">
             <TypeIcon type={budget.type} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[20px] font-bold tracking-[-.3px] text-foreground">{budget.name}</h1>
+                <h1 className="break-words text-[20px] font-bold tracking-[-.3px] text-foreground">{budget.name}</h1>
                 <span
                   className="rounded-full border px-2.5 py-1 text-[11px] font-bold"
                   style={{ background: cfg.iconBg, color: cfg.iconFg, borderColor: `${cfg.stripe}33` }}
@@ -833,8 +391,8 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                   {tRoot(cfg.labelKey)}
                 </span>
                 {budget.myRole !== "owner" ? (
-                  <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-bold capitalize text-muted-foreground">
-                    {budget.myRole}
+                  <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground">
+                    {tRoot(`budget.members.role${budget.myRole.charAt(0).toUpperCase()}${budget.myRole.slice(1)}`)}
                   </span>
                 ) : null}
               </div>
@@ -843,8 +401,9 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-3">
-              <div className="flex flex-col items-end text-right">
+            {/* Phones: the balance gets its own row instead of squeezing the name. */}
+            <div className="flex w-full shrink-0 items-center gap-3 sm:w-auto">
+              <div className="flex w-full items-baseline justify-between gap-2 rounded-xl bg-muted/50 px-3 py-2 sm:w-auto sm:flex-col sm:items-end sm:bg-transparent sm:p-0 sm:text-right">
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {tDetail("currentBalance")}
                 </span>
@@ -861,9 +420,9 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
             <div className="mb-1.5 flex items-baseline justify-between text-xs">
               <span className="text-muted-foreground">
                 <span className="text-sm font-bold text-foreground tabular-nums">
-                  {fmtShort(envelope?.currentSpend ?? 0, budget.currency)}
+                  {fmt(envelope?.currentSpend ?? 0, budget.currency)}
                 </span>
-                {envelope?.monthlyLimit ? <span> / {fmtShort(envelope.monthlyLimit, budget.currency)}</span> : null}
+                {envelope?.monthlyLimit ? <span> / {fmt(envelope.monthlyLimit, budget.currency)}</span> : null}
               </span>
               {spendPct != null ? (
                 <span className={cn(
@@ -883,13 +442,13 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
               <span>{tDetail("spentThisMonthLabel")}</span>
               {envelope?.monthlyLimit ? (
                 <span className="font-semibold text-income">
-                  {tDetail("remainingAmount", { amount: fmtShort(envelope.monthlyLimit - envelope.currentSpend, budget.currency) })}
+                  {tDetail("remainingAmount", { amount: fmt(envelope.monthlyLimit - envelope.currentSpend, budget.currency) })}
                 </span>
               ) : null}
             </div>
           </div>
 
-<div className="-mx-4 sm:-mx-6 flex gap-1 border-b border-border px-4 sm:px-6 overflow-x-auto scrollbar-hide -webkit-overflow-scrolling-touch">
+<div className="-mx-5 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {([
               { id: "overview", label: tDetail("tabOverview") },
               { id: "transactions", label: tDetail("tabTransactions") },
@@ -905,7 +464,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
                   type="button"
                   onClick={() => onTab(tab.id)}
                   className={cn(
-                    "-mb-px border-b-2 px-3.5 py-2 text-[13px] transition-colors",
+                    "-mb-px shrink-0 whitespace-nowrap border-b-2 px-3.5 py-2 text-[13px] transition-colors",
                     active
                       ? "border-primary font-bold text-primary"
                       : "border-transparent font-medium text-muted-foreground hover:text-foreground",
@@ -924,7 +483,7 @@ export function BudgetDetailMockup({ budget, activeTab, onTab }: { budget: Budge
           planningEnabled ? (
             <PeriodOverview budgetId={budget.id} currency={budget.currency} onEditPlan={() => onTab("plan")} />
           ) : (
-            <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} />
+            <BudgetOverviewMock budgetId={budget.id} currency={budget.currency} onViewAll={() => onTab("transactions")} />
           )
         ) : null}
         {activeTab === "plan" && planningEnabled ? (

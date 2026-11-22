@@ -37,7 +37,8 @@
     "myBalance": "My balance",
     "totalSpent": "Total spent",
     "memberCount": "{count, plural, one {# member} other {# members}}",
-    "debtOwed": "Owed"
+    "debtOwed": "Owed",
+    "view": "View"
   },
   "create": {
     "pickType": "What do you want to create?",
@@ -70,7 +71,14 @@
     "periodStartDay": "Budget period starts on day",
     "periodStartDayHint": "Day of the month your budget resets, e.g. your payday.",
     "expectedIncome": "Expected monthly income",
-    "expectedIncomeHint": "Used to turn the template percentages into planned amounts."
+    "expectedIncomeHint": "Used to turn the template percentages into planned amounts.",
+    "templates": {
+      "01": "50/30/20 Household",
+      "02": "Freelancer Monthly",
+      "03": "Trip / Event Sharing",
+      "04": "Debt Payoff Tracker",
+      "05": "Emergency Fund"
+    }
   },
   "dialogs": {
     "edit": {
@@ -146,7 +154,15 @@
     "noTransactions": "No transactions yet",
     "emptyTitle": "No transactions yet",
     "emptySubtitle": "Add your first transaction to see spending insights.",
-    "noCategories": "No categorized expenses yet"
+    "noCategories": "No categorized expenses yet",
+    "trendTitle": "Spending, last 12 months",
+    "trendSubtitle": "Total spent per month",
+    "categoriesCount": "{count, plural, one {category} other {categories}}",
+    "recentTransactions": "Recent transactions",
+    "viewAll": "View all",
+    "lastEntries": "Latest {count, plural, one {# transaction} other {# transactions}}",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
   },
   "transactions": {
     "searchPlaceholder": "Search transactions...",
@@ -173,7 +189,9 @@
       "title": "No transactions found.",
       "body": "Try adjusting your search or filters.",
       "clear": "Clear filters",
-      "allTime": "Show all time"
+      "allTime": "Show all time",
+      "newTitle": "No transactions yet",
+      "newBody": "Add your first one, or enter several rows at once."
     },
     "filters": "Filters",
     "filterTypeTitle": "Filter by type",
@@ -252,7 +270,11 @@
     "resetAll": "Reset all",
     "showResults": "Show {count, plural, one {# result} other {# results}}",
     "results": "{count, plural, one {# transaction} other {# transactions}}",
-    "loadError": "Could not load transactions."
+    "loadError": "Could not load transactions.",
+    "moreAddOptions": "More ways to add",
+    "addTransactionHint": "One transaction, full details",
+    "quickAddHint": "Enter several rows like a spreadsheet",
+    "importCsvHint": "Upload a CSV file (bank export, Excel)"
   },
   "txForm": {
     "createTitle": "Add Transaction",
@@ -425,7 +447,10 @@
     "save": "Save",
     "saving": "Saving...",
     "you": "You",
-    "pendingInvite": "Pending"
+    "pendingInvite": "Pending",
+    "noOtherOrgMembers": "Nobody else in the organization yet.",
+    "notInOrg": "Not in the organization yet?",
+    "inviteToOrg": "Invite them to the organization"
   },
   "settings": {
     "generalTitle": "General",
@@ -597,7 +622,11 @@
     "saving": "Saving...",
     "saveSuccess": "Transactions saved",
     "saveError": "Failed to save transactions",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "descriptionPlaceholder": "e.g. Lunch",
+    "amountPlaceholder": "e.g. 50k",
+    "removeRow": "Remove row",
+    "hint": "Amounts accept shorthand: 50k, 1tr5. Rows without a description or amount are skipped."
   },
   "bulkImport": {
     "title": "Import Transactions",
@@ -749,7 +778,8 @@
     "formQuantityPlaceholder": "e.g. 1 or 37.5",
     "formUnitChi": "chi",
     "formUnitLuong": "luong",
-    "formUnitGram": "gram"
+    "formUnitGram": "gram",
+    "emptyAssets": "No assets yet. Add a savings account, fixed deposit, gold lot, or stock lot to start."
   },
   "transfer": {
     "title": "Transfer between budgets",

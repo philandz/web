@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
@@ -9,13 +9,17 @@ import {
   ArrowUpRight,
   ArrowLeftRight,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  FileUp,
+  ListPlus,
   Paperclip,
   Plus,
   ReceiptText,
   RefreshCw,
   Search,
+  TableProperties,
   X,
 } from "lucide-react";
 import { FilterBadge, Pagination, StatusChip, TypePopover } from "@/components/philand/data-table";
@@ -27,6 +31,7 @@ import { CategoryPopover, MemberPopover } from "@/components/philand/data-table"
 import { TransactionDetailDrawer } from "@/components/philand/transaction-detail-drawer";
 import { TransactionFormDrawer } from "@/components/philand/transaction-form-drawer";
 import { QuickAddDrawer } from "@/components/philand/quick-add-drawer";
+import { BulkImportDrawer } from "@/components/philand/bulk-import-drawer";
 import { SectionLoadingState } from "@/components/state/section-loading-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useBulkTransactionMutation, useTransactionsQuery } from "@/modules/transaction/hooks";
+import { useBulkTransactionMutation, useEntrySummaryQuery, useTransactionQuery, useTransactionsQuery } from "@/modules/transaction/hooks";
 import { useCategoriesForBudgets } from "@/modules/category/hooks";
 import { useBudgetMembersQuery, useBudgetQuery } from "@/modules/budget/hooks";
 import { useAuthStore } from "@/lib/auth-store";
@@ -105,6 +110,7 @@ export function TransactionsTab({
   const t = useTranslations("budget.transactions");
   const tBudget = useTranslations("budget.transactions");
   const tTransfer = useTranslations("budget.transfer");
+  const tTable = useTranslations("common.table");
   const [transferOpen, setTransferOpen] = useState(false);
   const toast = useToast();
 
@@ -186,8 +192,28 @@ export function TransactionsTab({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [detailTx, setDetailTx] = useState<Transaction | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  // `?tx=<id>` (e.g. from a comment notification) opens that transaction once.
+  const searchParams = useSearchParams();
+  const linkedTxId = searchParams.get("tx");
+  const linkedTx = useTransactionQuery(linkedTxId);
+  const openedLinkRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!linkedTxId || !linkedTx.data || openedLinkRef.current === linkedTxId) return;
+    openedLinkRef.current = linkedTxId;
+    setDetailTx(linkedTx.data);
+    setDetailOpen(true);
+  }, [linkedTxId, linkedTx.data]);
+  const dropTxParam = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("tx")) return;
+    url.searchParams.delete("tx");
+    window.history.replaceState(window.history.state, "", url.toString());
+  }, []);
   const [createOpen, setCreateOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── Handlers ────────────────────────────────────────────────────────────
@@ -298,6 +324,14 @@ export function TransactionsTab({
   const rangeValue = { range: applied.range, from: applied.dateFrom, to: applied.dateTo };
   const rangeError = validation.errors.dateTo;
   const defaultView = isDefaultView(applied, qctx);
+  // A budget with nothing recorded yet gets a "start here", not "adjust your filters".
+  const budgetTotals = useEntrySummaryQuery(budgetId && !readOnly ? budgetId : null);
+  const brandNew =
+    defaultView &&
+    !applied.q &&
+    budgetTotals.data !== undefined &&
+    budgetTotals.data.totalIncome === 0 &&
+    budgetTotals.data.totalExpense === 0;
   const resetAll = () => replace(defaults());
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -323,10 +357,55 @@ export function TransactionsTab({
           </Feature>
         )}
         {budgetId && !readOnly && (
-          <Button size="sm" onClick={() => setCreateOpen(true)} data-testid="add-transaction">
-            <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
-            <span className="hidden sm:inline">{t("addTransaction")}</span>
-          </Button>
+          <div className="inline-flex shrink-0">
+            {/* Phones already have the floating "+" composer; keep only the menu here. */}
+            <Button
+              size="sm"
+              className="hidden rounded-r-none md:inline-flex"
+              onClick={() => setCreateOpen(true)}
+              data-testid="add-transaction"
+            >
+              <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{t("addTransaction")}</span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  className="px-2.5 md:rounded-l-none md:border-l md:border-primary-foreground/20 md:px-2"
+                  aria-label={t("moreAddOptions")}
+                  data-testid="add-transaction-menu"
+                >
+                  <ListPlus className="h-4 w-4 md:hidden" />
+                  <ChevronDown className="hidden h-3.5 w-3.5 md:block" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuItem onClick={() => setCreateOpen(true)}>
+                  <ReceiptText className="mr-2 h-4 w-4 shrink-0" />
+                  <div className="text-left">
+                    <div className="font-medium">{t("addTransaction")}</div>
+                    <div className="text-xs text-muted-foreground">{t("addTransactionHint")}</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setQuickAddOpen(true)} data-testid="open-quick-add">
+                  <TableProperties className="mr-2 h-4 w-4 shrink-0" />
+                  <div className="text-left">
+                    <div className="font-medium">{t("quickAdd")}</div>
+                    <div className="text-xs text-muted-foreground">{t("quickAddHint")}</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCsvImportOpen(true)} data-testid="open-csv-import">
+                  <FileUp className="mr-2 h-4 w-4 shrink-0" />
+                  <div className="text-left">
+                    <div className="font-medium">{t("importCsv")}</div>
+                    <div className="text-xs text-muted-foreground">{t("importCsvHint")}</div>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
 
@@ -518,16 +597,28 @@ export function TransactionsTab({
             <ReceiptText className="h-5 w-5 text-muted-foreground/50" />
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">{t("empty.title")}</p>
-            <p className="text-xs text-muted-foreground">{t("empty.body")}</p>
+            <p className="text-sm font-semibold text-foreground">{brandNew ? t("empty.newTitle") : t("empty.title")}</p>
+            <p className="text-xs text-muted-foreground">{brandNew ? t("empty.newBody") : t("empty.body")}</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
+            {brandNew ? (
+              <>
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  {t("addTransaction")}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setQuickAddOpen(true)}>
+                  <TableProperties className="mr-1.5 h-3.5 w-3.5" />
+                  {t("quickAdd")}
+                </Button>
+              </>
+            ) : null}
             {activeFilterCount > 0 && (
               <Button size="sm" variant="outline" onClick={handleClearFilters}>
                 {t("empty.clear")}
               </Button>
             )}
-            {applied.range !== "all" && (
+            {applied.range !== "all" && !brandNew && (
               <Button
                 size="sm"
                 variant="outline"
@@ -548,7 +639,7 @@ export function TransactionsTab({
                   <th className="w-10 px-4 py-3">
                     <input
                       type="checkbox"
-                      aria-label="Select all"
+                      aria-label={tTable("selectAll")}
                       checked={selected.size === transactions.length && transactions.length > 0}
                       onChange={toggleAll}
                       className="rounded"
@@ -623,7 +714,7 @@ export function TransactionsTab({
                     >
                       <input
                         type="checkbox"
-                        aria-label="Select row"
+                        aria-label={tTable("selectRow")}
                         checked={selected.has(tx.id)}
                         onChange={() => toggleSelect(tx.id)}
                         className="rounded"
@@ -793,6 +884,7 @@ export function TransactionsTab({
         onClose={() => {
           setDetailOpen(false);
           setDetailTx(null);
+          dropTxParam();
         }}
         transaction={detailTx}
         budgetId={budgetId}
@@ -812,6 +904,13 @@ export function TransactionsTab({
           onClose={() => setQuickAddOpen(false)}
           budgetId={budgetId}
           currency={currency}
+        />
+      )}
+      {budgetId && (
+        <BulkImportDrawer
+          open={csvImportOpen}
+          onClose={() => setCsvImportOpen(false)}
+          budgetId={budgetId}
         />
       )}
       <Feature flag="transfers">

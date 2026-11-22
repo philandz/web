@@ -1,8 +1,16 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/** False during server rendering and the first client render, so portals never mismatch. */
+function useMounted() {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  return mounted;
+}
 
 interface SheetProps {
   open: boolean;
@@ -19,9 +27,12 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onOpenChange]);
 
-  if (!open) return null;
+  // Rendered into <body>: a transformed ancestor (page enter animations) would otherwise
+  // become the containing block of `position: fixed` and leave part of the screen uncovered.
+  const mounted = useMounted();
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
       <div
@@ -30,7 +41,8 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
         aria-hidden
       />
       {children}
-    </div>
+    </div>,
+    document.body
   );
 }
 

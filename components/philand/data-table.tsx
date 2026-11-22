@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   CalendarDays,
   Check as CheckIcon,
@@ -112,17 +113,18 @@ export function Pagination({
   onPageSize: (s: number) => void;
   pageSizeOptions?: number[];
 }) {
+  const tt = useTranslations("common.table");
   const from = totalRows === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, totalRows);
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-1 pt-3 text-xs text-muted-foreground">
-      <span>{from}–{to} of {totalRows}</span>
+      <span>{tt("range", { from, to, total: totalRows })}</span>
       <div className="flex items-center gap-2">
-        <span>Rows</span>
+        <span>{tt("rows")}</span>
         <select
           value={pageSize}
-          aria-label="Rows per page"
+          aria-label={tt("rowsPerPage")}
           onChange={(e) => onPageSize(Number(e.target.value))}
           className="h-7 rounded-lg border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
         >
@@ -137,7 +139,7 @@ export function Pagination({
             className="h-7 w-7 p-0"
             disabled={page <= 1}
             onClick={() => onPage(page - 1)}
-            aria-label="Previous page"
+            aria-label={tt("prevPage")}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -148,7 +150,7 @@ export function Pagination({
             className="h-7 w-7 p-0"
             disabled={page >= totalPages}
             onClick={() => onPage(page + 1)}
-            aria-label="Next page"
+            aria-label={tt("nextPage")}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
@@ -330,6 +332,7 @@ export function DateRangeFilter({
   onClear: () => void;
   className?: string;
 }) {
+  const tt = useTranslations("common.table");
   const hasDate = Boolean(from || to);
   return (
     <div className={cn(
@@ -356,7 +359,7 @@ export function DateRangeFilter({
           type="button"
           onClick={onClear}
           className="ml-0.5 shrink-0 text-muted-foreground hover:text-foreground"
-          aria-label="Clear dates"
+          aria-label={tt("clearDates")}
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -370,10 +373,11 @@ export function DateRangeFilter({
 // ---------------------------------------------------------------------------
 
 export function FilterBadge({ label, onClear }: { label: string; onClear: () => void }) {
+  const tt = useTranslations("common.table");
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
       {label}
-      <button onClick={onClear} className="ml-0.5 rounded-full hover:text-primary/70" aria-label="Remove filter">
+      <button onClick={onClear} className="ml-0.5 rounded-full hover:text-primary/70" aria-label={tt("removeFilter")}>
         <X className="h-3 w-3" />
       </button>
     </span>
@@ -408,13 +412,14 @@ export function MemberPopover({
   /** When set (and labelled), the list starts with a one-tap "only me". */
   meId?: string;
 }) {
+  const tt = useTranslations("common.table");
   const L: PeopleLabels = labels ?? {
-    trigger: "Members",
-    title: "Filter by member",
-    clear: "Clear",
-    selected: "selected",
-    empty: "No members yet",
-    emptyHint: "Invite teammates to filter by them.",
+    trigger: tt("members"),
+    title: tt("filterByMember"),
+    clear: tt("clear"),
+    selected: tt("selected"),
+    empty: tt("noMembers"),
+    emptyHint: tt("noMembersHint"),
   };
   const [open, setOpen] = useState(false);
 
@@ -545,6 +550,7 @@ export function CategoryPopover({
   onChange: (ids: string[]) => void;
   categories: { id: string; name: string }[];
 }) {
+  const tt = useTranslations("common.table");
   const [open, setOpen] = useState(false);
 
   function toggle(id: string) {
@@ -569,7 +575,7 @@ export function CategoryPopover({
           )}
         >
           <TagIcon className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>Category</span>
+          <span>{tt("category")}</span>
           {value.length > 0 && (
             <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
               {value.length}
@@ -581,26 +587,26 @@ export function CategoryPopover({
       <PopoverContent align="start" sideOffset={6} className="w-60 p-0">
         <div className="border-b border-border bg-muted/40 px-3 py-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-foreground">Filter by category</p>
+            <p className="text-xs font-semibold text-foreground">{tt("filterByCategory")}</p>
             {value.length > 0 && (
               <button
                 type="button"
                 onClick={() => onChange([])}
                 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-primary"
               >
-                Clear
+                {tt("clear")}
               </button>
             )}
           </div>
           {value.length > 0 && (
-            <p className="mt-0.5 text-[10px] text-muted-foreground">{value.length} selected</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">{tt("selectedCount", { count: value.length })}</p>
           )}
         </div>
         {safeCategories.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-1 px-3 py-6 text-center">
             <TagIcon className="h-5 w-5 text-muted-foreground/60" />
-            <p className="text-xs font-medium text-foreground">No categories yet</p>
-            <p className="text-[11px] text-muted-foreground">Create a category to filter by it.</p>
+            <p className="text-xs font-medium text-foreground">{tt("noCategories")}</p>
+            <p className="text-[11px] text-muted-foreground">{tt("noCategoriesHint")}</p>
           </div>
         ) : (
           <div className="max-h-64 overflow-y-auto p-1">
@@ -661,6 +667,7 @@ export function FilterPanel({
   activeFilterCount: number;
   children: React.ReactNode;
 }) {
+  const tt = useTranslations("common.table");
   return (
     <div className="space-y-2">
       {/* Collapsed row: Filter button + pills hint */}
@@ -676,7 +683,7 @@ export function FilterPanel({
               : "border-input bg-background text-foreground hover:bg-muted"
           )}
         >
-          <span>Filter</span>
+          <span>{tt("filter")}</span>
           {activeFilterCount > 0 && (
             <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
               {activeFilterCount}

@@ -76,17 +76,17 @@
       "body": "{description} · {amount, number} ₫"
     },
     "entry_comment_added": {
-      "title": "New comment on a transaction",
-      "grouped": "{count} new comments",
+      "title": "{actor_name} commented on {entry_description}",
+      "grouped": "{count} new comments on {entry_description}",
       "body": "{excerpt}"
     },
     "budget_member_added": {
-      "title": "You were added to {budget_name}",
-      "body": ""
+      "title": "{actor_name} added you to {budget_name}",
+      "body": "Your role: {role_label}"
     },
     "budget_member_role_changed": {
-      "title": "Your role in {budget_name} changed",
-      "body": ""
+      "title": "{actor_name} changed your role in {budget_name}",
+      "body": "New role: {role_label}"
     },
     "sharing_settlement_marked": {
       "title": "{actor_name} recorded a settlement",
@@ -143,11 +143,37 @@
       "bodies": "Enter a message in both languages.",
       "link": "The link must be a relative path starting with /.",
       "users": "Enter at least one valid user id."
-    }
+    },
+    "publishConfirmTitle": "Publish this announcement?",
+    "publishConfirmBody": "It goes to {audience} right away and cannot be unsent (only archived).",
+    "audienceSummaryAll": "all users",
+    "audienceSummaryUsers": "{count, plural, one {# user} other {# users}}",
+    "previewWithBanner": "Shown in the inbox and as a top banner",
+    "previewInboxOnly": "Shown in the inbox only",
+    "publishNow": "Publish now"
   },
   "channels": {
     "in_app": "In app",
     "email": "Email"
   },
-  "settingsEmailHint": "Choose where each kind of notification reaches you. Email is off unless you turn it on."
+  "settingsEmailHint": "Choose where each kind of notification reaches you. Email is off unless you turn it on.",
+  "someone": "A member",
+  "aTransaction": "a transaction",
+  "roles": {
+    "owner": "Owner",
+    "manager": "Manager",
+    "contributor": "Contributor",
+    "viewer": "Viewer"
+  },
+  "filterAll": "All types",
+  "markRead": "Mark as read",
+  "open": "Open",
+  "groups": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "earlier": "Earlier"
+  },
+  "emptyCategory": "No notifications of this type yet.",
+  "emptyHint": "When someone adds you to a budget, comments, or a debt payment is coming up, you will see it here."
 }

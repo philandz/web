@@ -78,6 +78,7 @@ function GoogleSignInButton({
   onCredential: (idToken: string) => void;
   loading: boolean;
 }) {
+  const tGoogle = useTranslations("auth.login");
   const containerRef = useRef<HTMLDivElement>(null);
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
   const [sdkReady, setSdkReady] = useState(false);
@@ -126,7 +127,7 @@ function GoogleSignInButton({
       {/* Styled layer — visual only, clicks pass through */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition duration-200 hover:bg-muted/70">
         {loading ? <LoadingSpinner className="h-3.5 w-3.5" /> : <GoogleIcon />}
-        <span>Continue with Google</span>
+        <span>{tGoogle("continueWithGoogle")}</span>
       </div>
 
       {/* Google's rendered button — transparent overlay, receives clicks */}

@@ -21,6 +21,9 @@ export function Popover({
   trigger,
   open,
   onOpenChange,
+  align = "center",
+  sideOffset = 4,
+  className,
 }: {
   children: React.ReactNode;
   trigger?: React.ReactNode;
@@ -50,7 +53,16 @@ export function Popover({
       {triggerEl ? (
         <PopoverPrimitive.Trigger asChild>{triggerEl}</PopoverPrimitive.Trigger>
       ) : null}
-      {contentChildren}
+      {trigger !== undefined ? (
+        // Legacy `trigger` prop: the children are the panel, so they need the
+        // positioned, portalled surface. Rendering them bare left the panel
+        // permanently inline in the page.
+        <PopoverContent align={align} sideOffset={sideOffset} className={className}>
+          {contentChildren}
+        </PopoverContent>
+      ) : (
+        contentChildren
+      )}
     </PopoverPrimitive.Root>
   );
 }

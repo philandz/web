@@ -13,7 +13,16 @@
     "successRedirecting": "Redirecting…",
     "openBudget": "Open sharing budget",
     "displayNameTooShort": "Display name must be at least 2 characters",
-    "displayNameTooLong": "Display name must be at most 60 characters"
+    "displayNameTooLong": "Display name must be at most 60 characters",
+    "invalidBody": "Ask the person who shared it for a new link.",
+    "nameError": "Display name must be 2–60 characters",
+    "welcome": "Welcome, {name}!",
+    "redirecting": "You're in. Redirecting to the trip…",
+    "members": "{count, plural, one {# member} other {# members}}",
+    "nameLabel": "Your display name",
+    "namePlaceholder": "e.g. Alex",
+    "joining": "Joining…",
+    "join": "Join this trip"
   },
   "budget": {
     "title": "Sharing budget",
